@@ -1,0 +1,29 @@
+<div>
+The absolute path to the marathon configuration file that will be deployed.
+<br/>  
+Example:
+<br/>
+<pre>
+{
+  "id": "testjenkinsacs",
+  "instances": 1,
+  "acceptedResourceRoles" : [ "slave_public" ],
+  "cpus": 0.5,
+  "mem": 32.0,
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "yeasy/simple-web",
+      "network": "BRIDGE",
+      "portMappings": [
+        {
+          "containerPort": 80,
+          "hostPort": 9095,
+          "protocol": "tcp"
+        }
+      ]
+    }
+  }
+}
+</pre>
+</div>

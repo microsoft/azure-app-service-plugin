@@ -1,0 +1,26 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <f:section title="${%Azure_Profile_Configuration}">
+    <f:entry title="${%Subscription_ID}" field="subscriptionId" 
+             help="/plugin/azure-container-service-plugin/help-subscriptionId.html">
+      <f:textbox />
+    </f:entry>
+		 
+    <f:entry title="${%Client_Id}" field="clientId" 
+             help="/plugin/azure-container-service-plugin/help-clientId.html">
+      <f:textbox />
+    </f:entry>
+    <f:entry title="${%Client_Secret}" field="clientSecret" 
+             help="/plugin/azure-container-service-plugin/help-clientSecret.html">
+      <f:password />
+    </f:entry>
+
+    <f:entry title="${%OAuth2_Token_Endpoint}" field="oauth2TokenEndpoint" 
+             help="/plugin/azure-container-service-plugin/help-oauth2TokenEndpoint.html">
+      <f:textbox />
+    </f:entry>
+    
+    <f:validateButton title="${%Verify_Configuration}" progress="${%Verifying}" method="verifyConfiguration" 
+      with="subscriptionId,clientId,clientSecret,oauth2TokenEndpoint" />
+  </f:section>
+</j:jelly>
