@@ -23,7 +23,7 @@ Refer to
 ## Configure the plugin
 1. Within the Jenkins dashboard, Select a Job then select Configure
 2. Scroll to the "Add post-build action" drop down.  
-3. Select "Azure WebApp Plugin" 
+3. Select "Azure WebApp Configuration" 
 4. Enter the subscription ID, Client ID, Client Secret and the OAuth 2.0 Token Endpoint in the Azure Profile Configuration section.
 5. Enter the Resource Group Name, Location, Hosting Plan Name, Web App Name, Sku Name, Sku Capacity, War File Path in the Azure WebApp Configuration section.
 7. Save Job and click on Build now.
