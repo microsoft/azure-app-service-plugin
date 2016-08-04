@@ -13,12 +13,14 @@ Refer to
   * [Register a client app](https://msdn.microsoft.com/en-us/dn877542.asp)
 
 ## How to install the Azure WebApp Plugin
+1. Download the azure-webapp-plugin.hpi file from [here](https://github.com/Microsoft/azure-webapp-plugin/blob/master/install/azure-webapp-plugin.hpi)
 1. Within the Jenkins dashboard, click Manage Jenkins.
 2. In the Manage Jenkins page, click Manage Plugins.
-3. Click the Available tab.
-4. Search for "Azure WebApp Plugin", select the Azure WebApp Plugin.
-5. Click either “Install without restart” or “Download now and install after restart”.
-6. Restart Jenkins if necessary.
+3. Click the Advanced tab.
+4. Click on the Choose file button in the Upload Plugin section and choose the azure-webapp-plugin.hpi file.
+5. Click the Upload button in the Upload Plugin section.
+6. Click either “Install without restart” or “Download now and install after restart”.
+7. Restart Jenkins if necessary.
 
 ## Configure the plugin
 1. Within the Jenkins dashboard, Select a Job then select Configure
