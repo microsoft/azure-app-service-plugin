@@ -40,6 +40,8 @@ public class UploadWarCommand implements ICommand<UploadWarCommand.IUploadWarCom
 			ftpClient.connect(publishUrl);
 			ftpClient.login(userName, passWord);
 	        ftpClient.changeWorkingDirectory(siteDir);
+	        context.logStatus(
+                    String.format("Working directory for FTP upload: %s", ftpClient.printWorkingDirectory()));
 	        ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
 	        try(InputStream stream = new FileInputStream(filePath)){
 		        ftpClient.storeFile(fileName, stream);	        	
