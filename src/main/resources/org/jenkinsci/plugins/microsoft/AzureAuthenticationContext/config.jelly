@@ -3,12 +3,12 @@
     <f:section title="${%Azure_Profile_Configuration}">
     <f:entry title="${%Subscription_ID}" field="subscriptionId" 
              help="/plugin/azure-webapp-plugin/help-subscriptionId.html">
-      <f:textbox />
+      <f:password />
     </f:entry>
 		 
     <f:entry title="${%Client_Id}" field="clientId" 
              help="/plugin/azure-webapp-plugin/help-clientId.html">
-      <f:textbox />
+      <f:password />
     </f:entry>
     <f:entry title="${%Client_Secret}" field="clientSecret" 
              help="/plugin/azure-webapp-plugin/help-clientSecret.html">
@@ -17,7 +17,7 @@
 
     <f:entry title="${%OAuth2_Token_Endpoint}" field="oauth2TokenEndpoint" 
              help="/plugin/azure-webapp-plugin/help-oauth2TokenEndpoint.html">
-      <f:textbox />
+      <f:password />
     </f:entry>
     
     <f:validateButton title="${%Verify_Configuration}" progress="${%Verifying}" method="verifyConfiguration" 
