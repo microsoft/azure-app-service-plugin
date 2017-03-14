@@ -7,7 +7,6 @@ package org.jenkinsci.plugins.microsoft;
 
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.jenkinsci.plugins.microsoft.services.CommandService;
 
 import hudson.Extension;
@@ -23,22 +22,15 @@ import hudson.tasks.Recorder;
 public class WebappDeploymentRecorder extends Recorder {
 
     private WebappDeploymentContext context;
-    private AzureAuthenticationContext authContext;
 
     @DataBoundConstructor
     public WebappDeploymentRecorder(
-            final WebappDeploymentContext context,
-            final AzureAuthenticationContext authContext) {
+            final WebappDeploymentContext context) {
         this.context = context;
-        this.authContext = authContext;
     }
 
     public WebappDeploymentContext getContext() {
         return this.context;
-    }
-
-    public AzureAuthenticationContext getAuthContext() {
-        return this.authContext;
     }
 
     @Override
@@ -58,12 +50,6 @@ public class WebappDeploymentRecorder extends Recorder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println("Starting Azure Container Service Deployment");
-        try {
-            this.context.configure(listener, this.authContext);
-        } catch (AzureCloudException ex) {
-            listener.error("Error configuring deployment context: " + ex.getMessage());
-            ex.printStackTrace();
-        }
 
         CommandService.executeCommands(context);
 

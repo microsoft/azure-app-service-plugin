@@ -5,13 +5,21 @@
  */
 package org.jenkinsci.plugins.microsoft;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.microsoft.azure.management.resources.ResourceManagementClient;
 import com.microsoft.azure.management.website.WebSiteManagementClient;
+import com.microsoft.azure.util.AzureCredentials;
 import hudson.Extension;
 import hudson.model.BuildListener;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.security.ACL;
+import hudson.util.ListBoxModel;
+import java.util.Collections;
 import java.util.Hashtable;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.microsoft.commands.DeploymentState;
@@ -29,6 +37,7 @@ import org.jenkinsci.plugins.microsoft.services.AzureManagementServiceDelegate;
 import org.jenkinsci.plugins.microsoft.services.IARMTemplateServiceData;
 import org.jenkinsci.plugins.microsoft.services.IAzureConnectionData;
 import org.jenkinsci.plugins.microsoft.services.ServiceDelegateHelper;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class WebappDeploymentContext extends AbstractBaseContext
@@ -42,6 +51,7 @@ public class WebappDeploymentContext extends AbstractBaseContext
         Describable<WebappDeploymentContext> {
 
     private IAzureConnectionData connectData;
+    private final String azureCredentialsId;
     private ResourceManagementClient resourceClient;
     private WebSiteManagementClient websiteClient;
 
@@ -61,6 +71,7 @@ public class WebappDeploymentContext extends AbstractBaseContext
 
     @DataBoundConstructor
     public WebappDeploymentContext(
+            final String azureCredentialsId,
             final String resourceGroupName,
             final String hostingPlanName,
             final String webappName,
@@ -68,6 +79,7 @@ public class WebappDeploymentContext extends AbstractBaseContext
             final String skuCapacity,
             final String filePath,
             final String location) {
+        this.azureCredentialsId = azureCredentialsId;
         this.resourceGroupName = resourceGroupName;
         this.hostingPlanName = hostingPlanName;
         this.webappName = webappName;
@@ -81,6 +93,10 @@ public class WebappDeploymentContext extends AbstractBaseContext
     @Override
     public Descriptor<WebappDeploymentContext> getDescriptor() {
         return Jenkins.getInstance().getDescriptor(getClass());
+    }
+
+    public String getAzureCredentialsId() {
+        return this.azureCredentialsId;
     }
 
     public String getResourceGroupName() {
@@ -200,5 +216,9 @@ public class WebappDeploymentContext extends AbstractBaseContext
 
     @Extension
     public static final class DescriptorImpl extends WebappDeploymentContextDescriptor {
+
+        public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
+            return new StandardListBoxModel().withAll(CredentialsProvider.lookupCredentials(AzureCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()));
+        }
     }
 }
