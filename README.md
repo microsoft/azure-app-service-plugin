@@ -1,7 +1,7 @@
-# Azure WebApp Plugin
+# Azure App Service Plugin
 
 
-Jenkins Plugin to create an Azure Java WebApp and deploy a war file to the WebApp.
+Jenkins Plugin to create an Azure App Service (currently supports only Azure Java WebApps).
 
 ## Pre-requirements
 Register and authorize your client application.
@@ -12,8 +12,8 @@ Refer to
   * [Adding, Updating, and Removing an Application](https://msdn.microsoft.com/en-us/library/azure/dn132599.aspx) 
   * [Register a client app](https://msdn.microsoft.com/en-us/dn877542.asp)
 
-## How to install the Azure WebApp Plugin
-1. Download the azure-webapp-plugin.hpi file from [here](https://github.com/Microsoft/azure-webapp-plugin/blob/master/install/azure-webapp-plugin.hpi)
+## How to install the Azure App Service Plugin
+1. Download the azure-app-service.hpi file from [here](https://github.com/Microsoft/azure-webapp-plugin/blob/master/install/azure-webapp-plugin.hpi)
 1. Within the Jenkins dashboard, click Manage Jenkins.
 2. In the Manage Jenkins page, click Manage Plugins.
 3. Click the Advanced tab.
