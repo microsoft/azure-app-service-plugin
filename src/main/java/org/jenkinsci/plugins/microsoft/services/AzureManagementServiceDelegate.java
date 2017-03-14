@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.microsoft.azure.CloudException;
 import com.microsoft.azure.management.resources.ResourceManagementClient;
 import com.microsoft.azure.management.resources.models.Deployment;
 import com.microsoft.azure.management.resources.models.DeploymentMode;
@@ -28,8 +27,6 @@ import com.microsoft.azure.management.resources.models.DeploymentProperties;
 import com.microsoft.azure.management.website.models.ProvisioningState;
 import com.microsoft.windowsazure.Configuration;
 import com.microsoft.windowsazure.exception.ServiceException;
-
-import hudson.model.BuildListener;
 
 import org.jenkinsci.plugins.microsoft.util.Constants;
 import org.apache.commons.lang.StringUtils;
@@ -78,24 +75,24 @@ public class AzureManagementServiceDelegate {
             @Override
             public String call() throws Exception {
                 ServiceDelegateHelper.getStorageManagementClient(config).getStorageAccountsOperations().
-                checkNameAvailability("CI_SYSTEM");
+                        checkNameAvailability("CI_SYSTEM");
                 return Constants.OP_SUCCESS;
             }
         };
 
-    	ExecutorService service = Executors.newSingleThreadExecutor();
+        ExecutorService service = Executors.newSingleThreadExecutor();
         try {
-        	Future<String> future = service.submit(task);
-        	service.shutdown();
-        	return future.get().toString();
+            Future<String> future = service.submit(task);
+            service.shutdown();
+            return future.get().toString();
         } catch (InterruptedException | ExecutionException e) {
             LOGGER.log(Level.SEVERE, "Error validating configuration", e);
             return "Failure: Exception occured while validating subscription configuration " + e;
-        }finally {
-        	service.shutdown();
+        } finally {
+            service.shutdown();
         }
     }
-    
+
     public static String deploy(final IARMTemplateServiceData azureServiceData)
             throws AzureCloudException {
         try {
@@ -114,17 +111,16 @@ public class AzureManagementServiceDelegate {
             LOGGER.log(Level.INFO, "Use embedded deployment template {0}", azureServiceData.getEmbeddedTemplateName());
             embeddedTemplate
                     = AzureManagementServiceDelegate.class.getResourceAsStream(azureServiceData.getEmbeddedTemplateName());
-            
+
             final ObjectMapper mapper = new ObjectMapper();
             final JsonNode tmp = mapper.readTree(embeddedTemplate);
 
-            
             if (StringUtils.isBlank(azureServiceData.getResourceGroupName())) {
                 throw new AzureCloudException("Resource name is required.");
             }
-           
+
             azureServiceData.configureTemplate(tmp);
-            
+
             // Deployment ....
             properties.setMode(DeploymentMode.Incremental);
             properties.setTemplate(tmp.toString());
@@ -137,35 +133,35 @@ public class AzureManagementServiceDelegate {
             throw new AzureCloudException(e);
         }
     }
-    
+
     public static void validateAndAddFieldValue(String type,
-    		String fieldValue, 
-    		String fieldName, 
-    		String errorMessage, 
-    		JsonNode tmp) 
-    		throws AzureCloudException, IllegalAccessException{
+            String fieldValue,
+            String fieldName,
+            String errorMessage,
+            JsonNode tmp)
+            throws AzureCloudException, IllegalAccessException {
         if (StringUtils.isNotBlank(fieldValue)) {
             // Add count variable for loop....
-        	final ObjectMapper mapper = new ObjectMapper();
-			final ObjectNode parameter = mapper.createObjectNode();
-			parameter.put("type", type);
-			if(type == "int") {
-				parameter.put("defaultValue", Integer.parseInt(fieldValue));
-			}else {
-				parameter.put("defaultValue", fieldValue);
-			}
+            final ObjectMapper mapper = new ObjectMapper();
+            final ObjectNode parameter = mapper.createObjectNode();
+            parameter.put("type", type);
+            if (type == "int") {
+                parameter.put("defaultValue", Integer.parseInt(fieldValue));
+            } else {
+                parameter.put("defaultValue", fieldValue);
+            }
             ObjectNode.class.cast(tmp.get("parameters")).replace(fieldName, parameter);
         } else if (StringUtils.isBlank(errorMessage)) {
             throw new AzureCloudException(errorMessage);
         }
     }
-    
+
     public static boolean monitor(
-    		ResourceManagementClient rmc,
-    		String rcName,
-    		String deploymentName,
-    		IBaseCommandData baseCommandData) {
-    	int completed = 0;
+            ResourceManagementClient rmc,
+            String rcName,
+            String deploymentName,
+            IBaseCommandData baseCommandData) {
+        int completed = 0;
         do {
             try {
                 Thread.sleep(30 * 1000);
@@ -174,39 +170,39 @@ public class AzureManagementServiceDelegate {
             }
 
             List<DeploymentOperation> ops = null;
-			try {
-				//change to deployment name
-				ops = rmc.getDeploymentOperationsOperations().
-				        list(rcName, deploymentName, null).getOperations();
-			} catch (IOException | IllegalArgumentException | ServiceException | URISyntaxException e) {
-			    LOGGER.log(Level.INFO, "Failed getting deployment operations" + e.getMessage());
-			    baseCommandData.logStatus("Failed getting deployment operations" + e.getMessage());
-			    return false;
-			}
-			
+            try {
+                //change to deployment name
+                ops = rmc.getDeploymentOperationsOperations().
+                        list(rcName, deploymentName, null).getOperations();
+            } catch (IOException | IllegalArgumentException | ServiceException | URISyntaxException e) {
+                LOGGER.log(Level.INFO, "Failed getting deployment operations" + e.getMessage());
+                baseCommandData.logStatus("Failed getting deployment operations" + e.getMessage());
+                return false;
+            }
+
             completed = ops.size();
             for (DeploymentOperation op : ops) {
                 final String resource = op.getProperties().getTargetResource().getResourceName();
                 final String type = op.getProperties().getTargetResource().getResourceType();
                 final String state = op.getProperties().getProvisioningState();
-                
+
                 if (ProvisioningState.CANCELED.toValue().equalsIgnoreCase(state)
                         || ProvisioningState.FAILED.toValue().equalsIgnoreCase(state)) {
-                    LOGGER.log(Level.INFO, "Failed({0}): {1}:{2}", new Object[] { state, type, resource });
-    		        baseCommandData.logError(String.format("Failed(%s): %s:%s", state, type, resource));
+                    LOGGER.log(Level.INFO, "Failed({0}): {1}:{2}", new Object[]{state, type, resource});
+                    baseCommandData.logError(String.format("Failed(%s): %s:%s", state, type, resource));
                     return false;
                 } else if (ProvisioningState.SUCCEEDED.toValue().equalsIgnoreCase(state)) {
-                	baseCommandData.logStatus(
-    		        		String.format("Succeeded(%s): %s:%s", state, type, resource));
-                	completed--;
-                } else {
-                    LOGGER.log(Level.INFO, "To Be Completed({0}): {1}:{2}", new Object[] { state, type, resource });
                     baseCommandData.logStatus(
-    		        		String.format("To Be Completed(%s): %s:%s", state, type, resource));
+                            String.format("Succeeded(%s): %s:%s", state, type, resource));
+                    completed--;
+                } else {
+                    LOGGER.log(Level.INFO, "To Be Completed({0}): {1}:{2}", new Object[]{state, type, resource});
+                    baseCommandData.logStatus(
+                            String.format("To Be Completed(%s): %s:%s", state, type, resource));
                 }
             }
         } while (completed != 0);
-        
+
         return true;
     }
-  }
+}

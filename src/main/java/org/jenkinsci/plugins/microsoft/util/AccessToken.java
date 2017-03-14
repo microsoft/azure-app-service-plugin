@@ -8,13 +8,11 @@ package org.jenkinsci.plugins.microsoft.util;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.windowsazure.Configuration;
 import com.microsoft.windowsazure.management.configuration.ManagementConfiguration;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
-
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 public class AccessToken implements Serializable {

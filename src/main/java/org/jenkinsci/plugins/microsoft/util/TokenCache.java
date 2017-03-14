@@ -8,7 +8,6 @@ package org.jenkinsci.plugins.microsoft.util;
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.ClientCredential;
-import com.microsoft.windowsazure.Configuration;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -189,7 +188,7 @@ public class TokenCache {
 
         try {
             LOGGER.log(Level.INFO, "Aquiring access token: \n\t{0}\n\t{1}\n\t{2}",
-                    new Object[] { oauth2TokenEndpoint, serviceManagementURL, clientId });
+                    new Object[]{oauth2TokenEndpoint, serviceManagementURL, clientId});
 
             final ClientCredential credential = new ClientCredential(clientId, clientSecret);
 
@@ -213,7 +212,7 @@ public class TokenCache {
 
         LOGGER.log(Level.INFO,
                 "Authentication result:\n\taccess token: {0}\n\tExpires On: {1}",
-                new Object[] { authres.getAccessToken(), new Date(authres.getExpiresOn()) });
+                new Object[]{authres.getAccessToken(), new Date(authres.getExpiresOn())});
 
         final AccessToken token = new AccessToken(subscriptionId, serviceManagementURL, authres);
         writeTokenFile(token);

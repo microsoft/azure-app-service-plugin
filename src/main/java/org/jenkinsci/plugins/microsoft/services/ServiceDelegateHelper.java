@@ -8,10 +8,8 @@ package org.jenkinsci.plugins.microsoft.services;
 import static com.microsoft.windowsazure.management.configuration.ManagementConfiguration.SUBSCRIPTION_CLOUD_CREDENTIALS;
 
 import com.microsoft.azure.management.resources.ResourceManagementClient;
-import com.microsoft.azure.management.resources.ResourceManagementClientImpl;
 import com.microsoft.azure.management.resources.ResourceManagementService;
 import com.microsoft.azure.management.storage.StorageManagementClient;
-import com.microsoft.azure.management.storage.StorageManagementClientImpl;
 import com.microsoft.azure.management.storage.StorageManagementService;
 import com.microsoft.azure.management.website.WebSiteManagementClient;
 import com.microsoft.azure.management.website.WebSiteManagementClientImpl;
@@ -39,14 +37,14 @@ public class ServiceDelegateHelper {
      */
     public static Configuration load(IAzureConnectionData publisher)
             throws AzureCloudException {
-    	return ServiceDelegateHelper.loadConfiguration(
-    			publisher.getSubscriptionId(),
-    			publisher.getClientId(),
-    			publisher.getClientSecret(),
-    			publisher.getOauth2TokenEndpoint(),
-    			Constants.DEFAULT_MANAGEMENT_URL); 
+        return ServiceDelegateHelper.loadConfiguration(
+                publisher.getSubscriptionId(),
+                publisher.getClientId(),
+                publisher.getClientSecret(),
+                publisher.getOauth2TokenEndpoint(),
+                Constants.DEFAULT_MANAGEMENT_URL);
     }
-    
+
     /**
      * Loads configuration object..
      *
@@ -67,7 +65,7 @@ public class ServiceDelegateHelper {
             throws AzureCloudException {
 
         // Azure libraries are internally using ServiceLoader.load(...) method which uses context classloader and
-        // this causes problems for jenkins plugin, hence setting the class loader explicitly and then reseting back 
+        // this causes problems for jenkins plugin, hence setting the class loader explicitly and then reseting back
         // to original one.
         ClassLoader thread = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(AzureManagementServiceDelegate.class.getClassLoader());
@@ -85,21 +83,21 @@ public class ServiceDelegateHelper {
             Thread.currentThread().setContextClassLoader(thread);
         }
     }
-    
+
     // Gets StorageManagementClient
     public static StorageManagementClient getStorageManagementClient(final Configuration config) {
         ClassLoader thread = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(AzureManagementServiceDelegate.class.getClassLoader());
         TokenCloudCredentials cloudCreds = TokenCloudCredentials.class.cast(
-        		config.getProperty(SUBSCRIPTION_CLOUD_CREDENTIALS));
+                config.getProperty(SUBSCRIPTION_CLOUD_CREDENTIALS));
         try {
             return StorageManagementService.create(config)
-            		.withRequestFilterFirst(new AzureUserAgentFilter());
+                    .withRequestFilterFirst(new AzureUserAgentFilter());
         } finally {
             Thread.currentThread().setContextClassLoader(thread);
         }
     }
-    
+
     /**
      * Gets ResourceManagementClient.
      *
@@ -112,25 +110,25 @@ public class ServiceDelegateHelper {
 
         try {
             return ResourceManagementService.create(config)
-            		.withRequestFilterFirst(new AzureUserAgentFilter());
+                    .withRequestFilterFirst(new AzureUserAgentFilter());
         } finally {
             Thread.currentThread().setContextClassLoader(thread);
         }
     }
-    
+
     // Gets ManagementClient
     public static WebSiteManagementClient getWebsiteManagementClient(final Configuration config) {
         ClassLoader thread = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(AzureManagementServiceDelegate.class.getClassLoader());
         TokenCloudCredentials cloudCreds = TokenCloudCredentials.class.cast(
-        		config.getProperty(SUBSCRIPTION_CLOUD_CREDENTIALS));
+                config.getProperty(SUBSCRIPTION_CLOUD_CREDENTIALS));
 
         try {
-        	TokenCredentials creds = new TokenCredentials(null, cloudCreds.getToken());
-        	WebSiteManagementClientImpl client = new WebSiteManagementClientImpl(creds);
-        	client.setSubscriptionId(cloudCreds.getSubscriptionId());
-        	return client;
-            		//.withRequestFilterFirst(new AzureUserAgentFilter());
+            TokenCredentials creds = new TokenCredentials(null, cloudCreds.getToken());
+            WebSiteManagementClientImpl client = new WebSiteManagementClientImpl(creds);
+            client.setSubscriptionId(cloudCreds.getSubscriptionId());
+            return client;
+            //.withRequestFilterFirst(new AzureUserAgentFilter());
         } finally {
             Thread.currentThread().setContextClassLoader(thread);
         }

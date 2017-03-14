@@ -43,17 +43,23 @@ public class Constants {
 
     public static final String STORAGE_ACCOUNT_PREFIX = "jenkins";
 
-    /** OS Types */
+    /**
+     * OS Types
+     */
     public static final String OS_TYPE_WINDOWS = "Windows";
 
     public static final String OS_TYPE_LINUX = "Linux";
 
-    /** Slaves launch method */
+    /**
+     * Slaves launch method
+     */
     public static final String LAUNCH_METHOD_JNLP = "JNLP";
 
     public static final String LAUNCH_METHOD_SSH = "SSH";
 
-    /** Template Status */
+    /**
+     * Template Status
+     */
     public static final String TEMPLATE_STATUS_ACTIVE = "Active until first failure";
 
     public static final String TEMPLATE_STATUS_ACTIVE_ALWAYS = "Active always";
@@ -62,7 +68,9 @@ public class Constants {
 
     public static final int MAX_PROV_RETRIES = 20;
 
-    /** Error codes */
+    /**
+     * Error codes
+     */
     public static final String ERROR_CODE_RESOURCE_NF = "ResourceNotFound";
 
     public static final String ERROR_CODE_CONFLICT = "ConflictError";
@@ -75,17 +83,23 @@ public class Constants {
 
     public static final String ERROR_CODE_UNKNOWN_HOST = "UnknownHostException";
 
-    /** End points */
+    /**
+     * End points
+     */
     public static final String PROTOCOL_TCP = "tcp";
 
     public static final String EP_SSH_NAME = "ssh";
 
     public static final String EP_RDP_NAME = "rdp";
 
-    /** Status messages */
+    /**
+     * Status messages
+     */
     public static final String OP_SUCCESS = "Success";
 
-    /** Provisioning failure reasons */
+    /**
+     * Provisioning failure reasons
+     */
     public static final String JNLP_POST_PROV_LAUNCH_FAIL
             = "Provisioning Failure: JNLP slave failed to connect. Make sure that "
             + "slave node is able to reach master and necessary firewall rules are configured";
@@ -103,7 +117,9 @@ public class Constants {
 
     public static final String REG_EX_DIGIT = "\\d+";
 
-    /** Role Status */
+    /**
+     * Role Status
+     */
     public static final String READY_ROLE_STATUS = "ReadyRole";
 
     public static final String DELETING_VM_STATUS = "DeletingVM";

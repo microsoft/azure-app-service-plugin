@@ -9,10 +9,12 @@ import com.microsoft.windowsazure.core.pipeline.filter.ServiceRequestContext;
 import com.microsoft.windowsazure.core.pipeline.filter.ServiceRequestFilter;
 
 public class AzureUserAgentFilter implements ServiceRequestFilter {
+
     private static String USER_AGENT = "JenkinsWebAppPlugin";
 
     /**
-     * Need this as a static method when we call this class directly from Eclipse or IntelliJ plugin to know plugin version
+     * Need this as a static method when we call this class directly from
+     * Eclipse or IntelliJ plugin to know plugin version
      */
     public static void setUserAgent(String userAgent) {
         USER_AGENT = userAgent;
