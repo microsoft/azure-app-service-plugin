@@ -5,6 +5,8 @@
  */
 package org.jenkinsci.plugins.microsoft.util;
 
+import com.microsoft.rest.LogLevel;
+
 public class Constants {
 
     public static final String CI_SYSTEM = "jenkinsslaves";
@@ -133,5 +135,11 @@ public class Constants {
     public static final String STOPPED_DEALLOCATED_VM_STATUS = "StoppedDeallocated";
 
     public static final String RESOURCE_GROUP_NAME = "jenkins";
+    
+    /////////////////////
+    
+    public static final String PLUGIN_NAME = "AzureJenkinsAppService";
+    
+    public static final LogLevel DEFAULT_AZURE_SDK_LOGGING_LEVEL = LogLevel.BODY_AND_HEADERS;
 
 }

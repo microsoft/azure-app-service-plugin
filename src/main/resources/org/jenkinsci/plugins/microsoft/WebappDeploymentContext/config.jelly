@@ -15,8 +15,8 @@
                  help="/plugin/azure-app-service/help-location.html">
             <f:select default="${descriptor.defaultLocation()}"/>
         </f:entry>
-        <f:entry title="${%Hosting_Plan_Name}" field="hostingPlanName" 
-                 help="/plugin/azure-app-service/help-hostingPlanName.html">
+        <f:entry title="${%App_Service_Plan_Name}" field="appServicePlanName" 
+                 help="/plugin/azure-app-service/help-appServicePlanName.html">
             <f:textbox />
         </f:entry>
         <f:entry title="${%Webapp_Name}" field="webappName" 

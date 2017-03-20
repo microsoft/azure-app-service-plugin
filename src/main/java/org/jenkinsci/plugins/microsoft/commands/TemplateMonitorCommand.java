@@ -5,13 +5,12 @@
  */
 package org.jenkinsci.plugins.microsoft.commands;
 
-import com.microsoft.azure.management.resources.ResourceManagementClient;
-import org.jenkinsci.plugins.microsoft.services.AzureManagementServiceDelegate;
+import com.microsoft.azure.util.AzureCredentials;
 
 public class TemplateMonitorCommand implements ICommand<TemplateMonitorCommand.ITemplateMonitorCommandData> {
 
     public void execute(TemplateMonitorCommand.ITemplateMonitorCommandData context) {
-        String deploymentName = context.getDeploymentName();
+        /*String deploymentName = context.getDeploymentName();
         String rcName = context.getResourceGroupName();
         ResourceManagementClient rmc = context.getResourceClient();
         boolean deploySuccess = AzureManagementServiceDelegate.monitor(rmc, rcName, deploymentName, context);
@@ -22,15 +21,15 @@ public class TemplateMonitorCommand implements ICommand<TemplateMonitorCommand.I
         } else {
             context.logError(
                     String.format("Azure '%s' depoyment unsuccessfully.", deploymentName));
-        }
+        }*/
     }
 
     public interface ITemplateMonitorCommandData extends IBaseCommandData {
 
-        public String getDeploymentName();
+        //public String getDeploymentName();
 
         public String getResourceGroupName();
 
-        public ResourceManagementClient getResourceClient();
+        public AzureCredentials.ServicePrincipal getAzureServicePrincipal();
     }
 }

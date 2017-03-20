@@ -18,18 +18,19 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import org.jenkinsci.plugins.microsoft.commands.AbstractCommandContext;
 
-public class WebappDeploymentRecorder extends Recorder {
+public class WebAppDeploymentRecorder extends Recorder {
 
-    private WebappDeploymentContext context;
+    private final WebAppDeploymentContext context;
 
     @DataBoundConstructor
-    public WebappDeploymentRecorder(
-            final WebappDeploymentContext context) {
+    public WebAppDeploymentRecorder(
+            final WebAppDeploymentContext context) {
         this.context = context;
     }
 
-    public WebappDeploymentContext getContext() {
+    public WebAppDeploymentContext getContext() {
         return this.context;
     }
 
@@ -50,10 +51,13 @@ public class WebappDeploymentRecorder extends Recorder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println("Starting Azure Container Service Deployment");
+        WebAppDeploymentCommandContext commandContext = this.context.getCommandContext();
+        
+        commandContext.configure(listener);
 
-        CommandService.executeCommands(context);
+        CommandService.executeCommands(commandContext);
 
-        if (context.getHasError()) {
+        if (commandContext.getHasError()) {
             return false;
         } else {
             listener.getLogger().println("Done Azure Container Service Deployment");

@@ -5,8 +5,7 @@
  */
 package org.jenkinsci.plugins.microsoft.commands;
 
-import com.microsoft.azure.CloudException;
-import com.microsoft.azure.management.website.WebSiteManagementClient;
+import com.microsoft.azure.util.AzureCredentials;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -23,7 +22,7 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
 
     @Override
     public void execute(GetPublishSettingsCommand.IGetPublishSettingsCommandData context) {
-        try {
+        /*try {
             context.logStatus("Retrieving FTP publish settings.");
             String resourceGroupName = context.getResourceGroupName();
             String name = context.getWebappName();
@@ -63,7 +62,7 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
                 | ParserConfigurationException | SAXException e) {
             context.logError("Error retrieving FTP publish settings: " + e.getMessage());
             e.printStackTrace();
-        }
+        }*/
     }
 
     public interface IGetPublishSettingsCommandData extends IBaseCommandData {
@@ -72,12 +71,12 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
 
         public String getWebappName();
 
-        public void setPublishUrl(String publishUrl);
+        /*public void setPublishUrl(String publishUrl);
 
         public void setUserName(String userName);
 
-        public void setPassWord(String passWord);
+        public void setPassWord(String passWord);*/
 
-        public WebSiteManagementClient getWebsiteClient();
+        public AzureCredentials.ServicePrincipal getAzureServicePrincipal();
     }
 }

@@ -5,7 +5,7 @@
  */
 package org.jenkinsci.plugins.microsoft.services;
 
-import java.util.Hashtable;
+import java.util.HashMap;
 import org.jenkinsci.plugins.microsoft.commands.DeploymentState;
 import org.jenkinsci.plugins.microsoft.commands.IBaseCommandData;
 import org.jenkinsci.plugins.microsoft.commands.ICommand;
@@ -15,7 +15,7 @@ public class CommandService {
 
     public static boolean executeCommands(ICommandServiceData commandServiceData) {
         Class startCommand = commandServiceData.getStartCommandClass();
-        Hashtable<Class, TransitionInfo> commands = commandServiceData.getCommands();
+        HashMap<Class, TransitionInfo> commands = commandServiceData.getCommands();
         if (!commands.isEmpty() && startCommand != null) {
             //successfully started
             TransitionInfo current = commands.get(startCommand);

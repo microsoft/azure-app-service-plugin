@@ -13,7 +13,7 @@ import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 
-public class WebappDeploymentContextDescriptor extends Descriptor<WebappDeploymentContext> {
+public class WebAppDeploymentContextDescriptor extends Descriptor<WebAppDeploymentContext> {
 
     public String defaultLocation() {
         return "West US";

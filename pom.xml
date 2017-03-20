@@ -18,8 +18,8 @@
         <java.level>7</java.level>
         <jenkins-test-harness.version>2.1</jenkins-test-harness.version>
         <jackson.version>2.7.4</jackson.version>
-        <azuresdk.version>0.9.2</azuresdk.version>
-        <azuresvcsdk.version>0.9.3</azuresvcsdk.version>
+        <azuresdk.version>1.0.0-beta5</azuresdk.version>
+        <azure-storage.version>4.4.0</azure-storage.version>
         <azure-credentials.version>1.0</azure-credentials.version>
     </properties>
 
@@ -51,12 +51,7 @@
         <developerConnection>scm:git:git@github.com:jenkinsci/azure-app-service-plugin.git</developerConnection>
         <url>http://github.com/jenkinsci/azure-app-service-plugin</url>
     </scm>
-    <repositories>
-        <repository>
-            <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
-        </repository>
-    </repositories>
+    
     <pluginRepositories>
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
@@ -66,35 +61,37 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-storage</artifactId>
-            <version>4.0.0</version>
+            <groupId>org.jenkins-ci.main</groupId>
+            <artifactId>jenkins-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+            </exclusions>
+            <scope>provided</scope>
         </dependency>
     
         <dependency>
             <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-keyvault</artifactId>
-            <version>${azuresvcsdk.version}</version>
+            <artifactId>azure-storage</artifactId>
+            <version>${azure-storage.version}</version>
         </dependency>
+    
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-mgmt-resources</artifactId>
             <version>${azuresdk.version}</version>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-mgmt-website</artifactId>
             <version>1.0.0-beta1</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-mgmt-network</artifactId>
             <version>${azuresdk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-svc-mgmt-network</artifactId>
-            <version>${azuresvcsdk.version}</version>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
@@ -105,11 +102,6 @@
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure-mgmt-storage</artifactId>
             <version>${azuresdk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-svc-mgmt</artifactId>
-            <version>${azuresvcsdk.version}</version>
         </dependency>
     
         <dependency>
@@ -135,12 +127,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>19.0</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.53</version>
@@ -154,4 +140,20 @@
 
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>repo.jenkins-ci.org</id>
+            <url>http://repo.jenkins-ci.org/public/</url>
+        </repository>
+        <repository>
+            <id>com.springsource.repository.bundles.release</id>
+            <name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>
+            <url>http://repository.springsource.com/maven/bundles/release</url>
+        </repository>
+        <repository>
+            <id>com.springsource.repository.bundles.external</id>
+            <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+            <url>http://repository.springsource.com/maven/bundles/external</url>
+        </repository>
+    </repositories>
 </project>

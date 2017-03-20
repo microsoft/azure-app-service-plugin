@@ -5,33 +5,25 @@
  */
 package org.jenkinsci.plugins.microsoft.commands;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 
-import org.jenkinsci.plugins.microsoft.commands.DeploymentState;
-import com.microsoft.azure.management.resources.ResourceManagementClient;
-import com.microsoft.azure.management.resources.models.ResourceGroup;
-import com.microsoft.azure.management.resources.models.ResourceGroupCreateOrUpdateResult;
-import com.microsoft.windowsazure.exception.ServiceException;
+import com.microsoft.azure.util.AzureCredentials;
+import org.jenkinsci.plugins.microsoft.util.TokenCache;
 
 public class ResourceGroupCommand implements ICommand<ResourceGroupCommand.IResourceGroupCommandData> {
 
+    @Override
     public void execute(ResourceGroupCommand.IResourceGroupCommandData context) {
         try {
-            String resourceGroupName = context.getResourceGroupName();
-            String location = context.getLocation();
+            final String resourceGroupName = context.getResourceGroupName();
+            final Region region = context.getRegion();
             context.logStatus(String.format("Creating resource group '%s' if it does not exist", resourceGroupName));
-            ResourceManagementClient rmc = context.getResourceClient();
-            ResourceGroup parameters = new ResourceGroup();
-            parameters.setLocation(location);
-            ResourceGroupCreateOrUpdateResult response = rmc.getResourceGroupsOperations().createOrUpdate(resourceGroupName, parameters);
-            if (response.getStatusCode() < 200 || response.getStatusCode() > 299) {
-                context.logError("Error creating resource group.");
-                return;
-            }
+            final Azure azureClient = TokenCache.getInstance(context.getAzureServicePrincipal()).getAzureClient();
 
+            azureClient.resourceGroups().define(resourceGroupName).withRegion(region).create();
             context.setDeploymentState(DeploymentState.Success);
-        } catch (IOException | IllegalArgumentException | ServiceException | URISyntaxException e) {
+        } catch (Exception e) {
             context.logError("Error creating resource group:", e);
         }
     }
@@ -40,8 +32,8 @@ public class ResourceGroupCommand implements ICommand<ResourceGroupCommand.IReso
 
         public String getResourceGroupName();
 
-        public String getLocation();
+        public Region getRegion();
 
-        public ResourceManagementClient getResourceClient();
+        public AzureCredentials.ServicePrincipal getAzureServicePrincipal();
     }
 }

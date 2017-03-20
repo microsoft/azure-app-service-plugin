@@ -3,17 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft;
+package org.jenkinsci.plugins.microsoft.commands;
 
 import hudson.model.BuildListener;
 import java.util.HashMap;
-import org.jenkinsci.plugins.microsoft.commands.DeploymentState;
-import org.jenkinsci.plugins.microsoft.commands.IBaseCommandData;
-import org.jenkinsci.plugins.microsoft.commands.ICommand;
-import org.jenkinsci.plugins.microsoft.commands.TransitionInfo;
 import org.jenkinsci.plugins.microsoft.services.ICommandServiceData;
 
-public abstract class AbstractBaseContext implements ICommandServiceData {
+public abstract class AbstractCommandContext implements ICommandServiceData {
 
     private BuildListener listener;
     private DeploymentState deployState = DeploymentState.Unknown;
