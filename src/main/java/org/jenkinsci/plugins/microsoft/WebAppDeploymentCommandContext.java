@@ -41,12 +41,12 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
     public WebAppDeploymentCommandContext(
             final AzureCredentials.ServicePrincipal servicePrincipal,
             final String resourceGroupName,
-            final String regionName,
+            final Region region,
             final String webAppName,
             final String appServicePlanName,
             final String filePath) {
         this.servicePrincipal = servicePrincipal;
-        this.region = Region.fromName(regionName);
+        this.region = region;
         this.resourceGroupName = resourceGroupName;
         this.webAppName = webAppName;
         this.appServicePlanName = appServicePlanName;
@@ -92,11 +92,10 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
     }
 
     @Override
-    public String getAppServicePlanName()
-    {
+    public String getAppServicePlanName() {
         return appServicePlanName;
     }
-    
+
     @Override
     public String getFilePath() {
         return filePath;

@@ -141,5 +141,7 @@ public class Constants {
     public static final String PLUGIN_NAME = "AzureJenkinsAppService";
     
     public static final LogLevel DEFAULT_AZURE_SDK_LOGGING_LEVEL = LogLevel.BODY_AND_HEADERS;
+    
+    public static final String EMBEDDED_TEMPLATE_FILENAME = "/templateValue.json";
 
 }

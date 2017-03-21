@@ -5,6 +5,7 @@
  */
 package org.jenkinsci.plugins.microsoft;
 
+import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import org.jenkinsci.plugins.microsoft.services.CommandService;
@@ -18,41 +19,61 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
-import org.jenkinsci.plugins.microsoft.commands.AbstractCommandContext;
 
 public class WebAppDeploymentRecorder extends Recorder {
 
-    private final WebAppDeploymentContext context;
+    private final AzureAuth credentials;
+    private final AppService appService;
+    private final String filePath;
 
     @DataBoundConstructor
     public WebAppDeploymentRecorder(
-            final WebAppDeploymentContext context) {
-        this.context = context;
+            final AzureAuth credentials,
+            final AppService appService,
+            final String filePath) {
+        this.credentials = credentials;
+        this.filePath = filePath;
+        this.appService = appService;
     }
 
-    public WebAppDeploymentContext getContext() {
-        return this.context;
+    public AzureAuth getCredentials() {
+        return credentials;
+    }
+
+    public AppService getAppService() {
+        return appService;
+    }
+
+    public String getFilePath() {
+        return this.filePath;
     }
 
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
-        // TODO Auto-generated method stub
         return BuildStepMonitor.NONE;
     }
 
     @Override
     public boolean needsToRunAfterFinalized() {
-        /*
-         * This should be run before the build is finalized.
-         */
         return false;
+    }
+
+    private WebAppDeploymentCommandContext getCommandContext() {
+        return new WebAppDeploymentCommandContext(
+                credentials.getServicePrincipal(),
+                appService.getResourceGroupName(),
+                Region.fromName(appService.getAppServicePlan().getRegion()),
+                appService.getAppServiceName(),
+                appService.getAppServicePlan().getAppServicePlanName(),
+                filePath
+        );
     }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println("Starting Azure Container Service Deployment");
-        WebAppDeploymentCommandContext commandContext = this.context.getCommandContext();
-        
+        WebAppDeploymentCommandContext commandContext = getCommandContext();
+
         commandContext.configure(listener);
 
         CommandService.executeCommands(commandContext);
@@ -65,28 +86,15 @@ public class WebAppDeploymentRecorder extends Recorder {
         }
     }
 
-    /**
-     * Descriptor for ACSDeployRecorderDescriptor. Used as a singleton. The
-     * class is marked as public so that it can be accessed from views.
-     *
-     * <p>
-     * See
-     * <tt>src/main/resources/hudson/plugins/hello_world/HelloWorldBuilder/*.jelly</tt>
-     * for the actual HTML fragment for the configuration screen.
-     */
-    @Extension // This indicates to Jenkins that this is an implementation of an extension point.
+    @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types
             return true;
         }
 
-        /**
-         * This human readable name is used in the configuration screen.
-         */
         public String getDisplayName() {
-            return "Azure Webapp Configuration";
+            return "Publish an Azure WebApp";
         }
     }
 }
