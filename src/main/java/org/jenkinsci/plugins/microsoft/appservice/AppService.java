@@ -3,13 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft;
+package org.jenkinsci.plugins.microsoft.appservice;
 
 import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.microsoft.util.JellyUtil;
+import org.jenkinsci.plugins.microsoft.appservice.util.JellyUtil;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class AppService implements Describable<AppService> {

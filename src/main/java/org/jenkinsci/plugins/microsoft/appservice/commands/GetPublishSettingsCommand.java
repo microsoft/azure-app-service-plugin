@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft.commands;
+package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.microsoft.azure.util.AzureCredentials;
 import java.io.BufferedReader;

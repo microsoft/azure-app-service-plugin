@@ -6,9 +6,9 @@
 package org.jenkinsci.plugins.microsoft.services;
 
 import java.util.HashMap;
-import org.jenkinsci.plugins.microsoft.commands.IBaseCommandData;
-import org.jenkinsci.plugins.microsoft.commands.ICommand;
-import org.jenkinsci.plugins.microsoft.commands.TransitionInfo;
+import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
+import org.jenkinsci.plugins.microsoft.appservice.commands.ICommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
 
 public interface ICommandServiceData {
 

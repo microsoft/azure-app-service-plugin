@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft.util;
+package org.jenkinsci.plugins.microsoft.appservice.util;
 
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;

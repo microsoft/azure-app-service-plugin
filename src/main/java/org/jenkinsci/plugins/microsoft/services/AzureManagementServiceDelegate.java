@@ -20,9 +20,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.jenkinsci.plugins.microsoft.util.Constants;
+import org.jenkinsci.plugins.microsoft.appservice.util.Constants;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.microsoft.commands.IBaseCommandData;
+import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.jenkinsci.plugins.microsoft.services.AzureManagementServiceDelegate;
 

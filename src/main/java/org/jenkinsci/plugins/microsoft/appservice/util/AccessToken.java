@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft.util;
+package org.jenkinsci.plugins.microsoft.appservice.util;
 
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import java.io.IOException;

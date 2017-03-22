@@ -3,13 +3,9 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft.commands;
+package org.jenkinsci.plugins.microsoft.appservice.commands;
 
-public enum DeploymentState {
-    Unknown,
-    Done,
-    HasError,
-    Running,
-    Success,
-    UnSuccessful,
+public interface ICommand<T extends IBaseCommandData> {
+
+    public void execute(T context);
 }

@@ -3,24 +3,24 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft;
+package org.jenkinsci.plugins.microsoft.appservice;
 
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
 import hudson.model.BuildListener;
 import java.util.HashMap;
-import org.jenkinsci.plugins.microsoft.commands.AbstractCommandContext;
-import org.jenkinsci.plugins.microsoft.commands.CreateWebAppCommand;
-import org.jenkinsci.plugins.microsoft.commands.DeploymentState;
-import org.jenkinsci.plugins.microsoft.commands.GetPublishSettingsCommand;
-import org.jenkinsci.plugins.microsoft.commands.IBaseCommandData;
-import org.jenkinsci.plugins.microsoft.commands.ICommand;
-import org.jenkinsci.plugins.microsoft.commands.ResourceGroupCommand;
-import org.jenkinsci.plugins.microsoft.commands.TemplateDeployCommand;
-import org.jenkinsci.plugins.microsoft.commands.TemplateMonitorCommand;
-import org.jenkinsci.plugins.microsoft.commands.TransitionInfo;
-import org.jenkinsci.plugins.microsoft.commands.UploadWarCommand;
-import org.jenkinsci.plugins.microsoft.commands.ValidateWebAppCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.AbstractCommandContext;
+import org.jenkinsci.plugins.microsoft.appservice.commands.CreateWebAppCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.DeploymentState;
+import org.jenkinsci.plugins.microsoft.appservice.commands.GetPublishSettingsCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
+import org.jenkinsci.plugins.microsoft.appservice.commands.ICommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.ResourceGroupCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.TemplateDeployCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.TemplateMonitorCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
+import org.jenkinsci.plugins.microsoft.appservice.commands.UploadWarCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.ValidateWebAppCommand;
 
 public class WebAppDeploymentCommandContext extends AbstractCommandContext
         implements ResourceGroupCommand.IResourceGroupCommandData,
@@ -54,7 +54,7 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
     }
 
     public void configure(BuildListener listener) {
-        HashMap<Class, TransitionInfo> commands = new HashMap<Class, TransitionInfo>();
+        HashMap<Class, TransitionInfo> commands = new HashMap<>();
         commands.put(ResourceGroupCommand.class, new TransitionInfo(new ResourceGroupCommand(), CreateWebAppCommand.class, null));
         commands.put(CreateWebAppCommand.class, new TransitionInfo(new CreateWebAppCommand(), ValidateWebAppCommand.class, null));
         commands.put(ValidateWebAppCommand.class, new TransitionInfo(new ValidateWebAppCommand(), GetPublishSettingsCommand.class, TemplateDeployCommand.class));

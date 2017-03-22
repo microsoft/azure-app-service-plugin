@@ -3,13 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft.commands;
+package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 
 import com.microsoft.azure.util.AzureCredentials;
-import org.jenkinsci.plugins.microsoft.util.TokenCache;
+import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 
 public class ResourceGroupCommand implements ICommand<ResourceGroupCommand.IResourceGroupCommandData> {
 

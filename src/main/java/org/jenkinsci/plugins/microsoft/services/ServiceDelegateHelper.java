@@ -9,8 +9,8 @@ package org.jenkinsci.plugins.microsoft.services;
 
 
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
-import org.jenkinsci.plugins.microsoft.util.Constants;
-import org.jenkinsci.plugins.microsoft.util.TokenCache;
+import org.jenkinsci.plugins.microsoft.appservice.util.Constants;
+import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

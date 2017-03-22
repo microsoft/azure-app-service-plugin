@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package org.jenkinsci.plugins.microsoft;
+package org.jenkinsci.plugins.microsoft.appservice;
 
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import org.kohsuke.stapler.DataBoundConstructor;
