@@ -51,7 +51,10 @@ public class TokenCache {
         String instanceId = null;
         try {
             version = TokenCache.class.getPackage().getImplementationVersion();
-            instanceId = Jenkins.getInstance().getLegacyInstanceId();
+            Jenkins inst = Jenkins.getInstance();
+            if (inst != null) {
+                instanceId = inst.getLegacyInstanceId();
+            }
         } catch (Exception e) {
         }
 
@@ -69,7 +72,7 @@ public class TokenCache {
         return new ApplicationTokenCredentials(
                 servicePrincipal.getClientId(),
                 servicePrincipal.getTenant(),
-                servicePrincipal.getClientSecret(), 
+                servicePrincipal.getClientSecret(),
                 new AzureEnvironment(
                         servicePrincipal.getAuthenticationEndpoint(),
                         servicePrincipal.getServiceManagementURL(),

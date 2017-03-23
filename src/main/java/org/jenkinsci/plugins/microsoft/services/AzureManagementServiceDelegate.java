@@ -5,15 +5,6 @@
  */
 package org.jenkinsci.plugins.microsoft.services;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -22,11 +13,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.jenkinsci.plugins.microsoft.appservice.util.Constants;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.jenkinsci.plugins.microsoft.services.AzureManagementServiceDelegate;
-
-import java.util.logging.Level;
 
 public class AzureManagementServiceDelegate {
 
@@ -59,7 +47,7 @@ public class AzureManagementServiceDelegate {
 //            LOGGER.log(Level.SEVERE, "Error validating configuration", e);
 //            return "Failure: Exception occured while validating subscription configuration " + e;
 //        }
-return Constants.OP_SUCCESS;
+        return Constants.OP_SUCCESS;
     }
 
 //    public static String verifyConfiguration(final Configuration config) {
@@ -85,7 +73,6 @@ return Constants.OP_SUCCESS;
 //            service.shutdown();
 //        }
 //    }
-
 //    public static String deploy(final IARMTemplateServiceData azureServiceData)
 //            throws AzureCloudException {
 //        try {
@@ -126,7 +113,6 @@ return Constants.OP_SUCCESS;
 //            throw new AzureCloudException(e);
 //        }
 //    }
-
     public static void validateAndAddFieldValue(String type,
             String fieldValue,
             String fieldName,
@@ -138,7 +124,7 @@ return Constants.OP_SUCCESS;
             final ObjectMapper mapper = new ObjectMapper();
             final ObjectNode parameter = mapper.createObjectNode();
             parameter.put("type", type);
-            if (type == "int") {
+            if (type.equalsIgnoreCase("int")) {
                 parameter.put("defaultValue", Integer.parseInt(fieldValue));
             } else {
                 parameter.put("defaultValue", fieldValue);

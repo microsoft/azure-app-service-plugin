@@ -52,7 +52,7 @@ public class MarathonDeploymentHelper {
             //ignore if app does not exist
             listener.getLogger().println(String.format("Deleting application with appId: '%s' if it exists", appId));
             MarathonDeploymentHelper.executeCommand(session, "curl -X DELETE localhost:8080/v2/apps/" + appId, listener);
-            listener.getLogger().println(String.format("Deploying file '%s' with appId to marathon.", deployedFilename, appId));
+            listener.getLogger().println(String.format("Deploying file '%s' with appId %s to marathon.", deployedFilename, appId));
             MarathonDeploymentHelper.executeCommand(session, "curl -i -H 'Content-Type: application/json' -d@" + deployedFilename + " localhost:8080/v2/apps", listener);
         } catch (JSchException e) {
             listener.error("Error deploying application to marathon:" + e.getMessage());
