@@ -19,7 +19,7 @@ public class ValidateWebAppCommand implements ICommand<ValidateWebAppCommand.IVa
             final String resourceGroupName = context.getResourceGroupName();
             final Azure azureClient = TokenCache.getInstance(context.getAzureServicePrincipal()).getAzureClient();
 
-            String webappname = context.getWebappName();
+            String webappname = context.getAppServiceName();
             context.logStatus(String.format("Checking if the Azure Webapp with name '%s' exist.", resourceGroupName));
 
             final WebApp app = azureClient.webApps().getByGroup(resourceGroupName, webappname);
@@ -65,7 +65,7 @@ public class ValidateWebAppCommand implements ICommand<ValidateWebAppCommand.IVa
 
         public String getResourceGroupName();
 
-        public String getWebappName();
+        public String getAppServiceName();
 
         public AzureCredentials.ServicePrincipal getAzureServicePrincipal();
     }

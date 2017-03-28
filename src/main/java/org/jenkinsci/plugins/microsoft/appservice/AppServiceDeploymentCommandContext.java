@@ -5,6 +5,8 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice;
 
+import com.microsoft.azure.management.appservice.AppServicePricingTier;
+import com.microsoft.azure.management.appservice.SkuDescription;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
 import hudson.model.BuildListener;
@@ -22,7 +24,7 @@ import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
 import org.jenkinsci.plugins.microsoft.appservice.commands.UploadWarCommand;
 import org.jenkinsci.plugins.microsoft.appservice.commands.ValidateWebAppCommand;
 
-public class WebAppDeploymentCommandContext extends AbstractCommandContext
+public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         implements ResourceGroupCommand.IResourceGroupCommandData,
         UploadWarCommand.IUploadWarCommandData,
         ValidateWebAppCommand.IValidateWebAppCommandData,
@@ -34,23 +36,37 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
     private final AzureCredentials.ServicePrincipal servicePrincipal;
     private final String resourceGroupName;
     private final Region region;
-    private final String webAppName;
+    private final String appServiceName;
     private final String appServicePlanName;
     private final String filePath;
+    private final AppServicePricingTier appServicePricingTier;
+    private final boolean useExistingAppService;
+    private final boolean useExistingAppServicePlan;
 
-    public WebAppDeploymentCommandContext(
+    public AppServiceDeploymentCommandContext(
             final AzureCredentials.ServicePrincipal servicePrincipal,
             final String resourceGroupName,
             final Region region,
-            final String webAppName,
+            final String appServiceName,
             final String appServicePlanName,
-            final String filePath) {
+            final String appServicePricingTier,
+            final String filePath,
+            final boolean useExistingAppService,
+            final boolean useExistingAppServicePlan) {
         this.servicePrincipal = servicePrincipal;
         this.region = region;
         this.resourceGroupName = resourceGroupName;
-        this.webAppName = webAppName;
+        this.appServiceName = appServiceName;
         this.appServicePlanName = appServicePlanName;
         this.filePath = filePath;
+        this.useExistingAppService = useExistingAppService;
+        this.useExistingAppServicePlan = useExistingAppServicePlan;
+
+        String[] tierParts = appServicePricingTier.split("_");
+        SkuDescription sd = new SkuDescription();
+        sd.withTier(tierParts[0]);
+        sd.withSize(tierParts[1]);
+        this.appServicePricingTier = AppServicePricingTier.fromSkuDescription(sd);
     }
 
     public void configure(BuildListener listener) {
@@ -87,8 +103,8 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
     }
 
     @Override
-    public String getWebappName() {
-        return webAppName;
+    public String getAppServiceName() {
+        return appServiceName;
     }
 
     @Override
@@ -113,5 +129,20 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
     @Override
     public String getPassWord() {
         return "";
+    }
+
+    @Override
+    public AppServicePricingTier getAppServicePricingTier() {
+        return appServicePricingTier;
+    }
+
+    @Override
+    public boolean useExistingAppService() {
+        return useExistingAppService;
+    }
+
+    @Override
+    public boolean useExistingAppServicePlan() {
+        return useExistingAppServicePlan;
     }
 }

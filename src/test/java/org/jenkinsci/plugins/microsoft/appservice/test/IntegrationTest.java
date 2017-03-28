@@ -6,6 +6,8 @@
 package org.jenkinsci.plugins.microsoft.appservice.test;
 
 import com.microsoft.azure.CloudException;
+import com.microsoft.azure.management.appservice.AppServicePricingTier;
+import com.microsoft.azure.management.appservice.SkuDescription;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
 import java.io.PrintWriter;
@@ -13,14 +15,12 @@ import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
 import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
+import org.junit.*;
 import org.junit.rules.Timeout;
 import org.jvnet.hudson.test.JenkinsRule;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,12 +29,16 @@ import static org.mockito.Mockito.doAnswer;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+/*
+To execute the integration tests you need to set the credentials env variables (the ones that don't have a default) and run mvn failsafe:integration-test
+ */
 public class IntegrationTest {
 
     @ClassRule
     public static JenkinsRule j = new JenkinsRule();
     @Rule
-    public Timeout globalTimeout = Timeout.seconds(20 * 60); // integration tests are very slow
+    public Timeout globalTimeout = new Timeout(20, TimeUnit.MINUTES);
+    //Timeout.seconds(20 * 60); // integration tests are very slow
     private static final Logger LOGGER = Logger.getLogger(IntegrationTest.class.getName());
 
     protected static class TestEnvironment {
@@ -50,6 +54,9 @@ public class IntegrationTest {
         public final Region azureLocation;
         public final Region azureLocation2;
         public final String azureResourceGroup;
+        public final String appServiceName;
+        public final String appServicePlanName;
+        public final AppServicePricingTier appServicePricingTier;
         public final Map<String, String> blobEndpointSuffixForTemplate;
         public final Map<String, String> blobEndpointSuffixForCloudStorageAccount;
         public final static String AZUREPUBLIC = "azure public";
@@ -69,7 +76,15 @@ public class IntegrationTest {
 
             azureLocation = Region.fromName(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_LOCATION", "East US"));
             azureLocation2 = Region.fromName(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_LOCATION", "West Central US"));
-            azureResourceGroup = TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_RESOURCE_GROUP_PREFIX", "webapp-tst") + "-" + TestEnvironment.GenerateRandomString(16);
+            azureResourceGroup = TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_RESOURCE_GROUP_PREFIX", "appservice-tst") + "-" + TestEnvironment.GenerateRandomString(16);
+
+            appServiceName = TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_APP_SERVICE_NAME_PREFIX", "appservice") + "-" + TestEnvironment.GenerateRandomString(16);
+            appServicePlanName = TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_APP_SERVICE_PLAN_NAME_PREFIX", "appserviceplan") + "-" + TestEnvironment.GenerateRandomString(16);
+
+            SkuDescription sd = new SkuDescription();
+            sd.withTier(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_PRICING_TIER_SKU", "FREE"));
+            sd.withSize(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_PRICING_TIER_SIZE", "F1"));
+            appServicePricingTier = AppServicePricingTier.fromSkuDescription(sd);
 
             blobEndpointSuffixForTemplate = new HashMap<>();
             blobEndpointSuffixForTemplate.put(AZUREPUBLIC, ".blob.core.windows.net/");
@@ -139,6 +154,33 @@ public class IntegrationTest {
 
     }
 
+    protected static class CommandErrorException extends Exception {
+
+        private String msg;
+
+        public CommandErrorException(String msg) {
+            super();
+            this.msg = msg;
+        }
+
+        public CommandErrorException(String msg, Exception ex) {
+            super();
+            if (ex == null) {
+                this.msg = msg;
+            } else {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                ex.printStackTrace(pw);
+                this.msg = msg + ex.getMessage() + "\n" + sw.toString();
+            }
+        }
+
+        @Override
+        public String getMessage() {
+            return msg;
+        }
+    }
+
     protected void setUpBaseCommandMockErrorHandling(IBaseCommandData commandDataMock) {
 
         doAnswer(new Answer<String>() {
@@ -153,12 +195,7 @@ public class IntegrationTest {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                Exception ex = (Exception) args[1];
-                String msg = (String) args[0];
-                StringWriter sw = new StringWriter();
-                PrintWriter pw = new PrintWriter(sw);
-                ex.printStackTrace(pw);
-                throw new Exception(msg + ex.getMessage() + "\n" + sw.toString());
+                throw (Exception) args[1];
             }
         }).when(commandDataMock).logError(anyString(), any(Exception.class));
 
@@ -166,8 +203,7 @@ public class IntegrationTest {
             @Override
             public String answer(InvocationOnMock invocation) throws Throwable {
                 Object[] args = invocation.getArguments();
-                String msg = (String) args[0];
-                throw new Exception(msg);
+                throw new CommandErrorException((String) args[0]);
             }
         }).when(commandDataMock).logError(anyString());
     }

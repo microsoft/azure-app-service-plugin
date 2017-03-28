@@ -20,14 +20,14 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 
-public class WebAppDeploymentRecorder extends Recorder {
+public class AppServiceDeploymentRecorder extends Recorder {
 
     private final AzureAuth credentials;
     private final AppService appService;
     private final String filePath;
 
     @DataBoundConstructor
-    public WebAppDeploymentRecorder(
+    public AppServiceDeploymentRecorder(
             final AzureAuth credentials,
             final AppService appService,
             final String filePath) {
@@ -58,21 +58,24 @@ public class WebAppDeploymentRecorder extends Recorder {
         return false;
     }
 
-    private WebAppDeploymentCommandContext getCommandContext() {
-        return new WebAppDeploymentCommandContext(
+    private AppServiceDeploymentCommandContext getCommandContext() {
+        return new AppServiceDeploymentCommandContext(
                 credentials.getServicePrincipal(),
                 appService.getResourceGroupName(),
                 Region.fromName(appService.getAppServicePlan().getRegion()),
                 appService.getAppServiceName(),
                 appService.getAppServicePlan().getAppServicePlanName(),
-                filePath
+                appService.getAppServicePlan().getPricingTier(),
+                filePath,
+                !appService.isCreateNewAppServiceEnabled(),
+                !appService.getAppServicePlan().isCreateAppServicePlanEnabled()
         );
     }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         listener.getLogger().println("Starting Azure Container Service Deployment");
-        WebAppDeploymentCommandContext commandContext = getCommandContext();
+        AppServiceDeploymentCommandContext commandContext = getCommandContext();
 
         commandContext.configure(listener);
 

@@ -6,8 +6,8 @@
         <f:textbox default="${descriptor.defaultAppServiceName()}"/>
     </f:entry>
 
-    <f:optionalBlock title="${%Create_New_AppService}" field="useExistingAppService" name="useExistingAppService" inline="true" 
-                         checked="${instance!=null &amp;&amp; instance.isUseExistingAppServiceEnabled()}"
+    <f:optionalBlock title="${%Create_New_AppService}" field="createNewAppService" name="createNewAppService" inline="true" 
+                         checked="${instance!=null &amp;&amp; instance.isCreateNewAppServiceEnabled()}"
                          help="/plugin/azure-app-service/help-createNewAppService.html">
 
         <f:entry title="${%Resource_Group_Name}" field="resourceGroupName" 

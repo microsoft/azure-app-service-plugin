@@ -6,17 +6,6 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.microsoft.azure.util.AzureCredentials;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCommand.IGetPublishSettingsCommandData> {
 
@@ -69,14 +58,13 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
 
         public String getResourceGroupName();
 
-        public String getWebappName();
+        public String getAppServiceName();
 
         /*public void setPublishUrl(String publishUrl);
 
         public void setUserName(String userName);
 
         public void setPassWord(String passWord);*/
-
         public AzureCredentials.ServicePrincipal getAzureServicePrincipal();
     }
 }

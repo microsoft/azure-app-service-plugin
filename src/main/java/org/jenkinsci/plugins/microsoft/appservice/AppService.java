@@ -16,18 +16,18 @@ public class AppService implements Describable<AppService> {
 
     private final String resourceGroupName;
     private final String appServiceName;
-    private final boolean useExistingAppService;
+    private final boolean createNewAppService;
     private final AppServicePlan appServicePlan;
 
     @DataBoundConstructor
     public AppService(
             final String resourceGroupName,
             final String appServiceName,
-            final boolean useExistingAppService,
+            final boolean createNewAppService,
             final AppServicePlan appServicePlan) {
         this.resourceGroupName = resourceGroupName;
         this.appServiceName = appServiceName;
-        this.useExistingAppService = useExistingAppService;
+        this.createNewAppService = createNewAppService;
         this.appServicePlan = appServicePlan;
     }
 
@@ -43,8 +43,8 @@ public class AppService implements Describable<AppService> {
         return this.appServiceName;
     }
 
-    public boolean isUseExistingAppServiceEnabled() {
-        return useExistingAppService;
+    public boolean isCreateNewAppServiceEnabled() {
+        return createNewAppService;
     }
 
     @SuppressWarnings("unchecked")
