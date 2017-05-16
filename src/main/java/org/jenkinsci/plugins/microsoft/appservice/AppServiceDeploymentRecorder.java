@@ -6,6 +6,7 @@
 package org.jenkinsci.plugins.microsoft.appservice;
 
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
+import hudson.FilePath;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import org.jenkinsci.plugins.microsoft.services.CommandService;
@@ -58,7 +59,9 @@ public class AppServiceDeploymentRecorder extends Recorder {
         return false;
     }
 
-    private AppServiceDeploymentCommandContext getCommandContext() {
+    private AppServiceDeploymentCommandContext getCommandContext(FilePath workspacePath) {
+        FilePath absFilePath = workspacePath.child(filePath);
+
         return new AppServiceDeploymentCommandContext(
                 credentials.getServicePrincipal(),
                 appService.getResourceGroupName(),
@@ -66,7 +69,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
                 appService.getAppServiceName(),
                 appService.getAppServicePlan().getAppServicePlanName(),
                 appService.getAppServicePlan().getPricingTier(),
-                filePath,
+                absFilePath.getRemote(),
                 !appService.isCreateNewAppServiceEnabled(),
                 !appService.getAppServicePlan().isCreateAppServicePlanEnabled()
         );
@@ -74,8 +77,11 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+        FilePath workspace = build.getWorkspace();
+        FilePath workspacePath = new FilePath(launcher.getChannel(), workspace.getRemote());
+
         listener.getLogger().println("Starting Azure Container Service Deployment");
-        AppServiceDeploymentCommandContext commandContext = getCommandContext();
+        AppServiceDeploymentCommandContext commandContext = getCommandContext(workspacePath);
 
         commandContext.configure(listener);
 

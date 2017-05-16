@@ -5,53 +5,37 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.appservice.PublishingProfile;
+import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.util.AzureCredentials;
+import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 
 public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCommand.IGetPublishSettingsCommandData> {
 
     @Override
     public void execute(GetPublishSettingsCommand.IGetPublishSettingsCommandData context) {
-        /*try {
+        try {
             context.logStatus("Retrieving FTP publish settings.");
             String resourceGroupName = context.getResourceGroupName();
-            String name = context.getWebappName();
+            String name = context.getAppServiceName();
 
-            WebSiteManagementClient website = context.getWebsiteClient();
-            StringBuffer buffer = new StringBuffer();
-            try (BufferedReader inStream = new BufferedReader(new InputStreamReader(website.getSitesOperations().listSitePublishingProfileXml(resourceGroupName, name, "Ftp").getBody()))) {
-                String line = inStream.readLine();
-                while (line != null) {
-                    buffer.append(line);
-                    line = inStream.readLine();
-                }
-            }
+            final Azure azureClient = TokenCache.getInstance(context.getAzureServicePrincipal()).getAzureClient();
+            final WebApp app = azureClient.webApps().getByGroup(resourceGroupName, name);
+            final PublishingProfile pubProfile = app.getPublishingProfile();
 
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            org.w3c.dom.Document doc = dBuilder.parse(new java.io.ByteArrayInputStream(buffer.toString().getBytes(StandardCharsets.UTF_8)));
-            NodeList nodeList = doc.getElementsByTagName("publishProfile");
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                NamedNodeMap attributes = nodeList.item(i).getAttributes();
-                Node node = attributes.getNamedItem("publishMethod");
-                if (node != null && "FTP".equals(node.getNodeValue())) {
-                    String appUrl = attributes.getNamedItem("destinationAppUrl").getNodeValue();
-                    context.logStatus("Destination Application Url: " + appUrl);
-                    context.setPublishUrl(attributes.getNamedItem("publishUrl").getNodeValue());
-                    context.setUserName(attributes.getNamedItem("userName").getNodeValue());
-                    context.setPassWord(attributes.getNamedItem("userPWD").getNodeValue());
-                    context.setDeploymentState(DeploymentState.Success);
-                    context.logStatus("Successfully retrieved FTP publish settings");
-                    return;
-                }
-            }
+            context.setFTPUrl(pubProfile.ftpUrl());
+            context.setFTPUserName(pubProfile.ftpUsername());
+            context.setFTPPassword(pubProfile.ftpPassword());
 
-            context.logError("FTP profile information not found");
-            context.setDeploymentState(DeploymentState.HasError);
-        } catch (CloudException | IllegalArgumentException | IOException
-                | ParserConfigurationException | SAXException e) {
+            context.setDeploymentState(DeploymentState.Success);
+            context.logStatus("Successfully retrieved FTP publish settings");
+
+        } catch (Exception e) {
             context.logError("Error retrieving FTP publish settings: " + e.getMessage());
             e.printStackTrace();
-        }*/
+            context.setDeploymentState(DeploymentState.HasError);
+        }
     }
 
     public interface IGetPublishSettingsCommandData extends IBaseCommandData {
@@ -60,11 +44,12 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
 
         public String getAppServiceName();
 
-        /*public void setPublishUrl(String publishUrl);
+        public void setFTPUrl(String publishUrl);
 
-        public void setUserName(String userName);
+        public void setFTPUserName(String userName);
 
-        public void setPassWord(String passWord);*/
+        public void setFTPPassword(String password);
+
         public AzureCredentials.ServicePrincipal getAzureServicePrincipal();
     }
 }
