@@ -8,6 +8,8 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.AppServicePlan;
 import com.microsoft.azure.management.appservice.AppServicePricingTier;
+import com.microsoft.azure.management.appservice.JavaVersion;
+import com.microsoft.azure.management.appservice.WebContainer;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
 import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
@@ -44,7 +46,10 @@ public class CreateWebAppCommand implements ICommand<CreateWebAppCommand.ICreate
                     azureClient.webApps()
                             .define(webAppName)
                             .withExistingResourceGroup(resourceGroupName)
-                            .withExistingAppServicePlan(asp).create();
+                            .withExistingAppServicePlan(asp)
+                            .withJavaVersion(JavaVersion.JAVA_8_NEWEST)     // TODO: Give user an option
+                            .withWebContainer(WebContainer.TOMCAT_8_0_NEWEST)
+                            .create();
                 } else {
                     context.logStatus(String.format("Create Web App '%s' with App service Plan'%s' if any doesn't exist", webAppName, appServicePlan));
                     azureClient.webApps()
@@ -53,6 +58,8 @@ public class CreateWebAppCommand implements ICommand<CreateWebAppCommand.ICreate
                             .withNewAppServicePlan(appServicePlan)
                             .withRegion(region)
                             .withPricingTier(pricingTier)
+                            .withJavaVersion(JavaVersion.JAVA_8_NEWEST)     // TODO: Give user an option
+                            .withWebContainer(WebContainer.TOMCAT_8_0_NEWEST)
                             .create();
                 }
                 context.setDeploymentState(DeploymentState.Success);

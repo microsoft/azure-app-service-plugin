@@ -43,6 +43,10 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     private final boolean useExistingAppService;
     private final boolean useExistingAppServicePlan;
 
+    private String ftpUrl;
+    private String ftpUserName;
+    private String ftpPassword;
+
     public AppServiceDeploymentCommandContext(
             final AzureCredentials.ServicePrincipal servicePrincipal,
             final String resourceGroupName,
@@ -117,19 +121,25 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         return filePath;
     }
 
-    public String getPublishUrl() {
-        return "";
+    @Override
+    public void setFTPUrl(String ftpUrl) { this.ftpUrl = ftpUrl; }
+
+    @Override
+    public String getFTPUrl() {
+        return ftpUrl;
     }
 
     @Override
-    public String getUserName() {
-        return "";
-    }
+    public void setFTPUserName(String userName) { this.ftpUserName = userName; }
 
     @Override
-    public String getPassWord() {
-        return "";
-    }
+    public String getFTPUserName() { return ftpUserName; }
+
+    @Override
+    public void setFTPPassword(String password) { this.ftpPassword = password; }
+
+    @Override
+    public String getFTPPassword() { return ftpPassword; }
 
     @Override
     public AppServicePricingTier getAppServicePricingTier() {

@@ -11,6 +11,7 @@ import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.util.AzureCredentials;
 import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 
+// TODO: This can be merged into `GetPublishSettingsCommand`
 public class ValidateWebAppCommand implements ICommand<ValidateWebAppCommand.IValidateWebAppCommandData> {
 
     @Override
