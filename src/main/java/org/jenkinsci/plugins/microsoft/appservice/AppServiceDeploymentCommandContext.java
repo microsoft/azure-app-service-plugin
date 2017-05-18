@@ -18,8 +18,6 @@ import org.jenkinsci.plugins.microsoft.appservice.commands.GetPublishSettingsCom
 import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
 import org.jenkinsci.plugins.microsoft.appservice.commands.ICommand;
 import org.jenkinsci.plugins.microsoft.appservice.commands.ResourceGroupCommand;
-import org.jenkinsci.plugins.microsoft.appservice.commands.TemplateDeployCommand;
-import org.jenkinsci.plugins.microsoft.appservice.commands.TemplateMonitorCommand;
 import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
 import org.jenkinsci.plugins.microsoft.appservice.commands.UploadWarCommand;
 import org.jenkinsci.plugins.microsoft.appservice.commands.ValidateWebAppCommand;
@@ -29,9 +27,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         UploadWarCommand.IUploadWarCommandData,
         ValidateWebAppCommand.IValidateWebAppCommandData,
         CreateWebAppCommand.ICreateWebAppCommandData,
-        GetPublishSettingsCommand.IGetPublishSettingsCommandData,
-        TemplateDeployCommand.ITemplateDeployCommandData,
-        TemplateMonitorCommand.ITemplateMonitorCommandData {
+        GetPublishSettingsCommand.IGetPublishSettingsCommandData {
 
     private final AzureCredentials.ServicePrincipal servicePrincipal;
     private final String resourceGroupName;
@@ -77,10 +73,8 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         HashMap<Class, TransitionInfo> commands = new HashMap<>();
         commands.put(ResourceGroupCommand.class, new TransitionInfo(new ResourceGroupCommand(), CreateWebAppCommand.class, null));
         commands.put(CreateWebAppCommand.class, new TransitionInfo(new CreateWebAppCommand(), ValidateWebAppCommand.class, null));
-        commands.put(ValidateWebAppCommand.class, new TransitionInfo(new ValidateWebAppCommand(), GetPublishSettingsCommand.class, TemplateDeployCommand.class));
+        commands.put(ValidateWebAppCommand.class, new TransitionInfo(new ValidateWebAppCommand(), GetPublishSettingsCommand.class, null));
         commands.put(GetPublishSettingsCommand.class, new TransitionInfo(new GetPublishSettingsCommand(), UploadWarCommand.class, null));
-        commands.put(TemplateDeployCommand.class, new TransitionInfo(new TemplateDeployCommand(), TemplateMonitorCommand.class, null));
-        commands.put(TemplateMonitorCommand.class, new TransitionInfo(new TemplateMonitorCommand(), GetPublishSettingsCommand.class, null));
         commands.put(UploadWarCommand.class, new TransitionInfo(new UploadWarCommand(), null, null));
         super.configure(listener, commands, ResourceGroupCommand.class);
         this.setDeploymentState(DeploymentState.Running);
