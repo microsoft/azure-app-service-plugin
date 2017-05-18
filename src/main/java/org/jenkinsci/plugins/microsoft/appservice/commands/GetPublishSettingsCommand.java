@@ -32,9 +32,9 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
             context.logStatus("Successfully retrieved FTP publish settings");
 
         } catch (Exception e) {
-            context.logError("Error retrieving FTP publish settings: " + e.getMessage());
             e.printStackTrace();
             context.setDeploymentState(DeploymentState.HasError);
+            context.logError("Error retrieving FTP publish settings: " + e.getMessage());
         }
     }
 
