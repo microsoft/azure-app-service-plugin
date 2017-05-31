@@ -80,7 +80,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         FilePath workspace = build.getWorkspace();
         FilePath workspacePath = new FilePath(launcher.getChannel(), workspace.getRemote());
 
-        listener.getLogger().println("Starting Azure Container Service Deployment");
+        listener.getLogger().println("Starting Azure App Service Deployment");
         AppServiceDeploymentCommandContext commandContext = getCommandContext(workspacePath);
 
         commandContext.configure(listener);
@@ -90,7 +90,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         if (commandContext.getHasError()) {
             return false;
         } else {
-            listener.getLogger().println("Done Azure Container Service Deployment");
+            listener.getLogger().println("Done Azure App Service Deployment");
             return true;
         }
     }

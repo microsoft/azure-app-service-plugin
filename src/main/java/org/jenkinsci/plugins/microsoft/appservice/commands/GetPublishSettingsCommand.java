@@ -22,8 +22,13 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
 
             final Azure azureClient = TokenCache.getInstance(context.getAzureServicePrincipal()).getAzureClient();
             final WebApp app = azureClient.webApps().getByGroup(resourceGroupName, name);
-            final PublishingProfile pubProfile = app.getPublishingProfile();
+            if (app == null) {
+                context.logError(String.format("App %s in resource group %s not found", name, resourceGroupName));
+                context.setDeploymentState(DeploymentState.HasError);
+                return;
+            }
 
+            final PublishingProfile pubProfile = app.getPublishingProfile();
             context.setFTPUrl(pubProfile.ftpUrl());
             context.setFTPUserName(pubProfile.ftpUsername());
             context.setFTPPassword(pubProfile.ftpPassword());
