@@ -20,12 +20,10 @@ import org.jenkinsci.plugins.microsoft.appservice.commands.ICommand;
 import org.jenkinsci.plugins.microsoft.appservice.commands.ResourceGroupCommand;
 import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
 import org.jenkinsci.plugins.microsoft.appservice.commands.UploadWarCommand;
-import org.jenkinsci.plugins.microsoft.appservice.commands.ValidateWebAppCommand;
 
 public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         implements ResourceGroupCommand.IResourceGroupCommandData,
         UploadWarCommand.IUploadWarCommandData,
-        ValidateWebAppCommand.IValidateWebAppCommandData,
         CreateWebAppCommand.ICreateWebAppCommandData,
         GetPublishSettingsCommand.IGetPublishSettingsCommandData {
 
@@ -72,8 +70,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     public void configure(BuildListener listener) {
         HashMap<Class, TransitionInfo> commands = new HashMap<>();
         commands.put(ResourceGroupCommand.class, new TransitionInfo(new ResourceGroupCommand(), CreateWebAppCommand.class, null));
-        commands.put(CreateWebAppCommand.class, new TransitionInfo(new CreateWebAppCommand(), ValidateWebAppCommand.class, null));
-        commands.put(ValidateWebAppCommand.class, new TransitionInfo(new ValidateWebAppCommand(), GetPublishSettingsCommand.class, null));
+        commands.put(CreateWebAppCommand.class, new TransitionInfo(new CreateWebAppCommand(), GetPublishSettingsCommand.class, null));
         commands.put(GetPublishSettingsCommand.class, new TransitionInfo(new GetPublishSettingsCommand(), UploadWarCommand.class, null));
         commands.put(UploadWarCommand.class, new TransitionInfo(new UploadWarCommand(), null, null));
         super.configure(listener, commands, ResourceGroupCommand.class);
