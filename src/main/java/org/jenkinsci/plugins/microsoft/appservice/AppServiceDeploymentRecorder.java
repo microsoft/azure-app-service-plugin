@@ -21,6 +21,8 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 
+import java.io.IOException;
+
 public class AppServiceDeploymentRecorder extends Recorder {
 
     private final AzureAuth credentials;
@@ -59,9 +61,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         return false;
     }
 
-    private AppServiceDeploymentCommandContext getCommandContext(FilePath workspacePath) {
-        FilePath absFilePath = workspacePath.child(filePath);
-
+    private AppServiceDeploymentCommandContext getCommandContext(FilePath absFilePath) {
         return new AppServiceDeploymentCommandContext(
                 credentials.getServicePrincipal(),
                 appService.getResourceGroupName(),
@@ -76,12 +76,14 @@ public class AppServiceDeploymentRecorder extends Recorder {
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+            throws IOException, InterruptedException {
         FilePath workspace = build.getWorkspace();
         FilePath workspacePath = new FilePath(launcher.getChannel(), workspace.getRemote());
+        FilePath absFilePath = workspacePath.child(build.getEnvironment(listener).expand(filePath));
 
         listener.getLogger().println("Starting Azure App Service Deployment");
-        AppServiceDeploymentCommandContext commandContext = getCommandContext(workspacePath);
+        AppServiceDeploymentCommandContext commandContext = getCommandContext(absFilePath);
 
         commandContext.configure(listener);
 
