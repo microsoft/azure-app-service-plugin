@@ -11,8 +11,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
 
 public class UploadWarCommand implements ICommand<UploadWarCommand.IUploadWarCommandData> {
+
+    private static final String ROOT_WAR = "ROOT.war";
+
+    private static final String ROOT_DIR = "ROOT";
 
     public void execute(UploadWarCommand.IUploadWarCommandData context) {
         FTPClient ftpClient = new FTPClient();
@@ -43,6 +48,11 @@ public class UploadWarCommand implements ICommand<UploadWarCommand.IUploadWarCom
             context.logStatus(
                     String.format("Working directory for FTP upload: %s", ftpClient.printWorkingDirectory()));
 
+            // Deploying to website root, remove the default directory first
+            if (fileName.equals(ROOT_WAR)) {
+                removeFtpDirectory(context, ftpClient, ROOT_DIR);
+            }
+
             ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
             try (InputStream stream = new FileInputStream(filePath)) {
                 ftpClient.storeFile(fileName, stream);
@@ -64,6 +74,41 @@ public class UploadWarCommand implements ICommand<UploadWarCommand.IUploadWarCom
                 }
             }
         }
+    }
+
+    /**
+     * Remove FTP directory recursively
+     * @param context Command context
+     * @param ftpClient FTP client
+     * @param dir Directory to remove
+     * @throws IOException
+     */
+    private void removeFtpDirectory(UploadWarCommand.IUploadWarCommandData context, FTPClient ftpClient, String dir) throws IOException {
+        context.logStatus("Removing remote directory: " + dir);
+
+        FTPFile[] subFiles = ftpClient.listFiles(dir);
+        if (subFiles.length > 0) {
+            for (FTPFile ftpFile : subFiles) {
+                String fileName = ftpFile.getName();
+                if (fileName.equals(".") || fileName.equals("..")) {
+                    // Skip
+                    continue;
+                }
+
+                String fullFileName = dir + "/" + fileName;
+                if (ftpFile.isDirectory()) {
+                    // Remove sub directory recursively
+                    removeFtpDirectory(context, ftpClient, fullFileName);
+                } else {
+                    // Delete regular file
+                    context.logStatus("Removing remote file: " + fullFileName);
+
+                    ftpClient.deleteFile(fullFileName);
+                }
+            }
+        }
+
+        ftpClient.removeDirectory(dir);
     }
 
     public interface IUploadWarCommandData extends IBaseCommandData {
