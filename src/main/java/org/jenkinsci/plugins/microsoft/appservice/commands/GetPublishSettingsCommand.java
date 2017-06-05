@@ -29,9 +29,7 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
             }
 
             final PublishingProfile pubProfile = app.getPublishingProfile();
-            context.setFTPUrl(pubProfile.ftpUrl());
-            context.setFTPUserName(pubProfile.ftpUsername());
-            context.setFTPPassword(pubProfile.ftpPassword());
+            context.setPublishingProfile(pubProfile);
 
             context.setDeploymentState(DeploymentState.Success);
             context.logStatus("Successfully retrieved FTP publish settings");
@@ -49,11 +47,7 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
 
         public String getAppServiceName();
 
-        public void setFTPUrl(String publishUrl);
-
-        public void setFTPUserName(String userName);
-
-        public void setFTPPassword(String password);
+        public void setPublishingProfile(PublishingProfile profile);
 
         public AzureCredentials.ServicePrincipal getAzureServicePrincipal();
     }

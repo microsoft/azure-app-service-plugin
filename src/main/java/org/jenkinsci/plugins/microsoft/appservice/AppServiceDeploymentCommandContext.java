@@ -6,6 +6,7 @@
 package org.jenkinsci.plugins.microsoft.appservice;
 
 import com.microsoft.azure.management.appservice.AppServicePricingTier;
+import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.SkuDescription;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
@@ -37,9 +38,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     private final boolean useExistingAppService;
     private final boolean useExistingAppServicePlan;
 
-    private String ftpUrl;
-    private String ftpUserName;
-    private String ftpPassword;
+    private PublishingProfile pubProfile;
 
     public AppServiceDeploymentCommandContext(
             final AzureCredentials.ServicePrincipal servicePrincipal,
@@ -113,24 +112,14 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     }
 
     @Override
-    public void setFTPUrl(String ftpUrl) { this.ftpUrl = ftpUrl; }
-
-    @Override
-    public String getFTPUrl() {
-        return ftpUrl;
+    public PublishingProfile getPublishingProfile() {
+        return pubProfile;
     }
 
     @Override
-    public void setFTPUserName(String userName) { this.ftpUserName = userName; }
-
-    @Override
-    public String getFTPUserName() { return ftpUserName; }
-
-    @Override
-    public void setFTPPassword(String password) { this.ftpPassword = password; }
-
-    @Override
-    public String getFTPPassword() { return ftpPassword; }
+    public void setPublishingProfile(PublishingProfile profile) {
+        pubProfile = profile;
+    }
 
     @Override
     public AppServicePricingTier getAppServicePricingTier() {
