@@ -56,9 +56,7 @@ public class ITGetPublishSettingsCommand extends IntegrationTest {
         command.execute(commandDataMock);
 
         verify(commandDataMock, times(1)).setDeploymentState(DeploymentState.Success);
-        verify(commandDataMock, times(1)).setFTPUrl(pubProfile.ftpUrl());
-        verify(commandDataMock, times(1)).setFTPUserName(pubProfile.ftpUsername());
-        verify(commandDataMock, times(1)).setFTPPassword(pubProfile.ftpPassword());
+        verify(commandDataMock, times(1)).setPublishingProfile(pubProfile);
     }
 
     @Test

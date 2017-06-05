@@ -6,6 +6,7 @@
 package org.jenkinsci.plugins.microsoft.appservice.test;
 
 import com.microsoft.azure.management.appservice.AppServicePricingTier;
+import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
 import hudson.model.BuildListener;
@@ -15,6 +16,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class AppServiceDeploymentCommandContextTest {
 
@@ -45,13 +47,16 @@ public class AppServiceDeploymentCommandContextTest {
         Assert.assertFalse(ctx.getIsFinished());
         Assert.assertEquals(DeploymentState.Unknown, ctx.getDeploymentState());
 
-        ctx.setFTPUrl("ftp://example.com");
-        ctx.setFTPUserName("user");
-        ctx.setFTPPassword("pass");
+        final PublishingProfile pubProfile = mock(PublishingProfile.class);
+        when(pubProfile.ftpUrl()).thenReturn("ftp://example.com");
+        when(pubProfile.ftpUsername()).thenReturn("user");
+        when(pubProfile.ftpPassword()).thenReturn("pass");
 
-        Assert.assertEquals("ftp://example.com", ctx.getFTPUrl());
-        Assert.assertEquals("user", ctx.getFTPUserName());
-        Assert.assertEquals("pass", ctx.getFTPPassword());
+        ctx.setPublishingProfile(pubProfile);
+
+        Assert.assertEquals("ftp://example.com", ctx.getPublishingProfile().ftpUrl());
+        Assert.assertEquals("user", ctx.getPublishingProfile().ftpUsername());
+        Assert.assertEquals("pass", ctx.getPublishingProfile().ftpPassword());
 
         final BuildListener listener = mock(BuildListener.class);
         ctx.configure(listener);

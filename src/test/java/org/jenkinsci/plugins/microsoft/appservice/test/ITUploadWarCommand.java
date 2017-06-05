@@ -66,9 +66,7 @@ public class ITUploadWarCommand extends IntegrationTest {
         Assert.assertNotNull(webApp);
 
         final PublishingProfile pubProfile = webApp.getPublishingProfile();
-        when(commandDataMock.getFTPUrl()).thenReturn(pubProfile.ftpUrl());
-        when(commandDataMock.getFTPUserName()).thenReturn(pubProfile.ftpUsername());
-        when(commandDataMock.getFTPPassword()).thenReturn(pubProfile.ftpPassword());
+        when(commandDataMock.getPublishingProfile()).thenReturn(pubProfile);
     }
 
     private void setUpWarFile(String path) {

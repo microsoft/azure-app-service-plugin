@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import com.microsoft.azure.management.appservice.PublishingProfile;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
@@ -20,11 +22,12 @@ public class UploadWarCommand implements ICommand<UploadWarCommand.IUploadWarCom
     private static final String ROOT_DIR = "ROOT";
 
     public void execute(UploadWarCommand.IUploadWarCommandData context) {
+        final PublishingProfile pubProfile = context.getPublishingProfile();
         FTPClient ftpClient = new FTPClient();
         try {
-            String ftpUrl = context.getFTPUrl();
-            String userName = context.getFTPUserName();
-            String password = context.getFTPPassword();
+            String ftpUrl = pubProfile.ftpUrl();
+            String userName = pubProfile.ftpUsername();
+            String password = pubProfile.ftpPassword();
             String filePath = context.getFilePath();
             context.logStatus(
                     String.format("Starting deployment of WAR File: %s", filePath));
@@ -113,11 +116,7 @@ public class UploadWarCommand implements ICommand<UploadWarCommand.IUploadWarCom
 
     public interface IUploadWarCommandData extends IBaseCommandData {
 
-        public String getFTPUrl();
-
-        public String getFTPUserName();
-
-        public String getFTPPassword();
+        public PublishingProfile getPublishingProfile();
 
         public String getFilePath();
     }
