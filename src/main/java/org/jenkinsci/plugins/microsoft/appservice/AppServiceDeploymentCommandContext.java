@@ -10,21 +10,17 @@ import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.SkuDescription;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
+import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import java.util.HashMap;
-import org.jenkinsci.plugins.microsoft.appservice.commands.AbstractCommandContext;
-import org.jenkinsci.plugins.microsoft.appservice.commands.CreateWebAppCommand;
-import org.jenkinsci.plugins.microsoft.appservice.commands.DeploymentState;
-import org.jenkinsci.plugins.microsoft.appservice.commands.GetPublishSettingsCommand;
-import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
-import org.jenkinsci.plugins.microsoft.appservice.commands.ICommand;
-import org.jenkinsci.plugins.microsoft.appservice.commands.ResourceGroupCommand;
-import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
-import org.jenkinsci.plugins.microsoft.appservice.commands.UploadWarCommand;
+
+import org.jenkinsci.plugins.gitclient.GitCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.*;
 
 public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         implements ResourceGroupCommand.IResourceGroupCommandData,
         UploadWarCommand.IUploadWarCommandData,
+        GitDeployCommand.IGitDeployCommandData,
         CreateWebAppCommand.ICreateWebAppCommandData,
         GetPublishSettingsCommand.IGetPublishSettingsCommandData {
 
@@ -66,13 +62,16 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         this.appServicePricingTier = AppServicePricingTier.fromSkuDescription(sd);
     }
 
-    public void configure(BuildListener listener) {
+    public void configure(AbstractBuild<?, ?> build, BuildListener listener) {
         HashMap<Class, TransitionInfo> commands = new HashMap<>();
         commands.put(ResourceGroupCommand.class, new TransitionInfo(new ResourceGroupCommand(), CreateWebAppCommand.class, null));
         commands.put(CreateWebAppCommand.class, new TransitionInfo(new CreateWebAppCommand(), GetPublishSettingsCommand.class, null));
-        commands.put(GetPublishSettingsCommand.class, new TransitionInfo(new GetPublishSettingsCommand(), UploadWarCommand.class, null));
-        commands.put(UploadWarCommand.class, new TransitionInfo(new UploadWarCommand(), null, null));
-        super.configure(listener, commands, ResourceGroupCommand.class);
+        // TODO: Remove FTP-based deployment after Git-base deployment fully tested
+        // commands.put(GetPublishSettingsCommand.class, new TransitionInfo(new GetPublishSettingsCommand(), UploadWarCommand.class, null));
+        // commands.put(UploadWarCommand.class, new TransitionInfo(new UploadWarCommand(), null, null));
+        commands.put(GetPublishSettingsCommand.class, new TransitionInfo(new GetPublishSettingsCommand(), GitDeployCommand.class, null));
+        commands.put(GitDeployCommand.class, new TransitionInfo(new GitDeployCommand(), null, null));
+        super.configure(build, listener, commands, ResourceGroupCommand.class);
         this.setDeploymentState(DeploymentState.Running);
     }
 

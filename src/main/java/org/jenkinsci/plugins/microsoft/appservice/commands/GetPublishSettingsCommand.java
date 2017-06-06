@@ -16,7 +16,7 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
     @Override
     public void execute(GetPublishSettingsCommand.IGetPublishSettingsCommandData context) {
         try {
-            context.logStatus("Retrieving FTP publish settings.");
+            context.logStatus("Retrieving publish settings");
             String resourceGroupName = context.getResourceGroupName();
             String name = context.getAppServiceName();
 
@@ -32,12 +32,12 @@ public class GetPublishSettingsCommand implements ICommand<GetPublishSettingsCom
             context.setPublishingProfile(pubProfile);
 
             context.setDeploymentState(DeploymentState.Success);
-            context.logStatus("Successfully retrieved FTP publish settings");
+            context.logStatus("Successfully retrieved publish settings");
 
         } catch (Exception e) {
             e.printStackTrace();
             context.setDeploymentState(DeploymentState.HasError);
-            context.logError("Error retrieving FTP publish settings: " + e.getMessage());
+            context.logError("Error retrieving publish settings: " + e.getMessage());
         }
     }
 

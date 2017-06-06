@@ -126,7 +126,13 @@
             <artifactId>azure-credentials</artifactId>
             <version>${azure-credentials.version}</version>
         </dependency>
-    
+
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>git-client</artifactId>
+            <version>2.4.6</version>
+        </dependency>
+
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

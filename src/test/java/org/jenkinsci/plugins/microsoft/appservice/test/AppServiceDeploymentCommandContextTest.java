@@ -9,7 +9,9 @@ import com.microsoft.azure.management.appservice.AppServicePricingTier;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
+import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
+import hudson.model.FreeStyleBuild;
 import org.jenkinsci.plugins.microsoft.appservice.AppServiceDeploymentCommandContext;
 import org.jenkinsci.plugins.microsoft.appservice.commands.DeploymentState;
 import org.junit.Assert;
@@ -58,8 +60,9 @@ public class AppServiceDeploymentCommandContextTest {
         Assert.assertEquals("user", ctx.getPublishingProfile().ftpUsername());
         Assert.assertEquals("pass", ctx.getPublishingProfile().ftpPassword());
 
+        final AbstractBuild<?, ?> build = mock(FreeStyleBuild.class);
         final BuildListener listener = mock(BuildListener.class);
-        ctx.configure(listener);
+        ctx.configure(build, listener);
 
         Assert.assertEquals(DeploymentState.Running, ctx.getDeploymentState());
     }
