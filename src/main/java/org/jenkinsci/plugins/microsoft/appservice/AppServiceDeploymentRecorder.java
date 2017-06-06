@@ -61,7 +61,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         return false;
     }
 
-    private AppServiceDeploymentCommandContext getCommandContext(FilePath absFilePath) {
+    private AppServiceDeploymentCommandContext getCommandContext(String filePath) {
         return new AppServiceDeploymentCommandContext(
                 credentials.getServicePrincipal(),
                 appService.getResourceGroupName(),
@@ -69,7 +69,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
                 appService.getAppServiceName(),
                 appService.getAppServicePlan().getAppServicePlanName(),
                 appService.getAppServicePlan().getPricingTier(),
-                absFilePath.getRemote(),
+                filePath,
                 !appService.isCreateNewAppServiceEnabled(),
                 !appService.getAppServicePlan().isCreateAppServicePlanEnabled()
         );
@@ -78,14 +78,12 @@ public class AppServiceDeploymentRecorder extends Recorder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws IOException, InterruptedException {
-        FilePath workspace = build.getWorkspace();
-        FilePath workspacePath = new FilePath(launcher.getChannel(), workspace.getRemote());
-        FilePath absFilePath = workspacePath.child(build.getEnvironment(listener).expand(filePath));
+        String expandedFilePath = build.getEnvironment(listener).expand(filePath);
 
         listener.getLogger().println("Starting Azure App Service Deployment");
-        AppServiceDeploymentCommandContext commandContext = getCommandContext(absFilePath);
+        AppServiceDeploymentCommandContext commandContext = getCommandContext(expandedFilePath);
 
-        commandContext.configure(listener);
+        commandContext.configure(build, listener);
 
         CommandService.executeCommands(commandContext);
 

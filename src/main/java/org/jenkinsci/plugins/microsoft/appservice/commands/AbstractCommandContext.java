@@ -5,20 +5,23 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
+import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import java.util.HashMap;
 import org.jenkinsci.plugins.microsoft.services.ICommandServiceData;
 
 public abstract class AbstractCommandContext implements ICommandServiceData {
 
+    private AbstractBuild<?, ?> build;
     private BuildListener listener;
     private DeploymentState deployState = DeploymentState.Unknown;
     private HashMap<Class, TransitionInfo> commands;
     private Class startCommandClass;
 
-    protected void configure(BuildListener listener,
+    protected void configure(AbstractBuild<?, ?> build, BuildListener listener,
             HashMap<Class, TransitionInfo> commands,
             Class startCommandClass) {
+        this.build = build;
         this.listener = listener;
         this.commands = commands;
         this.startCommandClass = startCommandClass;
@@ -50,6 +53,10 @@ public abstract class AbstractCommandContext implements ICommandServiceData {
     public boolean getIsFinished() {
         return this.deployState.equals(DeploymentState.HasError)
                 || this.deployState.equals(DeploymentState.Done);
+    }
+
+    public AbstractBuild<?, ?> getBuild() {
+        return this.build;
     }
 
     public BuildListener getListener() {
