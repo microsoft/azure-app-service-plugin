@@ -19,6 +19,7 @@
         <jenkins-test-harness.version>2.1</jenkins-test-harness.version>
         <jackson.version>2.7.4</jackson.version>
         <guava.version>15.0</guava.version>
+        <powermock.version>1.7.0RC2</powermock.version>
         <azuresdk.version>1.0.0-beta5</azuresdk.version>
         <azure-storage.version>4.4.0</azure-storage.version>
         <azure-credentials.version>1.0</azure-credentials.version>
@@ -189,6 +190,18 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>2.4.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4-legacy</artifactId>
+            <version>${powermock.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito2</artifactId>
+            <version>${powermock.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
