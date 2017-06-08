@@ -5,8 +5,12 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice;
 
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import hudson.FilePath;
+import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
+import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import org.jenkinsci.plugins.microsoft.services.CommandService;
@@ -61,29 +65,24 @@ public class AppServiceDeploymentRecorder extends Recorder {
         return false;
     }
 
-    private AppServiceDeploymentCommandContext getCommandContext(String filePath) {
-        return new AppServiceDeploymentCommandContext(
-                credentials.getServicePrincipal(),
-                appService.getResourceGroupName(),
-                Region.fromName(appService.getAppServicePlan().getRegion()),
-                appService.getAppServiceName(),
-                appService.getAppServicePlan().getAppServicePlanName(),
-                appService.getAppServicePlan().getPricingTier(),
-                filePath,
-                !appService.isCreateNewAppServiceEnabled(),
-                !appService.getAppServicePlan().isCreateAppServicePlanEnabled()
-        );
-    }
-
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws IOException, InterruptedException {
-        String expandedFilePath = build.getEnvironment(listener).expand(filePath);
-
         listener.getLogger().println("Starting Azure App Service Deployment");
-        AppServiceDeploymentCommandContext commandContext = getCommandContext(expandedFilePath);
 
-        commandContext.configure(build, listener);
+        // Get app info
+        final Azure azureClient = TokenCache.getInstance(credentials.getServicePrincipal()).getAzureClient();
+        final WebApp app = azureClient.webApps().getByGroup(appService.getResourceGroupName(), appService.getAppServiceName());
+        if (app == null) {
+            listener.getLogger().println(String.format("App %s in resource group %s not found",
+                appService.getAppServiceName(), appService.getResourceGroupName()));
+            return false;
+        }
+
+        final String expandedFilePath = build.getEnvironment(listener).expand(filePath);
+        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath);
+
+        commandContext.configure(build, listener, app);
 
         CommandService.executeCommands(commandContext);
 

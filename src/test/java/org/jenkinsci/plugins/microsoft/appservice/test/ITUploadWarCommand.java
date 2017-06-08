@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 
 public class ITUploadWarCommand extends IntegrationTest {
 
-    private static final Logger LOGGER = Logger.getLogger(ITGetPublishSettingsCommand.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(ITUploadWarCommand.class.getName());
     private UploadWarCommand command = null;
     private UploadWarCommand.IUploadWarCommandData commandDataMock = null;
     private WebApp webApp = null;
