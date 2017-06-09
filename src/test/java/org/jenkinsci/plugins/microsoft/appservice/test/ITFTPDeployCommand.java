@@ -9,19 +9,13 @@ import com.microsoft.azure.management.appservice.*;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
-import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.microsoft.appservice.commands.FTPDeployCommand;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.nio.file.Files;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 import static org.mockito.Mockito.mock;
@@ -79,74 +73,52 @@ public class ITFTPDeployCommand extends IntegrationTest {
         when(commandDataMock.getBuild()).thenReturn(build);
     }
 
-    private void setUpWarFile(String path) {
-        InputStream sampleApp = getClass().getResourceAsStream("sample-java-app/app.war");
-        File warFile = new File(workspace.getRemote(), path);
-        warFile.delete();
-        File parentDir = warFile.getParentFile();
-        parentDir.mkdirs();
-        try {
-            Files.copy(sampleApp, warFile.toPath());
-            warFile.deleteOnExit();
-        } catch (IOException e) {
-            e.printStackTrace();
-            Assert.fail(e.getMessage());
-        }
-    }
-
-    private void waitForAppReady(URL url, int timeout) throws IllegalStateException, InterruptedException {
-        int elapsed = 0;
-
-        while (elapsed < timeout) {
-            URLConnection conn = null;
-            try {
-                conn = url.openConnection();
-                InputStream in = conn.getInputStream();
-                String content = IOUtils.toString(in, "UTF-8");
-
-                if (content.indexOf("Sample \"Hello, World\" Application") > 0) {
-                    LOGGER.info("App is running");
-                    return;
-                }
-            } catch (IOException e) {
-                // Ignore and continue waiting
-            }
-
-            elapsed++;
-            TimeUnit.SECONDS.sleep(1);
-        }
-
-        throw new IllegalStateException("App failed to start in timeout");
-    }
-
     /**
      * This test uploads a war file to a non-root directory and verifies web page content
-     * @throws MalformedURLException
+     * @throws IOException
      * @throws InterruptedException
      */
     @Test
-    public void uploadNonRoot() throws MalformedURLException, InterruptedException {
-        setUpWarFile("webapps/sample.war");
+    public void uploadNonRoot() throws IOException, InterruptedException {
+        Utils.extractResourceFile(getClass(), "sample-java-app/app.war", workspace.child("webapps/sample.war").getRemote());
         when(commandDataMock.getFilePath()).thenReturn("webapps/sample.war");
 
         command.execute(commandDataMock);
 
-        waitForAppReady(new URL("https://" + webApp.defaultHostName() + "/sample/"), 300);
+        Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName() + "/sample/"),"Sample \"Hello, World\" Application", 300);
     }
 
     /**
      * This test uploads a war file to a root directory and verifies web page content
-     * @throws MalformedURLException
+     * @throws IOException
      * @throws InterruptedException
      */
     @Test
-    public void uploadRoot() throws MalformedURLException, InterruptedException {
-        setUpWarFile("webapps/ROOT.war");
+    public void uploadRoot() throws IOException, InterruptedException {
+        Utils.extractResourceFile(getClass(), "sample-java-app/app.war", workspace.child("webapps/ROOT.war").getRemote());
         when(commandDataMock.getFilePath()).thenReturn("webapps/ROOT.war");
 
         command.execute(commandDataMock);
 
-        waitForAppReady(new URL("https://" + webApp.defaultHostName()), 300);
+        Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName()), "Sample \"Hello, World\" Application", 300);
+    }
+
+    /**
+     * This test uploads a standalone application which does not use the default tomcat
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    @Test
+    public void uploadStandalone() throws IOException, InterruptedException {
+        Utils.extractResourceFile(getClass(), "sample-java-app-spring-boot/gs-spring-boot-0.1.0.jar",
+            workspace.child("gs-spring-boot-0.1.0.jar").getRemote());
+        Utils.extractResourceFile(getClass(), "sample-java-app-spring-boot/web.config",
+            workspace.child("web.config").getRemote());
+        when(commandDataMock.getFilePath()).thenReturn("*.jar,web.config");
+
+        command.execute(commandDataMock);
+
+        Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName()), "Greetings from Spring Boot!", 300);
     }
 
 }
