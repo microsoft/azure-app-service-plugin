@@ -102,7 +102,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         }
 
         public String getDisplayName() {
-            return "Publish an Azure WebApp";
+            return "Publish an Azure Web App";
         }
     }
 }
