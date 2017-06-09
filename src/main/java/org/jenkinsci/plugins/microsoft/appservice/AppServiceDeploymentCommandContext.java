@@ -13,7 +13,7 @@ import java.util.HashMap;
 import org.jenkinsci.plugins.microsoft.appservice.commands.*;
 
 public class AppServiceDeploymentCommandContext extends AbstractCommandContext
-        implements UploadWarCommand.IUploadWarCommandData,
+        implements FTPDeployCommand.IFTPDeployCommandData,
         GitDeployCommand.IGitDeployCommandData {
 
     private final String filePath;
@@ -31,9 +31,9 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
 
         Class deployCommandClass = null;
         if (app.javaVersion() != JavaVersion.OFF) {
-            // For Java application, use FTP-based deployment as it's the recommend way
-            deployCommandClass = UploadWarCommand.class;
-            commands.put(UploadWarCommand.class, new TransitionInfo(new UploadWarCommand(), null, null));
+            // For Java application, use FTP-based deployment as it's the recommended way
+            deployCommandClass = FTPDeployCommand.class;
+            commands.put(FTPDeployCommand.class, new TransitionInfo(new FTPDeployCommand(), null, null));
         } else {
             // For non-Java application, use Git-based deployment
             deployCommandClass = GitDeployCommand.class;

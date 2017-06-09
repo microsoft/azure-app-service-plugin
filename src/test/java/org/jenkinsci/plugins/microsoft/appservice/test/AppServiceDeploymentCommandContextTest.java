@@ -15,7 +15,7 @@ import org.jenkinsci.plugins.microsoft.appservice.AppServiceDeploymentCommandCon
 import org.jenkinsci.plugins.microsoft.appservice.commands.DeploymentState;
 import org.jenkinsci.plugins.microsoft.appservice.commands.GitDeployCommand;
 import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
-import org.jenkinsci.plugins.microsoft.appservice.commands.UploadWarCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.FTPDeployCommand;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -66,13 +66,13 @@ public class AppServiceDeploymentCommandContextTest {
         ctx.configure(build, listener, app);
         HashMap<Class, TransitionInfo> commands = ctx.getCommands();
         Assert.assertTrue(commands.containsKey(GitDeployCommand.class));
-        Assert.assertFalse(commands.containsKey(UploadWarCommand.class));
+        Assert.assertFalse(commands.containsKey(FTPDeployCommand.class));
 
         // Java Application
         when(app.javaVersion()).thenReturn(JavaVersion.JAVA_8_NEWEST);
         ctx.configure(build, listener, app);
         commands = ctx.getCommands();
         Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
-        Assert.assertTrue(commands.containsKey(UploadWarCommand.class));
+        Assert.assertTrue(commands.containsKey(FTPDeployCommand.class));
     }
 }

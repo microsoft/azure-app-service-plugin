@@ -7,12 +7,13 @@ package org.jenkinsci.plugins.microsoft.appservice.test;
 
 import com.microsoft.azure.management.appservice.*;
 import com.microsoft.azure.management.resources.ResourceGroup;
+import hudson.FilePath;
+import hudson.model.AbstractBuild;
 import org.apache.commons.io.IOUtils;
-import org.jenkinsci.plugins.microsoft.appservice.commands.UploadWarCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.FTPDeployCommand;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,19 +27,20 @@ import java.util.logging.Logger;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ITUploadWarCommand extends IntegrationTest {
+public class ITFTPDeployCommand extends IntegrationTest {
 
-    private static final Logger LOGGER = Logger.getLogger(ITUploadWarCommand.class.getName());
-    private UploadWarCommand command = null;
-    private UploadWarCommand.IUploadWarCommandData commandDataMock = null;
+    private static final Logger LOGGER = Logger.getLogger(ITFTPDeployCommand.class.getName());
+    private FTPDeployCommand command = null;
+    private FTPDeployCommand.IFTPDeployCommandData commandDataMock = null;
     private WebApp webApp = null;
+    private FilePath workspace = null;
 
     @Override
     @Before
     public void setUp() {
         super.setUp();
-        command = new UploadWarCommand();
-        commandDataMock = mock(UploadWarCommand.IUploadWarCommandData.class);
+        command = new FTPDeployCommand();
+        commandDataMock = mock(FTPDeployCommand.IFTPDeployCommandData.class);
         setUpBaseCommandMockErrorHandling(commandDataMock);
 
         // Setup web app
@@ -67,12 +69,22 @@ public class ITUploadWarCommand extends IntegrationTest {
 
         final PublishingProfile pubProfile = webApp.getPublishingProfile();
         when(commandDataMock.getPublishingProfile()).thenReturn(pubProfile);
+
+        File workspaceDir = com.google.common.io.Files.createTempDir();
+        workspaceDir.deleteOnExit();
+        workspace = new FilePath(workspaceDir);
+
+        final AbstractBuild build = mock(AbstractBuild.class);
+        when(build.getWorkspace()).thenReturn(workspace);
+        when(commandDataMock.getBuild()).thenReturn(build);
     }
 
     private void setUpWarFile(String path) {
-        InputStream sampleApp = getClass().getResourceAsStream("sample-app.war");
-        File warFile = new File(path);
+        InputStream sampleApp = getClass().getResourceAsStream("sample-java-app/app.war");
+        File warFile = new File(workspace.getRemote(), path);
         warFile.delete();
+        File parentDir = warFile.getParentFile();
+        parentDir.mkdirs();
         try {
             Files.copy(sampleApp, warFile.toPath());
             warFile.deleteOnExit();
@@ -114,8 +126,8 @@ public class ITUploadWarCommand extends IntegrationTest {
      */
     @Test
     public void uploadNonRoot() throws MalformedURLException, InterruptedException {
-        setUpWarFile("sample.war");
-        when(commandDataMock.getFilePath()).thenReturn("sample.war");
+        setUpWarFile("webapps/sample.war");
+        when(commandDataMock.getFilePath()).thenReturn("webapps/sample.war");
 
         command.execute(commandDataMock);
 
@@ -129,8 +141,8 @@ public class ITUploadWarCommand extends IntegrationTest {
      */
     @Test
     public void uploadRoot() throws MalformedURLException, InterruptedException {
-        setUpWarFile("ROOT.war");
-        when(commandDataMock.getFilePath()).thenReturn("ROOT.war");
+        setUpWarFile("webapps/ROOT.war");
+        when(commandDataMock.getFilePath()).thenReturn("webapps/ROOT.war");
 
         command.execute(commandDataMock);
 
