@@ -20,8 +20,7 @@
         <jackson.version>2.7.4</jackson.version>
         <guava.version>15.0</guava.version>
         <powermock.version>1.7.0RC2</powermock.version>
-        <azuresdk.version>1.0.0-beta5</azuresdk.version>
-        <azure-storage.version>4.4.0</azure-storage.version>
+        <azuresdk.version>1.1.0</azuresdk.version>
         <azure-credentials.version>1.0</azure-credentials.version>
     </properties>
 
@@ -80,42 +79,6 @@
             <version>${guava.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-storage</artifactId>
-            <version>${azure-storage.version}</version>
-        </dependency>
-    
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-mgmt-resources</artifactId>
-            <version>${azuresdk.version}</version>
-        </dependency>
-        <!--<dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-mgmt-website</artifactId>
-            <version>1.0.0-beta1</version>
-        </dependency>-->
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-mgmt-network</artifactId>
-            <version>${azuresdk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-mgmt-compute</artifactId>
-            <version>${azuresdk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-mgmt-storage</artifactId>
-            <version>${azuresdk.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure-mgmt-appservice</artifactId>
-            <version>${azuresdk.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure</artifactId>
