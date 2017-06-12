@@ -72,7 +72,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
         // Get app info
         final Azure azureClient = TokenCache.getInstance(credentials.getServicePrincipal()).getAzureClient();
-        final WebApp app = azureClient.webApps().getByGroup(appService.getResourceGroupName(), appService.getAppServiceName());
+        final WebApp app = azureClient.webApps().getByResourceGroup(appService.getResourceGroupName(), appService.getAppServiceName());
         if (app == null) {
             listener.getLogger().println(String.format("App %s in resource group %s not found",
                 appService.getAppServiceName(), appService.getResourceGroupName()));
