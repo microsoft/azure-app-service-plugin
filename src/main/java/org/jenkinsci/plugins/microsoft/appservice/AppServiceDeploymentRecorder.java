@@ -7,8 +7,7 @@ package org.jenkinsci.plugins.microsoft.appservice;
 
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.resources.fluentcore.arm.Region;
-import hudson.FilePath;
+import hudson.Util;
 import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -24,7 +23,9 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.annotation.CheckForNull;
 import java.io.IOException;
 
 public class AppServiceDeploymentRecorder extends Recorder {
@@ -32,6 +33,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
     private final AzureAuth credentials;
     private final AppService appService;
     private final String filePath;
+    private @CheckForNull String slotName;
 
     @DataBoundConstructor
     public AppServiceDeploymentRecorder(
@@ -53,6 +55,15 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
     public String getFilePath() {
         return this.filePath;
+    }
+
+    @DataBoundSetter
+    public void setSlotName(@CheckForNull String slotName) {
+        this.slotName = Util.fixNull(slotName);
+    }
+
+    public @CheckForNull String getSlotName() {
+        return slotName;
     }
 
     @Override
@@ -80,9 +91,14 @@ public class AppServiceDeploymentRecorder extends Recorder {
         }
 
         final String expandedFilePath = build.getEnvironment(listener).expand(filePath);
-        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath);
+        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath, slotName);
 
-        commandContext.configure(build, listener, app);
+        try {
+            commandContext.configure(build, listener, app);
+        } catch (AzureCloudException e) {
+            listener.fatalError(e.getMessage());
+            return false;
+        }
 
         CommandService.executeCommands(commandContext);
 
