@@ -16,5 +16,12 @@
                  help="/plugin/azure-app-service/help-filePath.html">
             <f:textbox />
         </f:entry>
+
+        <f:advanced>
+            <f:entry title="${%Slot_Name}" field="slotName"
+                     help="/plugin/azure-app-service/help-slotName.html">
+                <f:textbox />
+            </f:entry>
+        </f:advanced>
     </f:section>
 </j:jelly>

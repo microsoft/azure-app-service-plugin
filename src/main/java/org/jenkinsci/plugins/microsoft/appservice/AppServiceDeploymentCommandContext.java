@@ -10,22 +10,37 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import java.util.HashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.microsoft.appservice.commands.*;
+import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         implements FTPDeployCommand.IFTPDeployCommandData,
         GitDeployCommand.IGitDeployCommandData {
 
     private final String filePath;
+    private final String slotName;
 
     private PublishingProfile pubProfile;
 
-    public AppServiceDeploymentCommandContext(final String filePath) {
+    public AppServiceDeploymentCommandContext(final String filePath, final String slotName) {
         this.filePath = filePath;
+        this.slotName = slotName;
     }
 
-    public void configure(AbstractBuild<?, ?> build, BuildListener listener, WebApp app) {
-        pubProfile = app.getPublishingProfile();
+    public void configure(AbstractBuild<?, ?> build, BuildListener listener, WebApp app) throws AzureCloudException {
+        if (StringUtils.isBlank(slotName)) {
+            // Deploy to default
+            pubProfile = app.getPublishingProfile();
+        } else {
+            // Deploy to slot
+            DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
+            if (slot == null) {
+                throw new AzureCloudException(String.format("Slot %s not found", slotName));
+            }
+
+            pubProfile = slot.getPublishingProfile();
+        }
 
         HashMap<Class, TransitionInfo> commands = new HashMap<>();
 
