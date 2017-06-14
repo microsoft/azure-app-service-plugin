@@ -5,9 +5,7 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice.test;
 
-import com.microsoft.azure.management.appservice.JavaVersion;
-import com.microsoft.azure.management.appservice.PublishingProfile;
-import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.*;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
@@ -16,6 +14,7 @@ import org.jenkinsci.plugins.microsoft.appservice.commands.DeploymentState;
 import org.jenkinsci.plugins.microsoft.appservice.commands.GitDeployCommand;
 import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
 import org.jenkinsci.plugins.microsoft.appservice.commands.FTPDeployCommand;
+import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -27,8 +26,8 @@ import static org.mockito.Mockito.when;
 public class AppServiceDeploymentCommandContextTest {
 
     @Test
-    public void getterSetter() {
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
+    public void getterSetter() throws AzureCloudException {
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
 
         Assert.assertEquals("sample.war", ctx.getFilePath());
         Assert.assertFalse(ctx.getHasError());
@@ -54,8 +53,8 @@ public class AppServiceDeploymentCommandContextTest {
     }
 
     @Test
-    public void configure() {
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
+    public void configure() throws AzureCloudException {
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
 
         final AbstractBuild<?, ?> build = mock(FreeStyleBuild.class);
         final BuildListener listener = mock(BuildListener.class);
@@ -74,5 +73,48 @@ public class AppServiceDeploymentCommandContextTest {
         commands = ctx.getCommands();
         Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
         Assert.assertTrue(commands.containsKey(FTPDeployCommand.class));
+    }
+
+    @Test
+    public void configureSlot() throws AzureCloudException {
+        final AbstractBuild<?, ?> build = mock(FreeStyleBuild.class);
+        final BuildListener listener = mock(BuildListener.class);
+        final WebApp app = mock(WebApp.class);
+
+        // Mock slot publishing profile
+        final PublishingProfile slotPubProfile = mock(PublishingProfile.class);
+        when(slotPubProfile.ftpUsername()).thenReturn("slot-user");
+
+        final DeploymentSlot slot = mock(DeploymentSlot.class);
+        when(slot.getPublishingProfile()).thenReturn(slotPubProfile);
+
+        final DeploymentSlots slots = mock(DeploymentSlots.class);
+        when(slots.getByName("staging")).thenReturn(slot);
+
+        when(app.deploymentSlots()).thenReturn(slots);
+
+        // Mock default publishing profile
+        final PublishingProfile defaultPubProfile = mock(PublishingProfile.class);
+        when(defaultPubProfile.ftpUsername()).thenReturn("default-user");
+
+        when(app.getPublishingProfile()).thenReturn(defaultPubProfile);
+
+        // Configure default
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
+        ctx.configure(build, listener, app);
+        Assert.assertEquals("default-user", ctx.getPublishingProfile().ftpUsername());
+
+        // Configure slot
+        ctx = new AppServiceDeploymentCommandContext("sample.war", "staging");
+        ctx.configure(build, listener, app);
+        Assert.assertEquals("slot-user", ctx.getPublishingProfile().ftpUsername());
+
+        // Configure not existing slot
+        try {
+            ctx = new AppServiceDeploymentCommandContext("sample.war", "not-found");
+            ctx.configure(build, listener, app);
+            Assert.fail("Should throw exception when slot not found");
+        } catch (AzureCloudException ex) {
+        }
     }
 }

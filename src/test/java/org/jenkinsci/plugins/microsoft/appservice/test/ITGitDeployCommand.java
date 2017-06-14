@@ -6,7 +6,10 @@
 package org.jenkinsci.plugins.microsoft.appservice.test;
 
 import com.microsoft.azure.management.appservice.*;
+import com.microsoft.azure.management.resources.Deployment;
+import com.microsoft.azure.management.resources.DeploymentMode;
 import com.microsoft.azure.management.resources.ResourceGroup;
+import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.AbstractBuild;
@@ -57,6 +60,7 @@ public class ITGitDeployCommand extends IntegrationTest {
                 .withRegion(testEnv.azureLocation)
                 .withNewResourceGroup(testEnv.azureResourceGroup)
                 .withPricingTier(testEnv.appServicePricingTier)
+                .withOperatingSystem(OperatingSystem.WINDOWS)
                 .create();
         Assert.assertNotNull(appServicePlan);
 
@@ -91,8 +95,8 @@ public class ITGitDeployCommand extends IntegrationTest {
     public void deployNodeJS() throws IOException, InterruptedException {
         final WebApp webApp = customTokenCache.getAzureClient().appServices().webApps()
                 .define(testEnv.appServiceName)
+                .withExistingWindowsPlan(appServicePlan)
                 .withExistingResourceGroup(testEnv.azureResourceGroup)
-                .withExistingAppServicePlan(appServicePlan)
                 .create();
         Assert.assertNotNull(webApp);
         when(commandDataMock.getPublishingProfile()).thenReturn(webApp.getPublishingProfile());
@@ -116,8 +120,8 @@ public class ITGitDeployCommand extends IntegrationTest {
     public void deployPHP() throws IOException, InterruptedException {
         final WebApp webApp = customTokenCache.getAzureClient().appServices().webApps()
                 .define(testEnv.appServiceName)
+                .withExistingWindowsPlan(appServicePlan)
                 .withExistingResourceGroup(testEnv.azureResourceGroup)
-                .withExistingAppServicePlan(appServicePlan)
                 .withPhpVersion(PhpVersion.PHP5_6)
                 .create();
         Assert.assertNotNull(webApp);
@@ -140,8 +144,8 @@ public class ITGitDeployCommand extends IntegrationTest {
     public void deployPython() throws IOException, InterruptedException {
         final WebApp webApp = customTokenCache.getAzureClient().appServices().webApps()
                 .define(testEnv.appServiceName)
+                .withExistingWindowsPlan(appServicePlan)
                 .withExistingResourceGroup(testEnv.azureResourceGroup)
-                .withExistingAppServicePlan(appServicePlan)
                 .withPythonVersion(PythonVersion.PYTHON_34)
                 .create();
         Assert.assertNotNull(webApp);

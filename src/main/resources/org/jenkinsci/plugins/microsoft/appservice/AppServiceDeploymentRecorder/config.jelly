@@ -45,6 +45,13 @@
                 <f:password value="${it.getDockerRegistryPassword()}"/>
             </f:entry>
         </f:radioBlock>
+
+        <f:advanced>
+            <f:entry title="${%Slot_Name}" field="slotName"
+                     help="/plugin/azure-app-service/help-slotName.html">
+                <f:textbox/>
+            </f:entry>
+        </f:advanced>
     </f:section>
 
     <script>

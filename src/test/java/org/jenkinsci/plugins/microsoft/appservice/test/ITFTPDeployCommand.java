@@ -49,13 +49,14 @@ public class ITFTPDeployCommand extends IntegrationTest {
                 .withRegion(testEnv.azureLocation)
                 .withNewResourceGroup(testEnv.azureResourceGroup)
                 .withPricingTier(testEnv.appServicePricingTier)
+                .withOperatingSystem(OperatingSystem.WINDOWS)
                 .create();
         Assert.assertNotNull(asp);
 
         webApp = customTokenCache.getAzureClient().appServices().webApps()
                 .define(testEnv.appServiceName)
+                .withExistingWindowsPlan(asp)
                 .withExistingResourceGroup(testEnv.azureResourceGroup)
-                .withExistingAppServicePlan(asp)
                 .withJavaVersion(JavaVersion.JAVA_8_NEWEST)
                 .withWebContainer(WebContainer.TOMCAT_8_0_NEWEST)
                 .create();

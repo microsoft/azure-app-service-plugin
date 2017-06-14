@@ -8,10 +8,19 @@ package org.jenkinsci.plugins.microsoft.appservice;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.ctc.wstx.util.StringUtil;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.implementation.WebAppsInner;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.util.AzureCredentials;
+import hudson.Util;
+import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
+import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import org.jenkinsci.plugins.microsoft.services.CommandService;
+
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -33,6 +42,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
+import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.util.Collections;
 
@@ -47,6 +57,9 @@ public class AppServiceDeploymentRecorder extends Recorder {
     private String dockerFilePath;
     private String dockerRegistryUserName;
     private String dockerRegistryPassword;
+    private
+    @CheckForNull
+    String slotName;
 
     @DataBoundConstructor
     public AppServiceDeploymentRecorder(
@@ -124,6 +137,17 @@ public class AppServiceDeploymentRecorder extends Recorder {
         return dockerRegistryPassword;
     }
 
+    @DataBoundSetter
+    public void setSlotName(@CheckForNull String slotName) {
+        this.slotName = Util.fixNull(slotName);
+    }
+
+    public
+    @CheckForNull
+    String getSlotName() {
+        return slotName;
+    }
+
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
@@ -141,16 +165,21 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
         // Get app info
         final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-        final WebApp app = azureClient.webApps().getByGroup(resourceGroup, appService);
+        final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appService);
         if (app == null) {
             listener.getLogger().println(String.format("App %s in resource group %s not found", appService, resourceGroup));
             return false;
         }
 
         final String expandedFilePath = build.getEnvironment(listener).expand(filePath);
-        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath);
+        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath, slotName);
 
-        commandContext.configure(build, listener, app);
+        try {
+            commandContext.configure(build, listener, app);
+        } catch (AzureCloudException e) {
+            listener.fatalError(e.getMessage());
+            return false;
+        }
 
         CommandService.executeCommands(commandContext);
 
@@ -201,7 +230,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
             // list all app service
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                for (final WebApp webApp : azureClient.webApps().listByGroup(resourceGroup)) {
+                for (final WebApp webApp : azureClient.webApps().listByResourceGroup(resourceGroup)) {
                     model.add(webApp.name());
                 }
             }
@@ -215,9 +244,10 @@ public class AppServiceDeploymentRecorder extends Recorder {
         public boolean isWebAppOnLinux(final String azureCredentialsId, final String resourceGroup, final String appService) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                WebApp webApp = azureClient.webApps().getByGroup(resourceGroup, appService);
+                WebApp webApp = azureClient.webApps().getByResourceGroup(resourceGroup, appService);
                 if (webApp != null) {
-                    // todo check linuxFxVersion instead
+                    // todo check the linuxFxVersion
+                    // return StringUtils.isNotBlank(webApp.inner().siteConfig().linuxFxVersion()); // not work because siteconfig() return null
                     return webApp.name().contains("linux");
                 }
             }

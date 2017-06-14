@@ -6,7 +6,7 @@
 package org.jenkinsci.plugins.microsoft.appservice.test;
 
 import com.microsoft.azure.CloudException;
-import com.microsoft.azure.management.appservice.AppServicePricingTier;
+import com.microsoft.azure.management.appservice.PricingTier;
 import com.microsoft.azure.management.appservice.SkuDescription;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
@@ -56,7 +56,7 @@ public class IntegrationTest {
         public final String azureResourceGroup;
         public final String appServiceName;
         public final String appServicePlanName;
-        public final AppServicePricingTier appServicePricingTier;
+        public final PricingTier appServicePricingTier;
         public final Map<String, String> blobEndpointSuffixForTemplate;
         public final Map<String, String> blobEndpointSuffixForCloudStorageAccount;
         public final static String AZUREPUBLIC = "azure public";
@@ -84,7 +84,7 @@ public class IntegrationTest {
             SkuDescription sd = new SkuDescription();
             sd.withTier(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_PRICING_TIER_SKU", "FREE"));
             sd.withSize(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_PRICING_TIER_SIZE", "F1"));
-            appServicePricingTier = AppServicePricingTier.fromSkuDescription(sd);
+            appServicePricingTier = PricingTier.fromSkuDescription(sd);
 
             blobEndpointSuffixForTemplate = new HashMap<>();
             blobEndpointSuffixForTemplate.put(AZUREPUBLIC, ".blob.core.windows.net/");
