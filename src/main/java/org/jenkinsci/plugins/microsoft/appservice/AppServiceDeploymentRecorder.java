@@ -5,54 +5,123 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice;
 
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.resources.fluentcore.arm.Region;
-import hudson.FilePath;
-import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
-import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import org.jenkinsci.plugins.microsoft.services.CommandService;
-
+import com.microsoft.azure.management.resources.ResourceGroup;
+import com.microsoft.azure.util.AzureCredentials;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Item;
+import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import hudson.util.ListBoxModel;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
+import org.jenkinsci.plugins.microsoft.services.CommandService;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import java.io.IOException;
+import java.util.Collections;
 
 public class AppServiceDeploymentRecorder extends Recorder {
 
-    private final AzureAuth credentials;
-    private final AppService appService;
-    private final String filePath;
+    private final String azureCredentialsId;
+    private final String resourceGroup;
+    private final String appService;
+    private String publishType;
+    private String filePath;
+    private String dockerRegistry;
+    private String dockerFilePath;
+    private String dockerRegistryUserName;
+    private String dockerRegistryPassword;
 
     @DataBoundConstructor
     public AppServiceDeploymentRecorder(
-            final AzureAuth credentials,
-            final AppService appService,
-            final String filePath) {
-        this.credentials = credentials;
-        this.filePath = filePath;
+            final String azureCredentialsId,
+            final String appService,
+            final String resourceGroup) {
+        this.azureCredentialsId = azureCredentialsId;
+        this.resourceGroup = resourceGroup;
         this.appService = appService;
     }
 
-    public AzureAuth getCredentials() {
-        return credentials;
+    @DataBoundSetter
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
-    public AppService getAppService() {
-        return appService;
+    @DataBoundSetter
+    public void setPublishType(final String publishType) {
+        this.publishType = publishType;
+    }
+
+    @DataBoundSetter
+    public void setDockerRegistry(final String dockerRegistry) {
+        this.dockerRegistry = dockerRegistry;
+    }
+
+    @DataBoundSetter
+    public void setDockerFilePath(final String dockerFilePath) {
+        this.dockerFilePath = dockerFilePath;
+    }
+
+    @DataBoundSetter
+    public void setDockerRegistryUserName(final String dockerRegistryUserName) {
+        this.dockerRegistryUserName = dockerRegistryUserName;
+    }
+
+    @DataBoundSetter
+    public void setDockerRegistryPassword(final String dockerRegistryPassword) {
+        this.dockerRegistryPassword = dockerRegistryPassword;
     }
 
     public String getFilePath() {
-        return this.filePath;
+        return filePath;
+    }
+
+    public String getAzureCredentialsId() {
+        return azureCredentialsId;
+    }
+
+    public String getAppService() {
+        return appService;
+    }
+
+    public String getResourceGroup() {
+        return resourceGroup;
+    }
+
+    public String getPublishType() {
+        return publishType;
+    }
+
+    public String getDockerRegistry() {
+        return dockerRegistry;
+    }
+
+    public String getDockerFilePath() {
+        return dockerFilePath;
+    }
+
+    public String getDockerRegistryUserName() {
+        return dockerRegistryUserName;
+    }
+
+    public String getDockerRegistryPassword() {
+        return dockerRegistryPassword;
     }
 
     @Override
@@ -71,11 +140,10 @@ public class AppServiceDeploymentRecorder extends Recorder {
         listener.getLogger().println("Starting Azure App Service Deployment");
 
         // Get app info
-        final Azure azureClient = TokenCache.getInstance(credentials.getServicePrincipal()).getAzureClient();
-        final WebApp app = azureClient.webApps().getByGroup(appService.getResourceGroupName(), appService.getAppServiceName());
+        final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+        final WebApp app = azureClient.webApps().getByGroup(resourceGroup, appService);
         if (app == null) {
-            listener.getLogger().println(String.format("App %s in resource group %s not found",
-                appService.getAppServiceName(), appService.getResourceGroupName()));
+            listener.getLogger().println(String.format("App %s in resource group %s not found", appService, resourceGroup));
             return false;
         }
 
@@ -103,6 +171,58 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
         public String getDisplayName() {
             return "Publish an Azure Web App";
+        }
+
+        public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
+            return new StandardListBoxModel().withAll(
+                    CredentialsProvider.lookupCredentials(
+                            AzureCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()
+                    ));
+        }
+
+        public ListBoxModel doFillResourceGroupItems(@QueryParameter final String azureCredentialsId) {
+            ListBoxModel model = new ListBoxModel();
+            // list all app service
+            if (StringUtils.isNotBlank(azureCredentialsId)) {
+                final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+                for (final ResourceGroup rg : azureClient.resourceGroups().list()) {
+                    model.add(rg.name());
+                }
+            }
+            if (model.size() == 0) {
+                model.add("");
+            }
+            return model;
+        }
+
+        public ListBoxModel doFillAppServiceItems(@QueryParameter final String azureCredentialsId,
+                                                  @QueryParameter final String resourceGroup) {
+            ListBoxModel model = new ListBoxModel();
+            // list all app service
+            if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
+                final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+                for (final WebApp webApp : azureClient.webApps().listByGroup(resourceGroup)) {
+                    model.add(webApp.name());
+                }
+            }
+            if (model.size() == 0) {
+                model.add("");
+            }
+            return model;
+        }
+
+        @JavaScriptMethod
+        public boolean isWebAppOnLinux(final String azureCredentialsId, final String resourceGroup, final String appService) {
+            if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
+                final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+                WebApp webApp = azureClient.webApps().getByGroup(resourceGroup, appService);
+                if (webApp != null) {
+                    // todo check linuxFxVersion instead
+                    return webApp.name().contains("linux");
+                }
+            }
+
+            return false;
         }
     }
 }
