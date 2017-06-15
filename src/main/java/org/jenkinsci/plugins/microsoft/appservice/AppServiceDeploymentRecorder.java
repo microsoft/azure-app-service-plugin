@@ -8,21 +8,16 @@ package org.jenkinsci.plugins.microsoft.appservice;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
-import com.ctc.wstx.util.StringUtil;
+import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.appservice.implementation.WebAppsInner;
+import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
+import com.microsoft.azure.management.appservice.implementation.SiteInner;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.util.AzureCredentials;
-import hudson.Util;
-import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
-import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import org.jenkinsci.plugins.microsoft.services.CommandService;
-
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -34,7 +29,10 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.ListBoxModel;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.jenkinsci.plugins.microsoft.appservice.commands.DockerBuildInfo;
 import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
+import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.jenkinsci.plugins.microsoft.services.CommandService;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -172,7 +170,16 @@ public class AppServiceDeploymentRecorder extends Recorder {
         }
 
         final String expandedFilePath = build.getEnvironment(listener).expand(filePath);
-        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath, slotName);
+
+        final DockerBuildInfo dockerBuildInfo;
+        try {
+            dockerBuildInfo = validateDockerBuildInfo(build, listener, app);
+        } catch (AzureCloudException e) {
+            listener.getLogger().println(e.getMessage());
+            return false;
+        }
+        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(
+                expandedFilePath, publishType, slotName, dockerBuildInfo);
 
         try {
             commandContext.configure(build, listener, app);
@@ -189,6 +196,49 @@ public class AppServiceDeploymentRecorder extends Recorder {
             listener.getLogger().println("Done Azure App Service Deployment");
             return true;
         }
+    }
+
+    private DockerBuildInfo validateDockerBuildInfo(final AbstractBuild<?, ?> build, final BuildListener listener, final WebApp app)
+            throws IOException, InterruptedException, AzureCloudException {
+        final DockerBuildInfo dockerBuildInfo = new DockerBuildInfo();
+
+        final String linuxFxVersion = getLinuxFxVersion(app);
+        if (StringUtils.isBlank(linuxFxVersion)) {
+            // windows app doesn't need any docker config
+            if (this.publishType.equals(AppServiceDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
+                throw new AzureCloudException("Publish a windows web app through docker is not currently supported.");
+            }
+            return dockerBuildInfo;
+        }
+
+        dockerBuildInfo.setDockerfile(build.getEnvironment(listener).expand(dockerFilePath));
+        dockerBuildInfo.setDockerRegistry(dockerRegistry);
+        dockerBuildInfo.setUsername(dockerRegistryUserName);
+        dockerBuildInfo.setPassword(dockerRegistryPassword);
+        dockerBuildInfo.setLinuxFxVersion(linuxFxVersion);
+        dockerBuildInfo.setDockerImageTag(String.valueOf(build.getNumber()));
+
+        final String imageAndTag = linuxFxVersion.substring(linuxFxVersion.indexOf("|") + 1);
+        if (imageAndTag.indexOf(":") > 0) {
+            dockerBuildInfo.setDockerImage(imageAndTag.substring(0, imageAndTag.indexOf(":") - 1));
+        } else
+            dockerBuildInfo.setDockerImage(imageAndTag);
+
+        return dockerBuildInfo;
+    }
+
+    public static final String getLinuxFxVersion(final WebApp webApp) throws AzureCloudException {
+        // https://github.com/Azure/azure-sdk-for-java/issues/1761
+        // access the field via reflection for now
+        try {
+            SiteConfigResourceInner siteConfig = (SiteConfigResourceInner) FieldUtils.readField(webApp, "siteConfig", true);
+            if (siteConfig != null) {
+                return siteConfig.linuxFxVersion();
+            }
+        } catch (IllegalAccessException e) {
+            throw new AzureCloudException(String.format("Cannot get the dcoker container info of web app %s", webApp.name()));
+        }
+        return "";
     }
 
     @Extension
@@ -228,9 +278,12 @@ public class AppServiceDeploymentRecorder extends Recorder {
                                                   @QueryParameter final String resourceGroup) {
             ListBoxModel model = new ListBoxModel();
             // list all app service
+            // https://github.com/Azure/azure-sdk-for-java/issues/1762
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                for (final WebApp webApp : azureClient.webApps().listByResourceGroup(resourceGroup)) {
+                PagedList<SiteInner> list = azureClient.webApps().inner().listByResourceGroup(resourceGroup);
+                list.loadAll();
+                for (final SiteInner webApp : list) {
                     model.add(webApp.name());
                 }
             }
@@ -244,14 +297,11 @@ public class AppServiceDeploymentRecorder extends Recorder {
         public boolean isWebAppOnLinux(final String azureCredentialsId, final String resourceGroup, final String appService) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                WebApp webApp = azureClient.webApps().getByResourceGroup(resourceGroup, appService);
-                if (webApp != null) {
-                    // todo check the linuxFxVersion
-                    // return StringUtils.isNotBlank(webApp.inner().siteConfig().linuxFxVersion()); // not work because siteconfig() return null
-                    return webApp.name().contains("linux");
+                SiteConfigResourceInner siteConfig = azureClient.webApps().inner().getConfiguration(resourceGroup, appService);
+                if (siteConfig != null) {
+                    return StringUtils.isNotBlank(siteConfig.linuxFxVersion());
                 }
             }
-
             return false;
         }
     }

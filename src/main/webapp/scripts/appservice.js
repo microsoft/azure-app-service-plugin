@@ -97,9 +97,13 @@
             if (app.value) {
                 var azureCredentialsId = getElementValue("SELECT[name$=azureCredentialsId]")
                 var resourceGroup = getElementValue("SELECT[name$=resourceGroup]")
-                if (azureCredentialsId && resourceGroup) {
+                if (azureCredentialsId) {
                     descriptor.isWebAppOnLinux(azureCredentialsId, resourceGroup, app.value, function (t) {
-                        t.responseObject() ? appService.showAllRadioBlocks(true) : appService.showRadioBlockByValues(["git"], true);
+                        if (t.responseObject()) {
+                            appService.showAllRadioBlocks(true);
+                        } else {
+                            appService.showRadioBlockByValues(["git"], true);
+                        }
                     })
                 } else {
                     appService.showAllRadioBlocks(false);
