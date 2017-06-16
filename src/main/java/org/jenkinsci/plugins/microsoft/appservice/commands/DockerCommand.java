@@ -67,7 +67,10 @@ public abstract class DockerCommand {
         } else {
             stringBuilder.append(dockerBuildInfo.getDockerImage());
         }
-        stringBuilder.append(":").append(dockerBuildInfo.getDockerImageTag());
         return stringBuilder.toString();
+    }
+
+    protected String getImageFullNameWithTag(final DockerBuildInfo dockerBuildInfo) throws AzureCloudException {
+        return getImageFullName(dockerBuildInfo) + ":" + dockerBuildInfo.getDockerImageTag();
     }
 }

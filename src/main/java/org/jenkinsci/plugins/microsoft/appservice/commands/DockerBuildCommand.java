@@ -33,7 +33,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
                 dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
 
         try {
-            final String image = getImageFullName(dockerBuildInfo);
+            final String image = getImageFullNameWithTag(dockerBuildInfo);
             final FilePath workspace = context.getBuild().getWorkspace();
             final File workspaceDir = new File(workspace.getRemote());
             final File dockerfile = new File(workspaceDir, dockerBuildInfo.getDockerfile());
