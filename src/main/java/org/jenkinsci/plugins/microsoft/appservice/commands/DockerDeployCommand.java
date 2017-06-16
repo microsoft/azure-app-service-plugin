@@ -15,13 +15,25 @@
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
+import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.WebAppBase;
+
 public class DockerDeployCommand extends DockerCommand implements ICommand<DockerDeployCommand.IDockerDeployCommandData> {
     @Override
     public void execute(IDockerDeployCommandData context) {
+        final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
+        context.getListener().getLogger().println(String.format("Begin to deploy to azure web app on linux, the docker image %s:%s",
+                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
 
+        WebApp webApp = context.getWebApp();
+//        azureClient.webApps().inner().updateConfiguration()
+
+        WebAppBase.DefinitionStages.WithCreate<WebApp> withCreate;
     }
 
     public interface IDockerDeployCommandData extends IBaseCommandData {
         public DockerBuildInfo getDockerBuildInfo();
+
+        public WebApp getWebApp();
     }
 }

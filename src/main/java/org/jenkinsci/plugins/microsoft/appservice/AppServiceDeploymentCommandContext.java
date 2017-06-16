@@ -32,6 +32,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     private final DockerBuildInfo dockerBuildInfo;
 
     private PublishingProfile pubProfile;
+    private WebApp webApp;
 
     public AppServiceDeploymentCommandContext(final String filePath,
                                               final String publishType,
@@ -62,6 +63,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         Class startCommandClass;
         if (publishType == PUBLISH_TYPE_DOCKER) {
             startCommandClass = DockerBuildCommand.class;
+            this.webApp = app;
             commands.put(DockerBuildCommand.class, new TransitionInfo(new DockerBuildCommand(), DockerPushCommand.class, null));
             commands.put(DockerPushCommand.class, new TransitionInfo(new DockerPushCommand(), DockerDeployCommand.class, null));
             commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), null, null));
@@ -97,5 +99,10 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     @Override
     public DockerBuildInfo getDockerBuildInfo() {
         return dockerBuildInfo;
+    }
+
+    @Override
+    public WebApp getWebApp() {
+        return webApp;
     }
 }
