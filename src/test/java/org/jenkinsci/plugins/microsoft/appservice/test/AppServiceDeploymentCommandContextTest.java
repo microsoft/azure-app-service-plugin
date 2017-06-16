@@ -27,12 +27,16 @@ public class AppServiceDeploymentCommandContextTest {
 
     @Test
     public void getterSetter() throws AzureCloudException {
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
 
+        Assert.assertEquals("", ctx.getTargetDirectory());
         Assert.assertEquals("sample.war", ctx.getFilePath());
         Assert.assertFalse(ctx.getHasError());
         Assert.assertFalse(ctx.getIsFinished());
         Assert.assertEquals(DeploymentState.Unknown, ctx.getDeploymentState());
+
+        ctx.setTargetDirectory("webapps");
+        Assert.assertEquals("webapps", ctx.getTargetDirectory());
 
         final PublishingProfile pubProfile = mock(PublishingProfile.class);
         when(pubProfile.ftpUrl()).thenReturn("ftp://example.com");
@@ -54,7 +58,7 @@ public class AppServiceDeploymentCommandContextTest {
 
     @Test
     public void configure() throws AzureCloudException {
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
 
         final AbstractBuild<?, ?> build = mock(FreeStyleBuild.class);
         final BuildListener listener = mock(BuildListener.class);
@@ -100,18 +104,20 @@ public class AppServiceDeploymentCommandContextTest {
         when(app.getPublishingProfile()).thenReturn(defaultPubProfile);
 
         // Configure default
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
         ctx.configure(build, listener, app);
         Assert.assertEquals("default-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure slot
-        ctx = new AppServiceDeploymentCommandContext("sample.war", "staging");
+        ctx = new AppServiceDeploymentCommandContext("sample.war");
+        ctx.setSlotName("staging");
         ctx.configure(build, listener, app);
         Assert.assertEquals("slot-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure not existing slot
         try {
-            ctx = new AppServiceDeploymentCommandContext("sample.war", "not-found");
+            ctx = new AppServiceDeploymentCommandContext("sample.war");
+            ctx.setSlotName("not-found");
             ctx.configure(build, listener, app);
             Assert.fail("Should throw exception when slot not found");
         } catch (AzureCloudException ex) {

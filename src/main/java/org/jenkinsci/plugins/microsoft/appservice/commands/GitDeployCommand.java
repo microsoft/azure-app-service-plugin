@@ -16,6 +16,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitTool;
 import hudson.remoting.VirtualChannel;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
 import org.eclipse.jgit.dircache.DirCache;
@@ -74,7 +75,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
 
             cleanWorkingDirectory(git);
 
-            copyAndAddFiles(git, ws, repo, context.getFilePath());
+            copyAndAddFiles(git, ws, repo, context.getFilePath(), Util.fixNull(context.getTargetDirectory()));
 
             if (!isWorkingTreeChanged(git)) {
                 context.logStatus("Deploy repository is up-to-date. Nothing to commit.");
@@ -159,21 +160,23 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
      * @param ws Path to workspace
      * @param repo Path to git repo
      * @param filesPattern Files name pattern
+     * @param targetDir Target directory
      * @throws IOException
      * @throws InterruptedException
      */
-    private void copyAndAddFiles(GitClient git, FilePath ws, FilePath repo, String filesPattern)
+    private void copyAndAddFiles(GitClient git, FilePath ws, FilePath repo, String filesPattern, String targetDir)
             throws IOException, InterruptedException {
         FileSet fs = Util.createFileSet(new File(ws.getRemote()), filesPattern);
         DirectoryScanner ds = fs.getDirectoryScanner();
         String[] files = ds.getIncludedFiles();
         for (String file: files) {
             FilePath srcPath = new FilePath(ws, file);
-            FilePath repoPath = new FilePath(repo, file);
+            FilePath repoPath = new FilePath(repo.child(targetDir), file);
             srcPath.copyTo(repoPath);
 
-            // Git always use '/' as file separator
-            git.add(file.replace(File.separator, "/"));
+            // Git always use Unix file path
+            String filePathInGit = FilenameUtils.separatorsToUnix(FilenameUtils.concat(targetDir, file));
+            git.add(filePathInGit);
         }
     }
 
@@ -201,5 +204,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
         PublishingProfile getPublishingProfile();
 
         String getFilePath();
+
+        String getTargetDirectory();
     }
 }
