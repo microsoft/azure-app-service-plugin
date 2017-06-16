@@ -29,6 +29,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jenkinsci.plugins.microsoft.appservice.commands.DockerBuildInfo;
@@ -56,7 +57,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
     private String dockerRegistry;
     private String dockerFilePath;
     private String dockerRegistryUserName;
-    private String dockerRegistryPassword;
+    private Secret dockerRegistryPassword;
     private
     @CheckForNull
     String slotName;
@@ -97,7 +98,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
     }
 
     @DataBoundSetter
-    public void setDockerRegistryPassword(final String dockerRegistryPassword) {
+    public void setDockerRegistryPassword(final Secret dockerRegistryPassword) {
         this.dockerRegistryPassword = dockerRegistryPassword;
     }
 
@@ -133,7 +134,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         return dockerRegistryUserName;
     }
 
-    public String getDockerRegistryPassword() {
+    public Secret getDockerRegistryPassword() {
         return dockerRegistryPassword;
     }
 
@@ -205,15 +206,18 @@ public class AppServiceDeploymentRecorder extends Recorder {
         final DockerBuildInfo dockerBuildInfo = new DockerBuildInfo();
 
         final String linuxFxVersion = getLinuxFxVersion(app);
-        if (StringUtils.isBlank(linuxFxVersion)) {
+        if (StringUtils.isBlank(linuxFxVersion) || isBuiltInDockerImage(linuxFxVersion)) {
             // windows app doesn't need any docker config
             if (this.publishType.equals(AppServiceDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
-                throw new AzureCloudException("Publish a windows web app through docker is not currently supported.");
+                throw new AzureCloudException("Publish a windows or built-in image web app through docker is not currently supported.");
             }
             return dockerBuildInfo;
         }
 
         dockerBuildInfo.setDockerfile(build.getEnvironment(listener).expand(dockerFilePath));
+        if (StringUtils.isBlank(dockerBuildInfo.getDockerfile())) {
+            throw new AzureCloudException("Docker file is cannot be null or empty.");
+        }
         dockerBuildInfo.setDockerRegistry(dockerRegistry);
         dockerBuildInfo.setUsername(dockerRegistryUserName);
         dockerBuildInfo.setPassword(dockerRegistryPassword);
@@ -223,8 +227,9 @@ public class AppServiceDeploymentRecorder extends Recorder {
         final String imageAndTag = linuxFxVersion.substring(linuxFxVersion.indexOf("|") + 1);
         if (imageAndTag.indexOf(":") > 0) {
             dockerBuildInfo.setDockerImage(imageAndTag.substring(0, imageAndTag.indexOf(":") - 1));
-        } else
+        } else {
             dockerBuildInfo.setDockerImage(imageAndTag);
+        }
 
         return dockerBuildInfo;
     }
@@ -241,6 +246,10 @@ public class AppServiceDeploymentRecorder extends Recorder {
             throw new AzureCloudException(String.format("Cannot get the dcoker container info of web app %s", webApp.name()));
         }
         return "";
+    }
+
+    public static boolean isBuiltInDockerImage(final String linuxFxVersion) {
+        return !linuxFxVersion.startsWith("DOCKER|");
     }
 
     @Extension
@@ -294,6 +303,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
             }
             return model;
         }
+
         public final FormValidation doVerifyConfiguration(
                 @QueryParameter final String dockerRegistry,
                 @QueryParameter final String dockerRegistryUserName,
@@ -315,7 +325,8 @@ public class AppServiceDeploymentRecorder extends Recorder {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
                 SiteConfigResourceInner siteConfig = azureClient.webApps().inner().getConfiguration(resourceGroup, appService);
                 if (siteConfig != null) {
-                    return StringUtils.isNotBlank(siteConfig.linuxFxVersion());
+                    return StringUtils.isNotBlank(siteConfig.linuxFxVersion())
+                            && !isBuiltInDockerImage(siteConfig.linuxFxVersion());
                 }
             }
             return false;

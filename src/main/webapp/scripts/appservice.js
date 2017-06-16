@@ -3,30 +3,34 @@
  */
 (function () {
     var appService = (function () {
-        var radioBlocks = {};
-        var radios = document.getElementsBySelector("INPUT.radio-block-control[name$=publishType]");
-        $(radios).each(function (radio) {
-            var start = findAncestorClass(radio, "radio-block-start");
-            // find the end node
-            var end = (function () {
-                var e = start;
-                var cnt = 1;
-                while (cnt > 0) {
-                    e = $(e).next();
-                    if (Element.hasClassName(e, "radio-block-start"))
-                        cnt++;
-                    if (Element.hasClassName(e, "radio-block-end"))
-                        cnt--;
-                }
-                return e;
-            })();
-            radioBlocks[radio.value] = {
-                start: start,
-                end: end,
-                radio: radio,
-                show: radio.checked
-            };
-        });
+        var getRadioBlocks = function () {
+            var radioBlocks = [];
+            var radios = document.getElementsBySelector("INPUT.radio-block-control[name$=publishType]");
+            $(radios).each(function (radio) {
+                var start = findAncestorClass(radio, "radio-block-start");
+                // find the end node
+                var end = (function () {
+                    var e = start;
+                    var cnt = 1;
+                    while (cnt > 0) {
+                        e = $(e).next();
+                        if (Element.hasClassName(e, "radio-block-start"))
+                            cnt++;
+                        if (Element.hasClassName(e, "radio-block-end"))
+                            cnt--;
+                    }
+                    return e;
+                })();
+                radioBlocks[radio.value] = {
+                    start: start,
+                    end: end,
+                    radio: radio,
+                    show: radio.checked
+                };
+            });
+            return radioBlocks;
+        };
+
 
         var showSingleRadioBlock = function (radioBlock, show) {
             var n = $(radioBlock.start);
@@ -38,7 +42,7 @@
             layoutUpdateCallback.call();
         };
 
-        var triggerClick = function () {
+        var triggerClick = function (radioBlocks) {
             var toClick = (function () {
                 var to;
                 for (var name in radioBlocks) {
@@ -46,7 +50,7 @@
                         var r = radioBlocks[name];
                         if (r.show && r.radio.checked)
                             return r;
-                        else if (!to && r.show)
+                        if (!to && r.show)
                             to = r;
                     }
                 }
@@ -57,23 +61,25 @@
         };
 
         var showAllRadioBlocks = function (show) {
+            var radioBlocks = getRadioBlocks();
             for (var name in radioBlocks) {
                 if (radioBlocks.hasOwnProperty(name)) {
                     showSingleRadioBlock(radioBlocks[name], show);
                 }
             }
 
-            triggerClick();
+            triggerClick(radioBlocks);
         };
 
         var showRadioBlockByValues = function (values) {
+            var radioBlocks = getRadioBlocks();
             for (var name in radioBlocks) {
                 if (radioBlocks.hasOwnProperty(name)) {
                     showSingleRadioBlock(radioBlocks[name], values.indexOf(name) >= 0);
                 }
             }
 
-            triggerClick();
+            triggerClick(radioBlocks);
         };
 
         return {

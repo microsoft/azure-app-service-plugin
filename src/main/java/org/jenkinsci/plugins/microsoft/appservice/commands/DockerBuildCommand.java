@@ -15,11 +15,61 @@
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.model.BuildResponseItem;
+import com.github.dockerjava.core.command.BuildImageResultCallback;
+import com.google.common.collect.Sets;
+import hudson.FilePath;
+import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
+
+import java.io.File;
+
 public class DockerBuildCommand extends DockerCommand implements ICommand<DockerBuildCommand.IDockerBuildCommandData> {
 
     @Override
-    public void execute(IDockerBuildCommandData context) {
-        
+    public void execute(final IDockerBuildCommandData context) {
+        final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
+        context.getListener().getLogger().println(String.format("Begin to build docker image %s:%s",
+                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
+
+        try {
+            final String image = getImageFullName(dockerBuildInfo);
+            final FilePath workspace = context.getBuild().getWorkspace();
+            final File workspaceDir = new File(workspace.getRemote());
+            final File dockerfile = new File(workspaceDir, dockerBuildInfo.getDockerfile());
+            if (!dockerfile.exists()) {
+                throw new AzureCloudException("Dockerfile cannot be found:" + dockerBuildInfo.getDockerfile());
+            }
+            context.getListener().getLogger().println("Dockerfile found: " + dockerfile.getAbsolutePath());
+
+            final DockerClient client = getDockerClient(dockerBuildInfo);
+            final BuildImageResultCallback callback = new BuildImageResultCallback() {
+                @Override
+                public void onNext(final BuildResponseItem buildResponseItem) {
+                    if (buildResponseItem.isBuildSuccessIndicated()) {
+                        context.getListener().getLogger().println("Build successful, the image Id: " + buildResponseItem.getImageId());
+                        context.getListener().getLogger().println(buildResponseItem.toString());
+                        dockerBuildInfo.setImageid(buildResponseItem.getImageId());
+                    } else if (buildResponseItem.isErrorIndicated()) {
+                        context.getListener().getLogger().println("Build failed, the error detail: " + buildResponseItem.getErrorDetail().toString());
+                        context.setDeploymentState(DeploymentState.HasError);
+                    }
+                }
+
+                @Override
+                public void onError(Throwable throwable) {
+                    context.getListener().getLogger().println("Fail to build docker image:" + throwable.getMessage());
+                    context.setDeploymentState(DeploymentState.HasError);
+                    super.onError(throwable);
+                }
+            };
+            client.buildImageCmd(dockerfile)
+                    .withTags(Sets.newHashSet(image))
+                    .exec(callback);
+        } catch (AzureCloudException e) {
+            context.getListener().getLogger().println("Build failed for " + e.getMessage());
+            context.setDeploymentState(DeploymentState.HasError);
+        }
     }
 
     public interface IDockerBuildCommandData extends IBaseCommandData {

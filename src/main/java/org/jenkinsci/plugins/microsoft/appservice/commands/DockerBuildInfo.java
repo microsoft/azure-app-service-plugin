@@ -15,14 +15,17 @@
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
+import hudson.util.Secret;
+
 public class DockerBuildInfo {
     private String dockerfile;
     private String dockerRegistry;
     private String username;
-    private String password;
+    private Secret password;
     private String linuxFxVersion; // the original docker image
     private String dockerImage;
     private String dockerImageTag;
+    private String imageid; // the image Id after build successfully
 
     public String getLinuxFxVersion() {
         return linuxFxVersion;
@@ -72,12 +75,19 @@ public class DockerBuildInfo {
         this.username = username;
     }
 
-    public String getPassword() {
+    public Secret getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
+    public void setPassword(Secret password) {
         this.password = password;
     }
 
+    public String getImageid() {
+        return imageid;
+    }
+
+    public void setImageid(String imageid) {
+        this.imageid = imageid;
+    }
 }

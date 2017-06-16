@@ -21,6 +21,10 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * To provide some common docker-related methods for docker commands
@@ -28,7 +32,7 @@ import org.apache.commons.lang.StringUtils;
 public abstract class DockerCommand {
 
     protected DockerClient getDockerClient(final DockerBuildInfo dockerBuildInfo) {
-        return getDockerClient(dockerBuildInfo.getDockerRegistry(), dockerBuildInfo.getUsername(), dockerBuildInfo.getPassword());
+        return getDockerClient(dockerBuildInfo.getDockerRegistry(), dockerBuildInfo.getUsername(), dockerBuildInfo.getPassword().getPlainText());
     }
 
     protected DockerClient getDockerClient(final String registry, final String userName, final String password) {
@@ -45,5 +49,25 @@ public abstract class DockerCommand {
                 .withMaxPerRouteConnections(1);
 
         return DockerClientBuilder.getInstance(builder).withDockerCmdExecFactory(dockerCmdExecFactory).build();
+    }
+
+    protected String getImageFullName(final DockerBuildInfo dockerBuildInfo) throws AzureCloudException {
+        final StringBuilder stringBuilder = new StringBuilder();
+        if (StringUtils.isNotBlank(dockerBuildInfo.getDockerRegistry())) {
+            String registry = dockerBuildInfo.getDockerRegistry();
+            if (dockerBuildInfo.getDockerRegistry().toLowerCase().startsWith("http")) {
+                try {
+                    URI uri = new URI(registry);
+                    registry = uri.getHost();
+                } catch (URISyntaxException e) {
+                    throw new AzureCloudException("The docker registry is not a valid URI", e);
+                }
+            }
+            stringBuilder.append(registry).append("/").append(dockerBuildInfo.getDockerImage());
+        } else {
+            stringBuilder.append(dockerBuildInfo.getDockerImage());
+        }
+        stringBuilder.append(":").append(dockerBuildInfo.getDockerImageTag());
+        return stringBuilder.toString();
     }
 }
