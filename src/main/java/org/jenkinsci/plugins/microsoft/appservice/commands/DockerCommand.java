@@ -15,15 +15,35 @@
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
-import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.command.DockerCmdExecFactory;
+import com.github.dockerjava.core.DefaultDockerClientConfig;
+import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * To provide some common docker-related methods for docker commands
  */
 public abstract class DockerCommand {
 
-    protected  void DockerClient getDockerClient(){
-//        DockerClientConfig config = DefaultDockerConfig
+    protected DockerClient getDockerClient(final DockerBuildInfo dockerBuildInfo) {
+        return getDockerClient(dockerBuildInfo.getDockerRegistry(), dockerBuildInfo.getUsername(), dockerBuildInfo.getPassword());
     }
 
+    protected DockerClient getDockerClient(final String registry, final String userName, final String password) {
+        final DefaultDockerClientConfig.Builder builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                .withRegistryUsername(userName)
+                .withRegistryPassword(password);
+        if (StringUtils.isNotBlank(registry)) {
+            builder.withRegistryUrl(registry);
+        }
+
+        final DockerCmdExecFactory dockerCmdExecFactory = new JerseyDockerCmdExecFactory()
+                .withConnectTimeout(1000)
+                .withMaxTotalConnections(1)
+                .withMaxPerRouteConnections(1);
+
+        return DockerClientBuilder.getInstance(builder).withDockerCmdExecFactory(dockerCmdExecFactory).build();
+    }
 }

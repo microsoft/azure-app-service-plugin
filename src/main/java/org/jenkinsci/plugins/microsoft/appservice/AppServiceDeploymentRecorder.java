@@ -27,10 +27,12 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jenkinsci.plugins.microsoft.appservice.commands.DockerBuildInfo;
+import org.jenkinsci.plugins.microsoft.appservice.commands.DockerPingCommand;
 import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.jenkinsci.plugins.microsoft.services.CommandService;
@@ -291,6 +293,20 @@ public class AppServiceDeploymentRecorder extends Recorder {
                 model.add("");
             }
             return model;
+        }
+        public final FormValidation doVerifyConfiguration(
+                @QueryParameter final String dockerRegistry,
+                @QueryParameter final String dockerRegistryUserName,
+                @QueryParameter final String dockerRegistryPassword) {
+
+            DockerPingCommand pingCommand = new DockerPingCommand();
+            try {
+                pingCommand.ping(dockerRegistry, dockerRegistryUserName, dockerRegistryPassword);
+            } catch (AzureCloudException e) {
+                return FormValidation.error(e.getMessage());
+            }
+
+            return FormValidation.ok("Successfully verified the docker configuration");
         }
 
         @JavaScriptMethod

@@ -44,15 +44,17 @@
                      help="/plugin/azure-app-service/help-dockerRegistryPassword.html">
                 <f:password value="${it.getDockerRegistryPassword()}"/>
             </f:entry>
+            <f:validateButton title="${%VerifyConfiguration}" progress="${%VerifyingMsg}" method="verifyConfiguration"
+                              with="dockerRegistry,dockerRegistryUserName,dockerRegistryPassword"/>
         </f:radioBlock>
-
-        <f:advanced>
-            <f:entry title="${%Slot_Name}" field="slotName"
-                     help="/plugin/azure-app-service/help-slotName.html">
-                <f:textbox/>
-            </f:entry>
-        </f:advanced>
     </f:section>
+
+    <f:advanced>
+        <f:entry title="${%Slot_Name}" field="slotName"
+                 help="/plugin/azure-app-service/help-slotName.html">
+            <f:textbox/>
+        </f:entry>
+    </f:advanced>
 
     <script>
         var descriptor =

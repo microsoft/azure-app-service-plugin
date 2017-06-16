@@ -22,6 +22,7 @@
         <powermock.version>1.7.0RC2</powermock.version>
         <azuresdk.version>1.1.0</azuresdk.version>
         <azure-credentials.version>1.0</azure-credentials.version>
+        <version.docker.java>3.0.10</version.docker.java>
     </properties>
 
     <name>Azure App Service</name>
@@ -95,7 +96,7 @@
             <groupId>com.github.docker-java</groupId>
             <artifactId>docker-java</artifactId>
             <!-- use latest version https://github.com/docker-java/docker-java/releases -->
-            <version>3.0.0</version>
+            <version>${version.docker.java}</version>
         </dependency>
 
         <dependency>
