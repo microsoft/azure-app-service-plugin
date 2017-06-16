@@ -19,11 +19,11 @@ import org.apache.tools.ant.types.FileSet;
 
 public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCommandData> {
 
-    private static final String SITE_ROOT = "/site/wwwroot";
+    private static final String SITE_ROOT = "/site/wwwroot/";
 
     // Java specific
-    private static final String TOMCAT_ROOT_WAR = "webapps/ROOT.war";
-    private static final String TOMCAT_ROOT_DIR = SITE_ROOT + "/webapps/ROOT";
+    private static final String TOMCAT_ROOT_WAR = SITE_ROOT + "webapps/ROOT.war";
+    private static final String TOMCAT_ROOT_DIR = SITE_ROOT + "webapps/ROOT";
 
     public void execute(IFTPDeployCommandData context) {
         final FilePath workspace = context.getBuild().getWorkspace();
@@ -47,7 +47,11 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
 
             ftpClient.connect(ftpUrl);
             ftpClient.login(userName, password);
-            ftpClient.changeWorkingDirectory(SITE_ROOT);
+
+            final String targetDirectory = SITE_ROOT + Util.fixNull(context.getTargetDirectory());
+            ftpClient.makeDirectory(targetDirectory);
+            ftpClient.changeWorkingDirectory(targetDirectory);
+            context.logStatus(String.format("Working directory: %s", ftpClient.printWorkingDirectory()));
 
             final File workspaceDir = new File(workspace.getRemote());
             FileSet fs = Util.createFileSet(workspaceDir, context.getFilePath());
@@ -121,7 +125,8 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
 
     private void prepareDirectory(IFTPDeployCommandData context, FTPClient ftpClient, String fileName) throws IOException {
         // Deployment to tomcat root requires removing root directory first
-        if (fileName.equalsIgnoreCase(FilenameUtils.separatorsToSystem(TOMCAT_ROOT_WAR))) {
+        final String targetFilePath = FilenameUtils.concat(ftpClient.printWorkingDirectory(), fileName);
+        if (targetFilePath.equalsIgnoreCase(FilenameUtils.separatorsToSystem(TOMCAT_ROOT_WAR))) {
             removeFtpDirectory(context, ftpClient, TOMCAT_ROOT_DIR);
         }
     }
@@ -131,5 +136,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         public PublishingProfile getPublishingProfile();
 
         public String getFilePath();
+
+        public String getTargetDirectory();
     }
 }

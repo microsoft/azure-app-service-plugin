@@ -6,6 +6,7 @@
 package org.jenkinsci.plugins.microsoft.appservice;
 
 import com.microsoft.azure.management.appservice.*;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import java.util.HashMap;
@@ -19,12 +20,21 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         GitDeployCommand.IGitDeployCommandData {
 
     private final String filePath;
-    private final String slotName;
+    private String targetDirectory;
+    private String slotName;
 
     private PublishingProfile pubProfile;
 
-    public AppServiceDeploymentCommandContext(final String filePath, final String slotName) {
+    public AppServiceDeploymentCommandContext(final String filePath) {
         this.filePath = filePath;
+        this.targetDirectory = "";
+    }
+
+    public void setTargetDirectory(String targetDirectory) {
+        this.targetDirectory = Util.fixNull(targetDirectory);
+    }
+
+    public void setSlotName(String slotName) {
         this.slotName = slotName;
     }
 
@@ -67,6 +77,11 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     @Override
     public String getFilePath() {
         return filePath;
+    }
+
+    @Override
+    public String getTargetDirectory() {
+        return targetDirectory;
     }
 
     @Override
