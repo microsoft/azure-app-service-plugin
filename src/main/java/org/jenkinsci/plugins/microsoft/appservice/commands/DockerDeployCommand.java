@@ -15,25 +15,31 @@
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
+import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.appservice.WebAppBase;
+import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
+import com.microsoft.azure.util.AzureCredentials;
+import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 
 public class DockerDeployCommand extends DockerCommand implements ICommand<DockerDeployCommand.IDockerDeployCommandData> {
     @Override
     public void execute(IDockerDeployCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
-        context.getListener().getLogger().println(String.format("Begin to deploy to azure web app on linux, the docker image %s:%s",
+        context.getListener().getLogger().println(String.format("Begin to update web app configuration, the docker image %s:%s",
                 dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
 
-        WebApp webApp = context.getWebApp();
-//        azureClient.webApps().inner().updateConfiguration()
-
-        WebAppBase.DefinitionStages.WithCreate<WebApp> withCreate;
+        final WebApp webApp = context.getWebApp();
+        final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(context.getAzureCredentialsId())).getAzureClient();
+        final SiteConfigResourceInner siteConfig = azureClient.webApps().inner().getConfiguration(webApp.resourceGroupName(), webApp.name());
+        siteConfig.withLinuxFxVersion(String.format("DOCKER|%s:%s", dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
+        azureClient.webApps().inner().updateConfiguration(webApp.resourceGroupName(), webApp.name(), siteConfig);
     }
 
     public interface IDockerDeployCommandData extends IBaseCommandData {
         public DockerBuildInfo getDockerBuildInfo();
 
         public WebApp getWebApp();
+
+        public String getAzureCredentialsId();
     }
 }

@@ -27,7 +27,7 @@ public class AppServiceDeploymentCommandContextTest {
 
     @Test
     public void getterSetter() throws AzureCloudException {
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "git", "", null, "");
 
         Assert.assertEquals("sample.war", ctx.getFilePath());
         Assert.assertFalse(ctx.getHasError());
@@ -54,7 +54,7 @@ public class AppServiceDeploymentCommandContextTest {
 
     @Test
     public void configure() throws AzureCloudException {
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "git", "", null, "");
 
         final AbstractBuild<?, ?> build = mock(FreeStyleBuild.class);
         final BuildListener listener = mock(BuildListener.class);
@@ -100,18 +100,18 @@ public class AppServiceDeploymentCommandContextTest {
         when(app.getPublishingProfile()).thenReturn(defaultPubProfile);
 
         // Configure default
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "");
+        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war", "git", "", null, "");
         ctx.configure(build, listener, app);
         Assert.assertEquals("default-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure slot
-        ctx = new AppServiceDeploymentCommandContext("sample.war", "staging");
+        ctx = new AppServiceDeploymentCommandContext("sample.war", "git", "staging", null, "");
         ctx.configure(build, listener, app);
         Assert.assertEquals("slot-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure not existing slot
         try {
-            ctx = new AppServiceDeploymentCommandContext("sample.war", "not-found");
+            ctx = new AppServiceDeploymentCommandContext("sample.war", "git", "not-found", null, "");
             ctx.configure(build, listener, app);
             Assert.fail("Should throw exception when slot not found");
         } catch (AzureCloudException ex) {

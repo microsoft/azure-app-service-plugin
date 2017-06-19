@@ -33,15 +33,18 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
 
     private PublishingProfile pubProfile;
     private WebApp webApp;
+    private String azureCredentialsId;
 
     public AppServiceDeploymentCommandContext(final String filePath,
                                               final String publishType,
                                               final String slotName,
-                                              final DockerBuildInfo dockerBuildInfo) {
+                                              final DockerBuildInfo dockerBuildInfo,
+                                              final String azureCredentialsId) {
         this.filePath = filePath;
         this.slotName = slotName;
         this.publishType = publishType;
         this.dockerBuildInfo = dockerBuildInfo;
+        this.azureCredentialsId = azureCredentialsId;
     }
 
     public void configure(AbstractBuild<?, ?> build, BuildListener listener, WebApp app) throws AzureCloudException {
@@ -61,7 +64,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         HashMap<Class, TransitionInfo> commands = new HashMap<>();
 
         Class startCommandClass;
-        if (publishType == PUBLISH_TYPE_DOCKER) {
+        if (publishType.equalsIgnoreCase(PUBLISH_TYPE_DOCKER)) {
             startCommandClass = DockerBuildCommand.class;
             this.webApp = app;
             commands.put(DockerBuildCommand.class, new TransitionInfo(new DockerBuildCommand(), DockerPushCommand.class, null));
@@ -104,5 +107,10 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     @Override
     public WebApp getWebApp() {
         return webApp;
+    }
+
+    @Override
+    public String getAzureCredentialsId() {
+        return azureCredentialsId;
     }
 }

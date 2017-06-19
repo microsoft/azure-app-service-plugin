@@ -17,6 +17,7 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.BuildResponseItem;
+import com.github.dockerjava.api.model.ResponseItem;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.google.common.collect.Sets;
 import hudson.FilePath;
@@ -35,6 +36,9 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
         try {
             final String image = getImageFullNameWithTag(dockerBuildInfo);
             final FilePath workspace = context.getBuild().getWorkspace();
+            if (workspace == null) {
+                throw new AzureCloudException("workspace is not available at this time.");
+            }
             final File workspaceDir = new File(workspace.getRemote());
             final File dockerfile = new File(workspaceDir, dockerBuildInfo.getDockerfile());
             if (!dockerfile.exists()) {
@@ -51,7 +55,11 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
                         context.getListener().getLogger().println(buildResponseItem.toString());
                         dockerBuildInfo.setImageid(buildResponseItem.getImageId());
                     } else if (buildResponseItem.isErrorIndicated()) {
-                        context.getListener().getLogger().println("Build failed, the error detail: " + buildResponseItem.getErrorDetail().toString());
+                        context.getListener().getLogger().println("Build docker image failed");
+                        ResponseItem.ErrorDetail detail = buildResponseItem.getErrorDetail();
+                        if (detail != null) {
+                            context.getListener().getLogger().println("The error detail: " + detail.toString());
+                        }
                         context.setDeploymentState(DeploymentState.HasError);
                     }
                 }

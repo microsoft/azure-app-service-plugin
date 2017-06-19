@@ -182,7 +182,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
             return false;
         }
         final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(
-                expandedFilePath, publishType, slotName, dockerBuildInfo);
+                expandedFilePath, publishType, slotName, dockerBuildInfo, azureCredentialsId);
 
         try {
             commandContext.configure(build, listener, app);
