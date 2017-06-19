@@ -4,7 +4,7 @@
 (function () {
     var appService = (function () {
         var getRadioBlocks = function () {
-            var radioBlocks = [];
+            var radioBlocks = {};
             var radios = document.getElementsBySelector("INPUT.radio-block-control[name$=publishType]");
             $(radios).each(function (radio) {
                 var start = findAncestorClass(radio, "radio-block-start");
