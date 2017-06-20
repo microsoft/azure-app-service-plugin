@@ -51,8 +51,14 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
             final TaskListener listener = context.getListener();
             final EnvVars env = build.getEnvironment(listener);
             final FilePath ws = build.getWorkspace();
+            if (ws == null) {
+                context.logError("Workspace is null");
+                context.setDeploymentState(DeploymentState.HasError);
+                return;
+            }
             final FilePath repo = ws.child(DEPLOY_REPO);
             final String gitExe = getGitExe(env);
+
 
             GitClient git = Git.with(listener, env)
                 .in(repo)
