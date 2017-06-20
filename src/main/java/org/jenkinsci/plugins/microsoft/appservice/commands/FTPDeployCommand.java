@@ -28,6 +28,13 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
     public void execute(IFTPDeployCommandData context) {
         final FilePath workspace = context.getBuild().getWorkspace();
         final PublishingProfile pubProfile = context.getPublishingProfile();
+
+        if (workspace == null) {
+            context.logError("Workspace is null");
+            context.setDeploymentState(DeploymentState.HasError);
+            return;
+        }
+
         FTPClient ftpClient = new FTPClient();
         try {
             String ftpUrl = pubProfile.ftpUrl();
