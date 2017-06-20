@@ -75,7 +75,9 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
 
             cleanWorkingDirectory(git);
 
-            copyAndAddFiles(git, ws, repo, context.getFilePath(), Util.fixNull(context.getTargetDirectory()));
+            final FilePath sourceDir = ws.child(Util.fixNull(context.getSourceDirectory()));
+            final String targetDir = Util.fixNull(context.getTargetDirectory());
+            copyAndAddFiles(git, repo, sourceDir, targetDir, context.getFilePath());
 
             if (!isWorkingTreeChanged(git)) {
                 context.logStatus("Deploy repository is up-to-date. Nothing to commit.");
@@ -157,20 +159,20 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
      * Copy selected files to git working directory and stage them
      *
      * @param git Git client
-     * @param ws Path to workspace
      * @param repo Path to git repo
-     * @param filesPattern Files name pattern
+     * @param sourceDir Source directory
      * @param targetDir Target directory
+     * @param filesPattern Files name pattern
      * @throws IOException
      * @throws InterruptedException
      */
-    private void copyAndAddFiles(GitClient git, FilePath ws, FilePath repo, String filesPattern, String targetDir)
+    private void copyAndAddFiles(GitClient git, FilePath repo, FilePath sourceDir, String targetDir, String filesPattern)
             throws IOException, InterruptedException {
-        FileSet fs = Util.createFileSet(new File(ws.getRemote()), filesPattern);
+        FileSet fs = Util.createFileSet(new File(sourceDir.getRemote()), filesPattern);
         DirectoryScanner ds = fs.getDirectoryScanner();
         String[] files = ds.getIncludedFiles();
         for (String file: files) {
-            FilePath srcPath = new FilePath(ws, file);
+            FilePath srcPath = new FilePath(sourceDir, file);
             FilePath repoPath = new FilePath(repo.child(targetDir), file);
             srcPath.copyTo(repoPath);
 
@@ -204,6 +206,8 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
         PublishingProfile getPublishingProfile();
 
         String getFilePath();
+
+        String getSourceDirectory();
 
         String getTargetDirectory();
     }

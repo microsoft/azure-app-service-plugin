@@ -29,11 +29,15 @@ public class AppServiceDeploymentCommandContextTest {
     public void getterSetter() throws AzureCloudException {
         AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
 
+        Assert.assertEquals("", ctx.getSourceDirectory());
         Assert.assertEquals("", ctx.getTargetDirectory());
         Assert.assertEquals("sample.war", ctx.getFilePath());
         Assert.assertFalse(ctx.getHasError());
         Assert.assertFalse(ctx.getIsFinished());
         Assert.assertEquals(DeploymentState.Unknown, ctx.getDeploymentState());
+
+        ctx.setSourceDirectory("src");
+        Assert.assertEquals("src", ctx.getSourceDirectory());
 
         ctx.setTargetDirectory("webapps");
         Assert.assertEquals("webapps", ctx.getTargetDirectory());

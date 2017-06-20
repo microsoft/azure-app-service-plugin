@@ -53,12 +53,12 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             ftpClient.changeWorkingDirectory(targetDirectory);
             context.logStatus(String.format("Working directory: %s", ftpClient.printWorkingDirectory()));
 
-            final File workspaceDir = new File(workspace.getRemote());
-            FileSet fs = Util.createFileSet(workspaceDir, context.getFilePath());
+            final File sourceDir = new File(workspace.getRemote(), Util.fixNull(context.getSourceDirectory()));
+            FileSet fs = Util.createFileSet(sourceDir, context.getFilePath());
             DirectoryScanner ds = fs.getDirectoryScanner();
             String[] files = ds.getIncludedFiles();
             for (String file: files) {
-                uploadFile(context, ftpClient, new File(workspaceDir, file), file);
+                uploadFile(context, ftpClient, new File(sourceDir, file), file);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -136,6 +136,8 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         public PublishingProfile getPublishingProfile();
 
         public String getFilePath();
+
+        public String getSourceDirectory();
 
         public String getTargetDirectory();
     }

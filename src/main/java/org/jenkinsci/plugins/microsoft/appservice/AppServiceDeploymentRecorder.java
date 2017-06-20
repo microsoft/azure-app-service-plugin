@@ -33,6 +33,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
     private final AzureAuth credentials;
     private final AppService appService;
     private final String filePath;
+    private @CheckForNull String sourceDirectory;
     private @CheckForNull String targetDirectory;
     private @CheckForNull String slotName;
 
@@ -56,6 +57,15 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
     public String getFilePath() {
         return this.filePath;
+    }
+
+    @DataBoundSetter
+    public void setSourceDirectory(@CheckForNull String sourceDirectory) {
+        this.sourceDirectory = Util.fixNull(sourceDirectory);
+    }
+
+    public @CheckForNull String getSourceDirectory() {
+        return sourceDirectory;
     }
 
     @DataBoundSetter
@@ -102,6 +112,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
         final String expandedFilePath = build.getEnvironment(listener).expand(filePath);
         final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath);
+        commandContext.setSourceDirectory(sourceDirectory);
         commandContext.setTargetDirectory(targetDirectory);
         commandContext.setSlotName(slotName);
 
