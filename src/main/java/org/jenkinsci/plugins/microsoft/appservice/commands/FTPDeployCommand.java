@@ -25,6 +25,14 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
     private static final String TOMCAT_ROOT_WAR = SITE_ROOT + "webapps/ROOT.war";
     private static final String TOMCAT_ROOT_DIR = SITE_ROOT + "webapps/ROOT";
 
+    private static final class FTPException extends Exception {
+
+        FTPException(String msg) {
+            super(msg);
+        }
+
+    }
+
     public void execute(IFTPDeployCommandData context) {
         final FilePath workspace = context.getBuild().getWorkspace();
         final PublishingProfile pubProfile = context.getPublishingProfile();
@@ -53,20 +61,34 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             context.logStatus(String.format("Starting to deploy to FTP: %s", ftpUrl));
 
             ftpClient.connect(ftpUrl);
-            ftpClient.login(userName, password);
+            if (!ftpClient.login(userName, password)) {
+                throw new FTPException("Fail to login");
+            }
 
             final String targetDirectory = SITE_ROOT + Util.fixNull(context.getTargetDirectory());
-            ftpClient.makeDirectory(targetDirectory);
-            ftpClient.changeWorkingDirectory(targetDirectory);
+            if (!ftpClient.changeWorkingDirectory(targetDirectory)) {
+                // Target directory doesn't exist. Try to create it.
+                if (!ftpClient.makeDirectory(targetDirectory)) {
+                    throw new FTPException("Fail to make directory: " + targetDirectory);
+                }
+            }
+
+            if (!ftpClient.changeWorkingDirectory(targetDirectory)) {
+                throw new FTPException("Fail to change working directory to: " + targetDirectory);
+            }
+
             context.logStatus(String.format("Working directory: %s", ftpClient.printWorkingDirectory()));
 
             final File sourceDir = new File(workspace.getRemote(), Util.fixNull(context.getSourceDirectory()));
             FileSet fs = Util.createFileSet(sourceDir, context.getFilePath());
             DirectoryScanner ds = fs.getDirectoryScanner();
             String[] files = ds.getIncludedFiles();
-            for (String file: files) {
+            for (String file : files) {
                 uploadFile(context, ftpClient, new File(sourceDir, file), file);
             }
+        } catch (FTPException e) {
+            context.logError(e);
+            context.setDeploymentState(DeploymentState.HasError);
         } catch (IOException e) {
             e.printStackTrace();
             context.logError("Fail to deploy to FTP: "  + e.getMessage());
@@ -90,7 +112,8 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
      * @param dir Directory to remove
      * @throws IOException
      */
-    private void removeFtpDirectory(IFTPDeployCommandData context, FTPClient ftpClient, String dir) throws IOException {
+    private void removeFtpDirectory(IFTPDeployCommandData context, FTPClient ftpClient, String dir)
+            throws IOException, FTPException {
         context.logStatus("Removing remote directory: " + dir);
 
         FTPFile[] subFiles = ftpClient.listFiles(dir);
@@ -110,27 +133,38 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
                     // Delete regular file
                     context.logStatus("Removing remote file: " + fullFileName);
 
-                    ftpClient.deleteFile(fullFileName);
+                    if (!ftpClient.deleteFile(fullFileName)) {
+                        throw new FTPException("Fail to delete file: " + fullFileName);
+                    }
                 }
             }
         }
 
-        ftpClient.removeDirectory(dir);
+        if (!ftpClient.removeDirectory(dir)) {
+            throw new FTPException("Fail to remove directory: " + dir);
+        }
     }
 
-    private void uploadFile(IFTPDeployCommandData context, FTPClient ftpClient, File file, String remoteName) throws IOException {
+    private void uploadFile(IFTPDeployCommandData context, FTPClient ftpClient, File file, String remoteName)
+            throws IOException, FTPException {
         context.logStatus(String.format("Uploading %s", remoteName));
 
         // Need some preparation in some cases
         prepareDirectory(context, ftpClient, remoteName);
 
-        ftpClient.setFileType(FTP.BINARY_FILE_TYPE);
+        if (!ftpClient.setFileType(FTP.BINARY_FILE_TYPE)) {
+            throw new FTPException("Fail to set FTP file type to binary");
+        }
+
         try (InputStream stream = new FileInputStream(file)) {
-            ftpClient.storeFile(remoteName, stream);
+            if (!ftpClient.storeFile(remoteName, stream)) {
+                throw new FTPException("Fail to upload file to: " + remoteName);
+            }
         }
     }
 
-    private void prepareDirectory(IFTPDeployCommandData context, FTPClient ftpClient, String fileName) throws IOException {
+    private void prepareDirectory(IFTPDeployCommandData context, FTPClient ftpClient, String fileName)
+            throws IOException, FTPException {
         // Deployment to tomcat root requires removing root directory first
         final String targetFilePath = FilenameUtils.concat(ftpClient.printWorkingDirectory(), fileName);
         if (targetFilePath.equalsIgnoreCase(FilenameUtils.separatorsToSystem(TOMCAT_ROOT_WAR))) {
