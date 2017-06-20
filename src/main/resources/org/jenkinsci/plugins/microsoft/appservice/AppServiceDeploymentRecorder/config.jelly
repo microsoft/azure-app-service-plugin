@@ -17,6 +17,11 @@
             <f:textbox />
         </f:entry>
 
+        <f:entry title="${%Source_Directory}" field="sourceDirectory"
+                 help="/plugin/azure-app-service/help-sourceDirectory.html">
+            <f:textbox />
+        </f:entry>
+
         <f:entry title="${%Target_Directory}" field="targetDirectory"
                  help="/plugin/azure-app-service/help-targetDirectory.html">
             <f:textbox />

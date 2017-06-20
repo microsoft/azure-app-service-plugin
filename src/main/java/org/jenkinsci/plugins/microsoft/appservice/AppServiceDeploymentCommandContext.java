@@ -20,6 +20,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         GitDeployCommand.IGitDeployCommandData {
 
     private final String filePath;
+    private String sourceDirectory;
     private String targetDirectory;
     private String slotName;
 
@@ -27,7 +28,12 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
 
     public AppServiceDeploymentCommandContext(final String filePath) {
         this.filePath = filePath;
+        this.sourceDirectory = "";
         this.targetDirectory = "";
+    }
+
+    public void setSourceDirectory(String sourceDirectory) {
+        this.sourceDirectory = Util.fixNull(sourceDirectory);
     }
 
     public void setTargetDirectory(String targetDirectory) {
@@ -77,6 +83,11 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     @Override
     public String getFilePath() {
         return filePath;
+    }
+
+    @Override
+    public String getSourceDirectory() {
+        return sourceDirectory;
     }
 
     @Override

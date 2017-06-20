@@ -93,7 +93,7 @@ public class GitDeployCommandTest {
         FileUtils.write(new File(src, "exclude.bak"), "exclude");
 
         Whitebox.invokeMethod(command, "copyAndAddFiles",
-            git, new FilePath(src), new FilePath(repo), "**/*.txt", "");
+            git, new FilePath(repo), new FilePath(src), "", "**/*.txt");
 
         // Files should be copied
         Assert.assertTrue(new File(repo, "f1.txt").exists());
@@ -121,6 +121,41 @@ public class GitDeployCommandTest {
     }
 
     @Test
+    public void copyAndAddFilesWithSourceDirectory() throws Exception {
+        GitDeployCommand command = new GitDeployCommand();
+        File repo = workspace.newFolder("repo");
+        GitClient git = Git.with(null, null)
+                .in(repo)
+                .getClient();
+        git.init();
+        File src = workspace.newFolder("src");
+        File deepDir = new File(src, "deep");
+        deepDir.mkdir();
+        FileUtils.write(new File(deepDir, "f.txt"), "f3");
+
+        Whitebox.invokeMethod(command, "copyAndAddFiles",
+                git, new FilePath(repo), new FilePath(deepDir), "", "*.txt");
+
+        // Files should be copied
+        Assert.assertTrue(new File(repo, "f.txt").exists());
+
+        // Files should be staged
+        git.withRepository(new RepositoryCallback<Void>() {
+            @Override
+            public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+                FileTreeIterator workingTreeIt = new FileTreeIterator(repo);
+                IndexDiff diff = new IndexDiff(repo, Constants.HEAD, workingTreeIt);
+                diff.diff();
+                Set<String> added = diff.getAdded();
+
+                Assert.assertTrue(added.contains("f.txt"));
+
+                return null;
+            }
+        });
+    }
+
+    @Test
     public void copyAndAddFilesWithTargetDirectory() throws Exception {
         GitDeployCommand command = new GitDeployCommand();
         File repo = workspace.newFolder("repo");
@@ -137,7 +172,7 @@ public class GitDeployCommandTest {
         FileUtils.write(new File(src, "exclude.bak"), "exclude");
 
         Whitebox.invokeMethod(command, "copyAndAddFiles",
-                git, new FilePath(src), new FilePath(repo), "**/*.txt", "target");
+                git, new FilePath(repo), new FilePath(src), "target", "**/*.txt");
 
         File targetDir = new File(repo, "target");
         File targetDeepDir = new File(targetDir, "deep");

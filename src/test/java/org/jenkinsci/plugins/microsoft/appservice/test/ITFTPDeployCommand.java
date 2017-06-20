@@ -123,13 +123,14 @@ public class ITFTPDeployCommand extends IntegrationTest {
     }
 
     /**
-     * This test uploads a war file to a root directory and verifies web page content, with target directory specified
+     * This test uploads a war file to a root directory and verifies web page content, with source and target directories specified
      * @throws IOException
      * @throws InterruptedException
      */
     @Test
-    public void uploadWithTargetDirectory() throws IOException, InterruptedException {
-        Utils.extractResourceFile(getClass(), "sample-java-app/app.war", workspace.child("ROOT.war").getRemote());
+    public void uploadWithSourceTargetDirectory() throws IOException, InterruptedException {
+        Utils.extractResourceFile(getClass(), "sample-java-app/app.war", workspace.child("target/ROOT.war").getRemote());
+        when(commandDataMock.getSourceDirectory()).thenReturn("target");
         when(commandDataMock.getTargetDirectory()).thenReturn("webapps");
         when(commandDataMock.getFilePath()).thenReturn("ROOT.war");
 
