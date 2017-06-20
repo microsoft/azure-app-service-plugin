@@ -65,6 +65,9 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
                 throw new FTPException("Fail to login");
             }
 
+            // Use passive mode to bypass client firewall
+            ftpClient.enterLocalPassiveMode();
+
             final String targetDirectory = SITE_ROOT + Util.fixNull(context.getTargetDirectory());
             if (!ftpClient.changeWorkingDirectory(targetDirectory)) {
                 // Target directory doesn't exist. Try to create it.
