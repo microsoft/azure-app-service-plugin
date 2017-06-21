@@ -8,11 +8,12 @@ package org.jenkinsci.plugins.microsoft.appservice.test;
 import com.microsoft.azure.management.appservice.*;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import hudson.FilePath;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import org.jenkinsci.plugins.microsoft.appservice.commands.FTPDeployCommand;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -69,9 +70,9 @@ public class ITFTPDeployCommand extends IntegrationTest {
         workspaceDir.deleteOnExit();
         workspace = new FilePath(workspaceDir);
 
-        final AbstractBuild build = mock(AbstractBuild.class);
-        when(build.getWorkspace()).thenReturn(workspace);
-        when(commandDataMock.getBuild()).thenReturn(build);
+        final Run run = mock(Run.class);
+        when(commandDataMock.getRun()).thenReturn(run);
+        when(commandDataMock.getWorkspace()).thenReturn(workspace);
     }
 
     /**

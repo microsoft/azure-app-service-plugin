@@ -6,15 +6,16 @@
 package org.jenkinsci.plugins.microsoft.appservice.test;
 
 import com.microsoft.azure.management.appservice.*;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.FreeStyleBuild;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import org.jenkinsci.plugins.microsoft.appservice.AppServiceDeploymentCommandContext;
 import org.jenkinsci.plugins.microsoft.appservice.commands.*;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.HashMap;
 
 import static org.mockito.Mockito.mock;
@@ -44,13 +45,15 @@ public class AppServiceDeploymentCommandContextTest {
         when(pubProfile.ftpUsername()).thenReturn("user");
         when(pubProfile.ftpPassword()).thenReturn("pass");
 
-        final AbstractBuild<?, ?> build = mock(FreeStyleBuild.class);
-        final BuildListener listener = mock(BuildListener.class);
+        final Run run = mock(Run.class);
+        final TaskListener listener = mock(TaskListener.class);
+        final FilePath workspace = new FilePath(new File("workspace"));
         final WebApp app = mock(WebApp.class);
         when(app.getPublishingProfile()).thenReturn(pubProfile);
 
-        ctx.configure(build, listener, app);
+        ctx.configure(run, workspace, listener, app);
 
+        Assert.assertEquals(workspace, ctx.getWorkspace());
         Assert.assertEquals("ftp://example.com", ctx.getPublishingProfile().ftpUrl());
         Assert.assertEquals("user", ctx.getPublishingProfile().ftpUsername());
         Assert.assertEquals("pass", ctx.getPublishingProfile().ftpPassword());
@@ -61,13 +64,14 @@ public class AppServiceDeploymentCommandContextTest {
     public void configure() throws AzureCloudException {
         AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
 
-        final AbstractBuild<?, ?> build = mock(FreeStyleBuild.class);
-        final BuildListener listener = mock(BuildListener.class);
+        final Run run = mock(Run.class);
+        final FilePath workspace = new FilePath(new File("workspace"));
+        final TaskListener listener = mock(TaskListener.class);
         final WebApp app = mock(WebApp.class);
 
         // Non-Java Application
         when(app.javaVersion()).thenReturn(JavaVersion.OFF);
-        ctx.configure(build, listener, app);
+        ctx.configure(run, workspace, listener, app);
         HashMap<Class, TransitionInfo> commands = ctx.getCommands();
         Assert.assertTrue(commands.containsKey(GitDeployCommand.class));
         Assert.assertFalse(commands.containsKey(FTPDeployCommand.class));
@@ -76,7 +80,7 @@ public class AppServiceDeploymentCommandContextTest {
 
         // Java Application
         when(app.javaVersion()).thenReturn(JavaVersion.JAVA_8_NEWEST);
-        ctx.configure(build, listener, app);
+        ctx.configure(run, workspace, listener, app);
         commands = ctx.getCommands();
         Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
         Assert.assertTrue(commands.containsKey(FTPDeployCommand.class));
@@ -85,7 +89,7 @@ public class AppServiceDeploymentCommandContextTest {
 
         // Docker
         ctx.setPublishType(AppServiceDeploymentCommandContext.PUBLISH_TYPE_DOCKER);
-        ctx.configure(build, listener, app);
+        ctx.configure(run, workspace, listener, app);
         commands = ctx.getCommands();
         Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
         Assert.assertFalse(commands.containsKey(FTPDeployCommand.class));
@@ -98,8 +102,9 @@ public class AppServiceDeploymentCommandContextTest {
 
     @Test
     public void configureSlot() throws AzureCloudException {
-        final AbstractBuild<?, ?> build = mock(FreeStyleBuild.class);
-        final BuildListener listener = mock(BuildListener.class);
+        final Run run = mock(Run.class);
+        final FilePath workspace = new FilePath(new File("workspace"));
+        final TaskListener listener = mock(TaskListener.class);
         final WebApp app = mock(WebApp.class);
 
         // Mock slot publishing profile
@@ -122,20 +127,20 @@ public class AppServiceDeploymentCommandContextTest {
 
         // Configure default
         AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
-        ctx.configure(build, listener, app);
+        ctx.configure(run, workspace, listener, app);
         Assert.assertEquals("default-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure slot
         ctx = new AppServiceDeploymentCommandContext("sample.war");
         ctx.setSlotName("staging");
-        ctx.configure(build, listener, app);
+        ctx.configure(run, workspace, listener, app);
         Assert.assertEquals("slot-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure not existing slot
         try {
             ctx = new AppServiceDeploymentCommandContext("sample.war");
             ctx.setSlotName("not-found");
-            ctx.configure(build, listener, app);
+            ctx.configure(run, workspace, listener, app);
             Assert.fail("Should throw exception when slot not found");
         } catch (AzureCloudException ex) {
         }

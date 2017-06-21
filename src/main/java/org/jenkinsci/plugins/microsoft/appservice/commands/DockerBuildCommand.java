@@ -18,8 +18,6 @@ import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 import java.io.File;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 public class DockerBuildCommand extends DockerCommand implements ICommand<DockerBuildCommand.IDockerBuildCommandData> {
 
     @Override
@@ -30,7 +28,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
             final String image = imageAndTag(dockerBuildInfo);
             context.logStatus(String.format("Building new docker image `%s`", image));
 
-            final FilePath workspace = context.getBuild().getWorkspace();
+            final FilePath workspace = context.getWorkspace();
             if (workspace == null) {
                 throw new AzureCloudException("workspace is not available at this time.");
             }

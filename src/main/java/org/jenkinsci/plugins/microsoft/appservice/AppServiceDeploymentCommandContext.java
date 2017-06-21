@@ -9,9 +9,10 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
+import hudson.FilePath;
 import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.microsoft.appservice.commands.*;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
@@ -69,7 +70,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         this.deleteTempImage = deleteTempImage;
     }
 
-    public void configure(AbstractBuild<?, ?> build, BuildListener listener, WebApp app) throws AzureCloudException {
+    public void configure(Run<?, ?> run, FilePath workspace, TaskListener listener, WebApp app) throws AzureCloudException {
         if (StringUtils.isBlank(slotName)) {
             // Deploy to default
             pubProfile = app.getPublishingProfile();
@@ -107,7 +108,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
             commands.put(GitDeployCommand.class, new TransitionInfo(new GitDeployCommand(), null, null));
         }
 
-        super.configure(build, listener, commands, startCommandClass);
+        super.configure(run, workspace, listener, commands, startCommandClass);
         this.setDeploymentState(DeploymentState.Running);
     }
 

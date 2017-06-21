@@ -11,7 +11,7 @@ import com.microsoft.azure.management.appservice.PublishingProfile;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Util;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitTool;
@@ -22,7 +22,10 @@ import org.apache.tools.ant.types.FileSet;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheBuildIterator;
 import org.eclipse.jgit.dircache.DirCacheBuilder;
-import org.eclipse.jgit.lib.*;
+import org.eclipse.jgit.lib.Constants;
+import org.eclipse.jgit.lib.FileMode;
+import org.eclipse.jgit.lib.IndexDiff;
+import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -47,10 +50,10 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
     public void execute(IGitDeployCommandData context) {
         try {
             final PublishingProfile pubProfile = context.getPublishingProfile();
-            final AbstractBuild<?, ?> build = context.getBuild();
+            final Run run = context.getRun();
             final TaskListener listener = context.getListener();
-            final EnvVars env = build.getEnvironment(listener);
-            final FilePath ws = build.getWorkspace();
+            final EnvVars env = run.getEnvironment(listener);
+            final FilePath ws = context.getWorkspace();
             if (ws == null) {
                 context.logError("Workspace is null");
                 context.setDeploymentState(DeploymentState.HasError);

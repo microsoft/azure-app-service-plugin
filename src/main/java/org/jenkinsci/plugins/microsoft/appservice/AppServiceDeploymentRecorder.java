@@ -10,7 +10,6 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.github.dockerjava.api.model.AuthConfig;
-import com.github.dockerjava.core.NameParser;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
@@ -18,10 +17,7 @@ import com.microsoft.azure.management.appservice.implementation.SiteConfigResour
 import com.microsoft.azure.management.appservice.implementation.SiteInner;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.util.AzureCredentials;
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.Launcher;
-import hudson.Util;
+import hudson.*;
 import hudson.model.*;
 import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
@@ -30,18 +26,18 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
-import hudson.util.Secret;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
+import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
 import org.jenkinsci.plugins.microsoft.appservice.commands.DockerBuildInfo;
 import org.jenkinsci.plugins.microsoft.appservice.commands.DockerPingCommand;
-import org.jenkinsci.plugins.microsoft.appservice.util.Constants;
 import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.jenkinsci.plugins.microsoft.services.CommandService;
@@ -52,11 +48,11 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 
-public class AppServiceDeploymentRecorder extends Recorder {
+public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuildStep {
 
     private final String azureCredentialsId;
     private final String resourceGroup;
@@ -218,12 +214,12 @@ public class AppServiceDeploymentRecorder extends Recorder {
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-            throws IOException, InterruptedException {
-        // only deploy on build succeeds
-        if (build.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
+    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener)
+            throws InterruptedException, IOException {
+        // Only deploy on build succeeds
+        if (run.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
             listener.getLogger().println("Deploy to Azure app service: SKIPPED.");
-            return false;
+            return;
         }
 
         listener.getLogger().println("Starting Azure App Service Deployment");
@@ -233,17 +229,18 @@ public class AppServiceDeploymentRecorder extends Recorder {
         final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appService);
         if (app == null) {
             listener.getLogger().println(String.format("App %s in resource group %s not found", appService, resourceGroup));
-            return false;
+            return;
         }
 
-        final String expandedFilePath = build.getEnvironment(listener).expand(filePath);
+        final String expandedFilePath = run.getEnvironment(listener).expand(filePath);
         final DockerBuildInfo dockerBuildInfo;
         try {
-            dockerBuildInfo = validateDockerBuildInfo(build, listener, app);
+            dockerBuildInfo = validateDockerBuildInfo(run, listener, app);
         } catch (AzureCloudException e) {
             listener.getLogger().println(e.getMessage());
-            return false;
+            return;
         }
+
         final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath);
         commandContext.setSourceDirectory(sourceDirectory);
         commandContext.setTargetDirectory(targetDirectory);
@@ -253,50 +250,47 @@ public class AppServiceDeploymentRecorder extends Recorder {
         commandContext.setDeleteTempImage(deleteTempImage);
 
         try {
-            commandContext.configure(build, listener, app);
+            commandContext.configure(run, workspace, listener, app);
         } catch (AzureCloudException e) {
             listener.fatalError(e.getMessage());
-            return false;
+            return;
         }
 
         CommandService.executeCommands(commandContext);
 
-        if (commandContext.getHasError()) {
-            return false;
-        } else {
+        if (!commandContext.getHasError()) {
             listener.getLogger().println("Done Azure App Service Deployment");
-            return true;
         }
     }
 
-    private DockerBuildInfo validateDockerBuildInfo(final AbstractBuild<?, ?> build, final BuildListener listener, final WebApp app)
+    private DockerBuildInfo validateDockerBuildInfo(final Run<?, ?> run, final TaskListener listener, final WebApp app)
             throws IOException, InterruptedException, AzureCloudException {
         final DockerBuildInfo dockerBuildInfo = new DockerBuildInfo();
 
         final String linuxFxVersion = getLinuxFxVersion(app);
         if (StringUtils.isBlank(linuxFxVersion) || isBuiltInDockerImage(linuxFxVersion)) {
             // windows app doesn't need any docker config
-            if (this.publishType.equals(AppServiceDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
+            if (StringUtils.isNotBlank(this.publishType) && this.publishType.equals(AppServiceDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
                 throw new AzureCloudException("Publish a windows or built-in image web app through docker is not currently supported.");
             }
             return dockerBuildInfo;
         }
 
-        final EnvVars envVars = build.getEnvironment(listener);
+        final EnvVars envVars = run.getEnvironment(listener);
 
         // docker file
         final String dockerfile = StringUtils.isBlank(dockerFilePath) ? "**/Dockerfile" : dockerFilePath;
         dockerBuildInfo.withDockerfile(envVars.expand(dockerfile));
 
         // AuthConfig for registry
-        dockerBuildInfo.withAuthConfig(getAuthConfig(build.getParent(), dockerRegistryEndpoint));
+        dockerBuildInfo.withAuthConfig(getAuthConfig(run.getParent(), dockerRegistryEndpoint));
 
         // the original docker image on Azure
         dockerBuildInfo.withLinuxFxVersion(linuxFxVersion);
 
         // docker image tag
         final String tag = StringUtils.isBlank(dockerImageTag) ?
-                String.valueOf(build.getNumber()) : envVars.expand(dockerImageTag);
+                String.valueOf(run.getNumber()) : envVars.expand(dockerImageTag);
         dockerBuildInfo.withDockerImageTag(tag);
 
         // docker image name
@@ -363,6 +357,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
     }
 
     @Extension
+    @Symbol("azureAppServicePublish")
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {

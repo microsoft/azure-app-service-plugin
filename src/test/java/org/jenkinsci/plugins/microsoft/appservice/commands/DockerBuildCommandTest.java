@@ -11,10 +11,10 @@ import com.github.dockerjava.api.model.AuthConfig;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.google.common.io.Files;
 import hudson.FilePath;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.StreamBuildListener;
+import hudson.model.*;
+import hudson.util.StreamTaskListener;
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.helpers.SyslogQuietWriter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -61,13 +61,13 @@ public class DockerBuildCommandTest extends AbstractDockerCommandTest {
         dockerfileDir = new TemporaryFolder(workspaceDir);
         dockerfileDir.create();
 
-        // Mock build
-        final AbstractBuild build = mock(AbstractBuild.class);
-        when(build.getWorkspace()).thenReturn(workspace);
-        when(commandData.getBuild()).thenReturn(build);
+        // Mock run
+        final Run run = mock(Run.class);
+        when(commandData.getWorkspace()).thenReturn(workspace);
+        when(commandData.getRun()).thenReturn(run);
 
-        // Mock build listener
-        final BuildListener listener = new StreamBuildListener(System.out, Charset.defaultCharset());
+        // Mock task listener
+        final TaskListener listener = new StreamTaskListener(System.out, Charset.defaultCharset());
         when(commandData.getListener()).thenReturn(listener);
 
         // Mock docker client
