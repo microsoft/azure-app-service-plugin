@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
@@ -10,6 +10,17 @@ import com.microsoft.azure.management.appservice.PricingTier;
 import com.microsoft.azure.management.appservice.SkuDescription;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
+import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
+import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.rules.Timeout;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -18,16 +29,10 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jenkinsci.plugins.microsoft.appservice.commands.IBaseCommandData;
-import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
-import org.junit.*;
-import org.junit.rules.Timeout;
-import org.jvnet.hudson.test.JenkinsRule;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 /*
 To execute the integration tests you need to set the credentials env variables (the ones that don't have a default) and run mvn failsafe:integration-test
