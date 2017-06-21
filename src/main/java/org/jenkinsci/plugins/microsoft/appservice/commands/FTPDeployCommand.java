@@ -5,8 +5,6 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
-import java.io.*;
-
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import hudson.FilePath;
 import hudson.Util;
@@ -16,6 +14,11 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCommandData> {
 
@@ -34,7 +37,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
     }
 
     public void execute(IFTPDeployCommandData context) {
-        final FilePath workspace = context.getBuild().getWorkspace();
+        final FilePath workspace = context.getWorkspace();
         final PublishingProfile pubProfile = context.getPublishingProfile();
 
         if (workspace == null) {

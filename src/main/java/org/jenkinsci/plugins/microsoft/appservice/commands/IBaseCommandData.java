@@ -5,14 +5,17 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 
 public interface IBaseCommandData {
 
-    public AbstractBuild<?, ?> getBuild();
+    public Run<?, ?> getRun();
 
-    public BuildListener getListener();
+    public TaskListener getListener();
+
+    public FilePath getWorkspace();
 
     public void logError(String message);
 

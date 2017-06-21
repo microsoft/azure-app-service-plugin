@@ -5,23 +5,27 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import java.util.HashMap;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import org.jenkinsci.plugins.microsoft.services.ICommandServiceData;
+
+import java.util.HashMap;
 
 public abstract class AbstractCommandContext implements ICommandServiceData {
 
-    private AbstractBuild<?, ?> build;
-    private BuildListener listener;
+    private Run<?, ?> run;
+    private FilePath workspace;
+    private TaskListener listener;
     private DeploymentState deployState = DeploymentState.Unknown;
     private HashMap<Class, TransitionInfo> commands;
     private Class startCommandClass;
 
-    protected void configure(AbstractBuild<?, ?> build, BuildListener listener,
-            HashMap<Class, TransitionInfo> commands,
-            Class startCommandClass) {
-        this.build = build;
+    protected void configure(Run<?, ?> run, FilePath workspace, TaskListener listener,
+                             HashMap<Class, TransitionInfo> commands,
+                             Class startCommandClass) {
+        this.run = run;
+        this.workspace = workspace;
         this.listener = listener;
         this.commands = commands;
         this.startCommandClass = startCommandClass;
@@ -55,12 +59,16 @@ public abstract class AbstractCommandContext implements ICommandServiceData {
                 || this.deployState.equals(DeploymentState.Done);
     }
 
-    public AbstractBuild<?, ?> getBuild() {
-        return this.build;
+    public Run<?, ?> getRun() {
+        return this.run;
     }
 
-    public BuildListener getListener() {
+    public TaskListener getListener() {
         return this.listener;
+    }
+
+    public FilePath getWorkspace() {
+        return workspace;
     }
 
     public void logStatus(String status) {

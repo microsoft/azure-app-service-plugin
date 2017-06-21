@@ -6,14 +6,10 @@
 package org.jenkinsci.plugins.microsoft.appservice.test;
 
 import com.microsoft.azure.management.appservice.*;
-import com.microsoft.azure.management.resources.Deployment;
-import com.microsoft.azure.management.resources.DeploymentMode;
 import com.microsoft.azure.management.resources.ResourceGroup;
-import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import hudson.EnvVars;
 import hudson.FilePath;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
+import hudson.model.Run;
 import hudson.model.StreamBuildListener;
 import hudson.model.TaskListener;
 import org.jenkinsci.plugins.microsoft.appservice.commands.GitDeployCommand;
@@ -68,21 +64,21 @@ public class ITGitDeployCommand extends IntegrationTest {
         File workspaceDir = com.google.common.io.Files.createTempDir();
         workspaceDir.deleteOnExit();
         workspace = new FilePath(workspaceDir);
+        when(commandDataMock.getWorkspace()).thenReturn(workspace);
 
-        // Mock build
-        final AbstractBuild build = mock(AbstractBuild.class);
-        when(build.getWorkspace()).thenReturn(workspace);
+        // Mock run
+        final Run run = mock(Run.class);
         final EnvVars env = new EnvVars("BUILD_TAG", "jenkins-job-1");
         try {
-            when(build.getEnvironment(any(TaskListener.class))).thenReturn(env);
+            when(run.getEnvironment(any(TaskListener.class))).thenReturn(env);
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             Assert.fail(e.getMessage());
         }
-        when(commandDataMock.getBuild()).thenReturn(build);
+        when(commandDataMock.getRun()).thenReturn(run);
 
-        // Mock build listener
-        final BuildListener listener = new StreamBuildListener(System.out, Charset.defaultCharset());
+        // Mock task listener
+        final TaskListener listener = new StreamBuildListener(System.out, Charset.defaultCharset());
         when(commandDataMock.getListener()).thenReturn(listener);
     }
 
