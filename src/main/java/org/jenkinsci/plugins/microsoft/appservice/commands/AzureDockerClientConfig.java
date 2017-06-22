@@ -18,9 +18,6 @@ import org.apache.commons.lang.builder.ToStringStyle;
 
 import java.io.*;
 import java.net.URI;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
@@ -131,7 +128,7 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
     }
 
     /**
-     * Creates a new Properties object containing values overridden from ${user.home}/.docker.io.properties
+     * Creates a new Properties object containing values overridden from ${user.home}/.docker.io.properties .
      *
      * @param p The original set of properties to override
      * @return A copy of the original Properties with overridden values
@@ -172,7 +169,7 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
     }
 
     /**
-     * Creates a new Properties object containing values overridden from the System properties
+     * Creates a new Properties object containing values overridden from the System properties.
      *
      * @param p The original set of properties to override
      * @return A copy of the original Properties with overridden values
@@ -194,7 +191,7 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
     }
 
     /**
-     * Allows you to build the config without system environment interfering for more robust testing
+     * Allows you to build the config without system environment interfering for more robust testing.
      */
     static AzureDockerClientConfig.Builder createDefaultConfigBuilder(Map<String, String> env, Properties systemProperties) {
         Properties properties = loadIncludedDockerProperties(systemProperties);
@@ -310,7 +307,7 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
         }
 
         /**
-         * configure DOCKER_HOST
+         * configure DOCKER_HOST.
          */
         public final AzureDockerClientConfig.Builder withDockerHost(String dockerHost) {
             checkNotNull(dockerHost, "uri was not specified");

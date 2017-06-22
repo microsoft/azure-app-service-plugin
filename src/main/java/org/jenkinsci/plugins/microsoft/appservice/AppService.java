@@ -9,7 +9,6 @@ import hudson.Extension;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import jenkins.model.Jenkins;
-import org.jenkinsci.plugins.microsoft.appservice.util.JellyUtil;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class AppService implements Describable<AppService> {
@@ -52,13 +51,6 @@ public class AppService implements Describable<AppService> {
             return null;
         }
 
-        public String defaultAppServiceName() {
-            return JellyUtil.generateUniqueName("jw");
-        }
-
-        public String defaultResourceGroupName() {
-            return JellyUtil.generateUniqueName("jw");
-        }
     }
 
 }

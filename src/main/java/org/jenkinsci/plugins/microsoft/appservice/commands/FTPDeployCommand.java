@@ -112,7 +112,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
     }
 
     /**
-     * Remove FTP directory recursively
+     * Remove FTP directory recursively.
      * @param context Command context
      * @param ftpClient FTP client
      * @param dir Directory to remove
@@ -180,12 +180,12 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
 
     public interface IFTPDeployCommandData extends IBaseCommandData {
 
-        public PublishingProfile getPublishingProfile();
+        PublishingProfile getPublishingProfile();
 
-        public String getFilePath();
+        String getFilePath();
 
-        public String getSourceDirectory();
+        String getSourceDirectory();
 
-        public String getTargetDirectory();
+        String getTargetDirectory();
     }
 }

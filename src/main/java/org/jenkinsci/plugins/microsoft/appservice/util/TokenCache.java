@@ -20,14 +20,14 @@ public class TokenCache {
 
     private static final Logger LOGGER = Logger.getLogger(TokenCache.class.getName());
 
-    private static final Object tsafe = new Object();
+    private static final Object TSAFE = new Object();
 
     private static TokenCache cache = null;
 
     protected final AzureCredentials.ServicePrincipal credentials;
 
     public static TokenCache getInstance(final AzureCredentials.ServicePrincipal servicePrincipal) {
-        synchronized (tsafe) {
+        synchronized (TSAFE) {
             if (cache == null) {
                 cache = new TokenCache(servicePrincipal);
             } else if (cache.credentials == null

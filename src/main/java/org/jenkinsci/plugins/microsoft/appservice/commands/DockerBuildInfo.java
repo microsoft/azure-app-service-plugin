@@ -7,7 +7,6 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.model.AuthConfig;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 
 public class DockerBuildInfo {
     private String dockerfile;

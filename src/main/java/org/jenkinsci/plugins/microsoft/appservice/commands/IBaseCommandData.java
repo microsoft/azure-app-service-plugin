@@ -11,21 +11,22 @@ import hudson.model.TaskListener;
 
 public interface IBaseCommandData {
 
-    public Run<?, ?> getRun();
+    Run<?, ?> getRun();
 
-    public TaskListener getListener();
+    TaskListener getListener();
 
-    public FilePath getWorkspace();
+    FilePath getWorkspace();
 
-    public void logError(String message);
+    void logError(String message);
 
-    public void logStatus(String status);
+    void logStatus(String status);
 
-    public void logError(Exception ex);
+    void logError(Exception ex);
 
-    public void logError(String prefix, Exception ex);
+    void logError(String prefix, Exception ex);
 
-    public void setDeploymentState(DeploymentState deployState);
+    void setDeploymentState(DeploymentState deployState);
 
-    public DeploymentState getDeploymentState();
+    DeploymentState getDeploymentState();
 }
+
