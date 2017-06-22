@@ -5,15 +5,13 @@
   ~ license information.
   -->
 
-<j:jelly xmlns:j="jelly:core"  xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form"  xmlns:c="/lib/credentials">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
-    <f:entry title="${%Resource_Group_Name}" field="resourceGroupName"
-                 help="/plugin/azure-app-service/help-resourceGroupName.html">
+    <f:entry title="${%Resource_Group_Name}" field="resourceGroupName">
         <f:textbox />
     </f:entry>
 
-    <f:entry title="${%AppService_Name}" field="appServiceName" 
-             help="/plugin/azure-app-service/help-appServiceName.html">
+    <f:entry title="${%AppService_Name}" field="appServiceName">
         <f:textbox />
     </f:entry>
 

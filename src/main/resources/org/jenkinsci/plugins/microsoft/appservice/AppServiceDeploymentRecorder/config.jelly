@@ -3,9 +3,7 @@
   ~ Licensed under the MIT License. See License.txt in the project root for
   ~ license information.
   -->
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout"
-         xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+<j:jelly xmlns:j="jelly:core"  xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:section title="${%Azure_Profile_Configuration}">
         <f:entry title="${%Azure_Credentials}" field="azureCredentialsId"
                  help="/plugin/azure-app-service/help-azureCredentials.html">
@@ -14,61 +12,51 @@
     </f:section>
 
     <f:section title="${%Webapp_Profile_Configuration}">
-        <f:entry title="${%Resource_Group_Name}" field="resourceGroup"
-                 help="/plugin/azure-app-service/help-resourceGroupName.html">
+        <f:entry title="${%Resource_Group_Name}" field="resourceGroup">
             <f:select/>
         </f:entry>
-        <f:entry title="${%Azure_Web_App}" field="appService"
-                 help="/plugin/azure-app-service/help-appServiceName.html">
+
+        <f:entry title="${%Azure_Web_App}" field="appService">
             <f:select/>
         </f:entry>
+
         <f:radioBlock name="publishType" value="git" inline="true" title="${%Publish_via_Git}"
-                      checked="${ instance.getPublishType()==null || instance.getPublishType() == 'git'}"
-                      help="/plugin/azure-app-service/help-publishViaGit.html">
-            <f:entry title="${%File_Path}" field="filePath"
-                     help="/plugin/azure-app-service/help-filePath.html">
+                      checked="${ instance.getPublishType()==null || instance.getPublishType() == 'git'}">
+            <f:entry title="${%File_Path}" field="filePath">
                 <f:textbox/>
             </f:entry>
-            <f:entry title="${%Source_Directory}" field="sourceDirectory"
-                     help="/plugin/azure-app-service/help-sourceDirectory.html">
+            <f:entry title="${%Source_Directory}" field="sourceDirectory">
                 <f:textbox/>
             </f:entry>
 
-            <f:entry title="${%Target_Directory}" field="targetDirectory"
-                     help="/plugin/azure-app-service/help-targetDirectory.html">
+            <f:entry title="${%Target_Directory}" field="targetDirectory">
                 <f:textbox/>
             </f:entry>
 
-            <f:entry title="${%Slot_Name}" field="slotName"
-                     help="/plugin/azure-app-service/help-slotName.html">
+            <f:entry title="${%Slot_Name}" field="slotName">
                 <f:textbox/>
             </f:entry>
         </f:radioBlock>
         <f:radioBlock name="publishType" value="docker" title="${%Publish_via_Docker}" inline="true"
                       checked="${instance.getPublishType() == 'docker'}"
                       help="/plugin/azure-app-service/help-publishViaDocker.html">
-            <f:entry title="${%Dockerfile_Path}" field="dockerFilePath"
-                     help="/plugin/azure-app-service/help-dockerfile.html">
+            <f:entry title="${%Dockerfile_Path}" field="dockerFilePath">
                 <f:textbox default="**/Dockerfile"/>
             </f:entry>
             <f:entry field="dockerRegistryEndpoint">
                 <f:property propertyDescriptor="${descriptor.dockerRegistryEndpointDescriptor}"/>
             </f:entry>
             <f:advanced align="left">
-                <f:entry title="${%Docker_Image}" field="dockerImageName"
-                         help="/plugin/azure-app-service/help-dockerImageName.html">
+                <f:entry title="${%Docker_Image}" field="dockerImageName">
                     <f:textbox/>
                 </f:entry>
-                <f:entry title="${%Docker_Image_Tag}" field="dockerImageTag"
-                         help="/plugin/azure-app-service/help-dockerImageTag.html">
+                <f:entry title="${%Docker_Image_Tag}" field="dockerImageTag">
                     <f:textbox default="${BUILD_NUMBER}"/>
                 </f:entry>
-                <f:entry field="deployOnlyIfSuccessful"
-                         help="/plugin/azure-app-service/help-deployOnlyIfSuccessful.html">
+                <f:entry field="deployOnlyIfSuccessful">
                     <f:checkbox title="${%Deploy_Only_If_Successful}" default="true"/>
                 </f:entry>
-                <f:entry field="deleteTempImage"
-                         help="/plugin/azure-app-service/help-deleteTempImage.html">
+                <f:entry field="deleteTempImage">
                     <f:checkbox title="${%Delete_Temporary_Image}" default="true"/>
                 </f:entry>
             </f:advanced>
