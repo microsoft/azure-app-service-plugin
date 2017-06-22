@@ -25,11 +25,11 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
     public void execute(final IDockerPushCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
         context.getListener().getLogger().println(String.format("Begin to push docker image %s:%s to registry %s",
-                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag(), dockerBuildInfo.getDockerRegistry()));
+                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag(), dockerBuildInfo.getAuthConfig().getRegistryAddress()));
 
         try {
-            final String image = getImageFullNameWithTag(dockerBuildInfo);
-            final DockerClient dockerClient = getDockerClient(dockerBuildInfo);
+            final String image = imageAndTagAndRegistry(dockerBuildInfo);
+            final DockerClient dockerClient = getDockerClient(dockerBuildInfo.getAuthConfig());
 
             final PushImageResultCallback callback = new PushImageResultCallback() {
                 @Override
@@ -48,8 +48,10 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
 
             dockerClient.pushImageCmd(image)
                     .withTag(dockerBuildInfo.getDockerImageTag())
-                    .exec(callback).awaitSuccess();
+                    .exec(callback)
+                    .awaitSuccess();
             context.getListener().getLogger().println("Push completed");
+            context.setDeploymentState(DeploymentState.Success);
         } catch (AzureCloudException e) {
             context.getListener().getLogger().println("Build failed for " + e.getMessage());
             context.setDeploymentState(DeploymentState.HasError);

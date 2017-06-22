@@ -32,20 +32,15 @@
                      help="/plugin/azure-app-service/help-dockerfile.html">
                 <f:textbox value="${it.getDockerFilePath()}" default="**/Dockerfile"/>
             </f:entry>
-            <f:entry title="${%Docker_Registry}" field="dockerRegistry"
-                     help="/plugin/azure-app-service/help-dockerRegistry.html">
-                <f:textbox value="${it.getDockerRegistry()}"/>
+            <f:entry title="${%Dockerfile_Path}" field="dockerFilePath"
+                                 help="/plugin/azure-app-service/help-dockerfile.html">
+                            <f:textbox value="${it.getDockerFilePath()}" default="**/Dockerfile"/>
             </f:entry>
-            <f:entry title="${%Docker_Registry_UserName}" field="dockerRegistryUserName"
-                     help="/plugin/azure-app-service/help-dockerRegistryUsername.html">
-                <f:textbox value="${it.getDockerRegistryUserName()}"/>
-            </f:entry>
-            <f:entry title="${%Docker_Registry_Password}" field="dockerRegistryPassword"
-                     help="/plugin/azure-app-service/help-dockerRegistryPassword.html">
-                <f:password value="${it.getDockerRegistryPassword()}"/>
+            <f:entry field="dockerRegistryEndpoint">
+                <f:property propertyDescriptor="${descriptor.dockerRegistryEndpointDescriptor}" />
             </f:entry>
             <f:validateButton title="${%VerifyConfiguration}" progress="${%VerifyingMsg}" method="verifyConfiguration"
-                              with="dockerRegistry,dockerRegistryUserName,dockerRegistryPassword"/>
+                              with="url,credentialsId"/>
         </f:radioBlock>
     </f:section>
 

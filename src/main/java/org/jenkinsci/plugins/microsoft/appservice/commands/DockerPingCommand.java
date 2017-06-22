@@ -16,12 +16,13 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.model.AuthConfig;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 public class DockerPingCommand extends DockerCommand {
-    public void ping(final String registry, final String userName, final String password)
+    public void ping(final AuthConfig authConfig)
             throws AzureCloudException {
-        DockerClient dockerClient = getDockerClient(registry, userName, password);
+        DockerClient dockerClient = getDockerClient(authConfig);
         try {
             dockerClient.pingCmd().exec();
         } catch (Exception e) {

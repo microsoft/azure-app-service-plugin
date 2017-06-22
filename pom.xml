@@ -18,11 +18,12 @@
         <java.level>7</java.level>
         <jenkins-test-harness.version>2.1</jenkins-test-harness.version>
         <jackson.version>2.7.4</jackson.version>
-        <guava.version>15.0</guava.version>
+        <guava.version>19.0</guava.version>
         <powermock.version>1.7.0RC2</powermock.version>
         <azuresdk.version>1.1.0</azuresdk.version>
         <azure-credentials.version>1.0</azure-credentials.version>
         <version.docker.java>3.0.10</version.docker.java>
+        <version.jenkins.docker-commons>1.4.0</version.jenkins.docker-commons>
     </properties>
 
     <name>Azure App Service</name>
@@ -125,6 +126,12 @@
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.53</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>docker-commons</artifactId>
+            <version>${version.jenkins.docker-commons}</version>
         </dependency>
     
         <dependency>

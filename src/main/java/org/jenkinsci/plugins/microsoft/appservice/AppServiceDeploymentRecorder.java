@@ -8,6 +8,8 @@ package org.jenkinsci.plugins.microsoft.appservice;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.github.dockerjava.api.model.AuthConfig;
+import com.github.dockerjava.core.NameParser;
 import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
@@ -18,10 +20,7 @@ import com.microsoft.azure.util.AzureCredentials;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Item;
+import hudson.model.*;
 import hudson.security.ACL;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -30,10 +29,16 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import jenkins.model.Jenkins;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.io.Charsets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
 import org.jenkinsci.plugins.microsoft.appservice.commands.DockerBuildInfo;
 import org.jenkinsci.plugins.microsoft.appservice.commands.DockerPingCommand;
+import org.jenkinsci.plugins.microsoft.appservice.util.Constants;
 import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.jenkinsci.plugins.microsoft.services.CommandService;
@@ -54,10 +59,9 @@ public class AppServiceDeploymentRecorder extends Recorder {
     private final String appService;
     private String publishType;
     private String filePath;
-    private String dockerRegistry;
     private String dockerFilePath;
-    private String dockerRegistryUserName;
-    private Secret dockerRegistryPassword;
+    private DockerRegistryEndpoint dockerRegistryEndpoint;
+
     private
     @CheckForNull
     String slotName;
@@ -83,23 +87,17 @@ public class AppServiceDeploymentRecorder extends Recorder {
     }
 
     @DataBoundSetter
-    public void setDockerRegistry(final String dockerRegistry) {
-        this.dockerRegistry = dockerRegistry;
-    }
-
-    @DataBoundSetter
     public void setDockerFilePath(final String dockerFilePath) {
         this.dockerFilePath = dockerFilePath;
     }
 
     @DataBoundSetter
-    public void setDockerRegistryUserName(final String dockerRegistryUserName) {
-        this.dockerRegistryUserName = dockerRegistryUserName;
+    public void setDockerRegistryEndpoint(final DockerRegistryEndpoint dockerRegistryEndpoint) {
+        this.dockerRegistryEndpoint = dockerRegistryEndpoint;
     }
 
-    @DataBoundSetter
-    public void setDockerRegistryPassword(final Secret dockerRegistryPassword) {
-        this.dockerRegistryPassword = dockerRegistryPassword;
+    public DockerRegistryEndpoint getDockerRegistryEndpoint() {
+        return dockerRegistryEndpoint;
     }
 
     public String getFilePath() {
@@ -122,20 +120,8 @@ public class AppServiceDeploymentRecorder extends Recorder {
         return publishType;
     }
 
-    public String getDockerRegistry() {
-        return dockerRegistry;
-    }
-
     public String getDockerFilePath() {
         return dockerFilePath;
-    }
-
-    public String getDockerRegistryUserName() {
-        return dockerRegistryUserName;
-    }
-
-    public Secret getDockerRegistryPassword() {
-        return dockerRegistryPassword;
     }
 
     @DataBoundSetter
@@ -214,24 +200,53 @@ public class AppServiceDeploymentRecorder extends Recorder {
             return dockerBuildInfo;
         }
 
+
         dockerBuildInfo.setDockerfile(build.getEnvironment(listener).expand(dockerFilePath));
         if (StringUtils.isBlank(dockerBuildInfo.getDockerfile())) {
             throw new AzureCloudException("Docker file is cannot be null or empty.");
         }
-        dockerBuildInfo.setDockerRegistry(dockerRegistry);
-        dockerBuildInfo.setUsername(dockerRegistryUserName);
-        dockerBuildInfo.setPassword(dockerRegistryPassword);
+        dockerBuildInfo.setAuthConfig(getAuthConfig(build.getParent(), dockerRegistryEndpoint));
         dockerBuildInfo.setLinuxFxVersion(linuxFxVersion);
         dockerBuildInfo.setDockerImageTag(String.valueOf(build.getNumber()));
 
-        final String imageAndTag = linuxFxVersion.substring(linuxFxVersion.indexOf("|") + 1);
-        if (imageAndTag.indexOf(":") > 0) {
-            dockerBuildInfo.setDockerImage(imageAndTag.substring(0, imageAndTag.indexOf(":") - 1));
+        // the linuxFxVersion should be "DOCKER|registry/repo/name:tag"
+        final String originalImageName = linuxFxVersion.substring(linuxFxVersion.indexOf("|") + 1).toLowerCase();
+        // Change "xxx.azurecr.io/someRepo/a/b/c:latest" to "<username>/a/b/c:<buildNumber>"
+        final NameParser.ReposTag reposTag = NameParser.parseRepositoryTag(originalImageName);
+        final String imageNameWithoutTagAndRegistry = NameParser.resolveRepositoryName(reposTag.repos).reposName;
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(dockerBuildInfo.getAuthConfig().getUsername())
+                .append("/");
+        final String[] nameParts = imageNameWithoutTagAndRegistry.split("/", 2);
+        if (nameParts.length == 1) {
+            stringBuilder.append(imageNameWithoutTagAndRegistry);
         } else {
-            dockerBuildInfo.setDockerImage(imageAndTag);
+            stringBuilder.append(nameParts[1]);
         }
+        dockerBuildInfo.setDockerImage(stringBuilder.toString());
 
         return dockerBuildInfo;
+    }
+
+    private static AuthConfig getAuthConfig(final Item project, final DockerRegistryEndpoint endpoint) throws AzureCloudException {
+        if (endpoint == null || StringUtils.isBlank(endpoint.getCredentialsId())) {
+            throw new AzureCloudException("docker registry configuration is not valid");
+        }
+
+        final DockerRegistryToken dockerRegistryToken = endpoint.getToken(project);
+        if (dockerRegistryToken == null) {
+            throw new AzureCloudException("cannot find the docker registry credential.");
+        }
+
+        final String[] credentials = new String(Base64.decodeBase64(dockerRegistryToken.getToken()), Charsets.UTF_8).split(":");
+        final AuthConfig authConfig = new AuthConfig();
+
+        authConfig.withRegistryAddress(StringUtils.isBlank(endpoint.getUrl()) ? AuthConfig.DEFAULT_SERVER_ADDRESS : endpoint.getUrl());
+        authConfig.withUsername(credentials[0]);
+        authConfig.withPassword(credentials[1]);
+
+        return authConfig;
     }
 
     public static final String getLinuxFxVersion(final WebApp webApp) throws AzureCloudException {
@@ -252,6 +267,11 @@ public class AppServiceDeploymentRecorder extends Recorder {
         return !linuxFxVersion.startsWith("DOCKER|");
     }
 
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl) super.getDescriptor();
+    }
+
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
@@ -261,6 +281,11 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
         public String getDisplayName() {
             return "Publish an Azure Web App";
+        }
+
+        public DockerRegistryEndpoint.DescriptorImpl getDockerRegistryEndpointDescriptor() {
+            return (DockerRegistryEndpoint.DescriptorImpl)
+                    Jenkins.getInstance().getDescriptor(DockerRegistryEndpoint.class);
         }
 
         public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
@@ -304,14 +329,15 @@ public class AppServiceDeploymentRecorder extends Recorder {
             return model;
         }
 
-        public final FormValidation doVerifyConfiguration(
-                @QueryParameter final String dockerRegistry,
-                @QueryParameter final String dockerRegistryUserName,
-                @QueryParameter final String dockerRegistryPassword) {
+        public final FormValidation doVerifyConfiguration(final @AncestorInPath Item owner,
+                                                          final @QueryParameter String url,
+                                                          final @QueryParameter String credentialsId) {
 
             DockerPingCommand pingCommand = new DockerPingCommand();
             try {
-                pingCommand.ping(dockerRegistry, dockerRegistryUserName, dockerRegistryPassword);
+                final DockerRegistryEndpoint dockerRegistryEndpoint = new DockerRegistryEndpoint(url, credentialsId);
+                final AuthConfig authConfig = getAuthConfig(null, dockerRegistryEndpoint);
+                pingCommand.ping(authConfig);
             } catch (AzureCloudException e) {
                 return FormValidation.error(e.getMessage());
             }

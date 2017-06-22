@@ -17,60 +17,69 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.DockerCmdExecFactory;
+import com.github.dockerjava.api.model.AuthConfig;
+import com.github.dockerjava.api.model.AuthConfigurations;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.dockerjava.core.SSLConfig;
 import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import hudson.model.AbstractBuild;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
+import javax.net.ssl.SSLContext;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
 
 /**
  * To provide some common docker-related methods for docker commands
  */
 public abstract class DockerCommand {
 
-    protected DockerClient getDockerClient(final DockerBuildInfo dockerBuildInfo) {
-        return getDockerClient(dockerBuildInfo.getDockerRegistry(), dockerBuildInfo.getUsername(), dockerBuildInfo.getPassword().getPlainText());
-    }
-
-    protected DockerClient getDockerClient(final String registry, final String userName, final String password) {
-        final DefaultDockerClientConfig.Builder builder = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withRegistryUsername(userName)
-                .withRegistryPassword(password);
-        if (StringUtils.isNotBlank(registry)) {
-            builder.withRegistryUrl(registry);
-        }
+    protected DockerClient getDockerClient(final AuthConfig authConfig) {
+        final AzureDockerClientConfig.Builder builder = AzureDockerClientConfig.createDefaultConfigBuilder()
+                .withRegistryUsername(authConfig.getUsername())
+                .withRegistryPassword(authConfig.getPassword())
+                .withRegistryUrl(authConfig.getRegistryAddress())
+                .withRegistryEmail(authConfig.getEmail());
 
         final DockerCmdExecFactory dockerCmdExecFactory = new JerseyDockerCmdExecFactory()
                 .withConnectTimeout(1000)
                 .withMaxTotalConnections(1)
                 .withMaxPerRouteConnections(1);
 
-        return DockerClientBuilder.getInstance(builder).withDockerCmdExecFactory(dockerCmdExecFactory).build();
+        return DockerClientBuilder.getInstance(builder.build())
+                .withDockerCmdExecFactory(dockerCmdExecFactory).build();
     }
 
-    protected String getImageFullName(final DockerBuildInfo dockerBuildInfo) throws AzureCloudException {
-        final StringBuilder stringBuilder = new StringBuilder();
-        if (StringUtils.isNotBlank(dockerBuildInfo.getDockerRegistry())) {
-            String registry = dockerBuildInfo.getDockerRegistry();
-            if (dockerBuildInfo.getDockerRegistry().toLowerCase().startsWith("http")) {
-                try {
-                    URI uri = new URI(registry);
-                    registry = uri.getHost();
-                } catch (URISyntaxException e) {
-                    throw new AzureCloudException("The docker registry is not a valid URI", e);
-                }
-            }
-            stringBuilder.append(registry).append("/").append(dockerBuildInfo.getDockerImage());
+    protected String imageAndTag(final DockerBuildInfo dockerBuildInfo) {
+        return String.format("%s:%s", dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag());
+    }
+
+    protected boolean isDockerHub(final AuthConfig authConfig) {
+        return StringUtils.isBlank(authConfig.getRegistryAddress()) ||
+                AuthConfig.DEFAULT_SERVER_ADDRESS.equalsIgnoreCase(authConfig.getRegistryAddress());
+    }
+
+    protected String imageAndTagAndRegistry(final DockerBuildInfo dockerBuildInfo)
+            throws AzureCloudException {
+        final AuthConfig authConfig = dockerBuildInfo.getAuthConfig();
+        if (isDockerHub(authConfig)) {
+            return imageAndTag(dockerBuildInfo);
         } else {
-            stringBuilder.append(dockerBuildInfo.getDockerImage());
+            try {
+                final URI uri = new URI(authConfig.getRegistryAddress());
+                final String registry = uri.getHost();
+                return String.format("%s/%s", registry, imageAndTag(dockerBuildInfo));
+            } catch (URISyntaxException e) {
+                throw new AzureCloudException("The docker registry is not a valid URI", e);
+            }
         }
-        return stringBuilder.toString();
-    }
-
-    protected String getImageFullNameWithTag(final DockerBuildInfo dockerBuildInfo) throws AzureCloudException {
-        return getImageFullName(dockerBuildInfo) + ":" + dockerBuildInfo.getDockerImageTag();
     }
 }

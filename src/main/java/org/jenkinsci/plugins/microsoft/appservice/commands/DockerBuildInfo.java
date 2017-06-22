@@ -15,14 +15,13 @@
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
-import hudson.util.Secret;
+import com.github.dockerjava.api.model.AuthConfig;
+import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 
 public class DockerBuildInfo {
     private String dockerfile;
-    private String dockerRegistry;
-    private String username;
-    private Secret password;
     private String linuxFxVersion; // the original docker image
+    private AuthConfig authConfig;
     private String dockerImage;
     private String dockerImageTag;
     private String imageid; // the image Id after build successfully
@@ -59,28 +58,12 @@ public class DockerBuildInfo {
         this.dockerfile = dockerfile;
     }
 
-    public String getDockerRegistry() {
-        return dockerRegistry;
+    public AuthConfig getAuthConfig() {
+        return authConfig;
     }
 
-    public void setDockerRegistry(String dockerRegistry) {
-        this.dockerRegistry = dockerRegistry;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public Secret getPassword() {
-        return password;
-    }
-
-    public void setPassword(Secret password) {
-        this.password = password;
+    public void setAuthConfig(final AuthConfig authConfig) {
+        this.authConfig = authConfig;
     }
 
     public String getImageid() {
