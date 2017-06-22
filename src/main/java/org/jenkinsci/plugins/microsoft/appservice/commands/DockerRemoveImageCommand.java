@@ -7,7 +7,6 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
-import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 /**
  * Created by juniwang on 28/06/2017.
