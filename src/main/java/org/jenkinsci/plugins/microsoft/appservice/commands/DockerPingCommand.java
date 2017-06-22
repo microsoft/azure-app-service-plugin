@@ -9,10 +9,7 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.exception.UnauthorizedException;
 import com.github.dockerjava.api.model.AuthConfig;
-import com.github.dockerjava.api.model.PullResponseItem;
-import com.github.dockerjava.core.command.PullImageResultCallback;
 import hudson.util.FormValidation;
-import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 public class DockerPingCommand extends DockerCommand {
     public FormValidation ping(final AuthConfig authConfig) {
@@ -22,9 +19,9 @@ public class DockerPingCommand extends DockerCommand {
             // make sure local docker is running
             dockerClient.pingCmd().exec();
         } catch (Exception e) {
-            return FormValidation.error("Docker is not running on Jenkins master server thus the verification cannot continue. " +
-                    "You can proceed to save the configuration. But you need to make sure Docker is properly installed and " +
-                    "running on your build agents. The detailed message:" + e.getMessage());
+            return FormValidation.error("Docker is not running on Jenkins master server thus the verification cannot continue. "
+                    + "You can proceed to save the configuration. But you need to make sure Docker is properly installed and "
+                    + "running on your build agents. The detailed message:" + e.getMessage());
         }
 
 
@@ -37,7 +34,7 @@ public class DockerPingCommand extends DockerCommand {
         } catch (Exception e) {
             return FormValidation.error("Validation fails: " + e.getMessage());
         }
-        return FormValidation.ok("Docker registry configuration verified. NOTE that you still need make sure docker is " +
-                "installed correctly on you build agents.");
+        return FormValidation.ok("Docker registry configuration verified. NOTE that you still need make sure docker is "
+                + "installed correctly on you build agents.");
     }
 }

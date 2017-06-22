@@ -72,6 +72,6 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
     }
 
     public interface IDockerPushCommandData extends IBaseCommandData {
-        public DockerBuildInfo getDockerBuildInfo();
+        DockerBuildInfo getDockerBuildInfo();
     }
 }

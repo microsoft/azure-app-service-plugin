@@ -150,22 +150,24 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
                     }
                     builder.commit();
                 } finally {
-                    if (dc != null)
+                    if (dc != null) {
                         dc.unlock();
+                    }
                 }
 
                 return null;
             }
 
             private void delete(Repository repo, File p) {
-                while (p != null && !p.equals(repo.getWorkTree()) && p.delete())
+                while (p != null && !p.equals(repo.getWorkTree()) && p.delete()) {
                     p = p.getParentFile();
+                }
             }
         });
     }
 
     /**
-     * Copy selected files to git working directory and stage them
+     * Copy selected files to git working directory and stage them.
      *
      * @param git Git client
      * @param repo Path to git repo
@@ -192,7 +194,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
     }
 
     /**
-     * Check if working tree changed
+     * Check if working tree changed.
      *
      * @param git Git client
      * @return If working tree changed.

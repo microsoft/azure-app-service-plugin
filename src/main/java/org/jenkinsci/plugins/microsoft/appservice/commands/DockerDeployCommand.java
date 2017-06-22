@@ -7,18 +7,8 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.model.AuthConfig;
-import com.microsoft.azure.management.Azure;
-import com.microsoft.azure.management.appservice.AppServiceCertificate;
-import com.microsoft.azure.management.appservice.AzureResourceType;
-import com.microsoft.azure.management.appservice.NameValuePair;
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
-import com.microsoft.azure.management.graphrbac.ResourceType;
-import com.microsoft.azure.util.AzureCredentials;
 import org.apache.commons.collections.map.HashedMap;
-import org.jenkinsci.plugins.microsoft.appservice.util.TokenCache;
-
-import java.util.List;
 
 public class DockerDeployCommand extends DockerCommand implements ICommand<DockerDeployCommand.IDockerDeployCommandData> {
     @Override
@@ -52,8 +42,8 @@ public class DockerDeployCommand extends DockerCommand implements ICommand<Docke
     }
 
     public interface IDockerDeployCommandData extends IBaseCommandData {
-        public DockerBuildInfo getDockerBuildInfo();
+        DockerBuildInfo getDockerBuildInfo();
 
-        public WebApp getWebApp();
+        WebApp getWebApp();
     }
 }

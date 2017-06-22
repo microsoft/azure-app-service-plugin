@@ -9,12 +9,12 @@
 
     <f:entry title="${%Resource_Group_Name}" field="resourceGroupName"
                  help="/plugin/azure-app-service/help-resourceGroupName.html">
-        <f:textbox default="${descriptor.defaultResourceGroupName()}"/>
+        <f:textbox />
     </f:entry>
 
     <f:entry title="${%AppService_Name}" field="appServiceName" 
              help="/plugin/azure-app-service/help-appServiceName.html">
-        <f:textbox default="${descriptor.defaultAppServiceName()}"/>
+        <f:textbox />
     </f:entry>
 
 </j:jelly>

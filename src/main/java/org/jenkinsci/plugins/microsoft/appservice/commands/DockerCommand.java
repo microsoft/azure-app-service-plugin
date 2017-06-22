@@ -9,30 +9,23 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.DockerCmdExecFactory;
 import com.github.dockerjava.api.model.AuthConfig;
-import com.github.dockerjava.api.model.AuthConfigurations;
-import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.NameParser;
-import com.github.dockerjava.core.SSLConfig;
 import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import hudson.model.AbstractBuild;
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
-import javax.net.ssl.SSLContext;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
 
 /**
- * To provide some common docker-related methods for docker commands
+ * To provide some common docker-related methods for docker commands.
  */
 public abstract class DockerCommand {
+
+    private static final int CONNECT_TIMEOUT = 1000;
+    private static final int MAX_TOTAL_CONNECTIONS = 1;
+    private static final int MAX_PER_ROUTE_CONNECTIONS = 1;
 
     protected DockerClient getDockerClient(final AuthConfig authConfig) {
         final AzureDockerClientConfig.Builder builder = AzureDockerClientConfig.createDefaultConfigBuilder()
@@ -42,17 +35,18 @@ public abstract class DockerCommand {
                 .withRegistryEmail(authConfig.getEmail());
 
         final DockerCmdExecFactory dockerCmdExecFactory = new JerseyDockerCmdExecFactory()
-                .withConnectTimeout(1000)
-                .withMaxTotalConnections(1)
-                .withMaxPerRouteConnections(1);
+                .withConnectTimeout(CONNECT_TIMEOUT)
+                .withMaxTotalConnections(MAX_TOTAL_CONNECTIONS)
+                .withMaxPerRouteConnections(MAX_PER_ROUTE_CONNECTIONS);
 
         return DockerClientBuilder.getInstance(builder.build())
                 .withDockerCmdExecFactory(dockerCmdExecFactory).build();
     }
 
     protected String getFullImageName(final DockerBuildInfo dockerBuildInfo) throws AzureCloudException {
-        if (StringUtils.isNotBlank(dockerBuildInfo.getDockerImage()))
+        if (StringUtils.isNotBlank(dockerBuildInfo.getDockerImage())) {
             return dockerBuildInfo.getDockerImage();
+        }
 
         final String linuxFxVersion = dockerBuildInfo.getLinuxFxVersion();
         if (!linuxFxVersion.startsWith("DOCKER|")) {

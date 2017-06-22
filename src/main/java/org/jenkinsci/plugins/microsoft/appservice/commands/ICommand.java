@@ -7,5 +7,5 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 public interface ICommand<T extends IBaseCommandData> {
 
-    public void execute(T context);
+    void execute(T context);
 }

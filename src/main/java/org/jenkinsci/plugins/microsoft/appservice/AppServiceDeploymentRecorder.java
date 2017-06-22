@@ -66,14 +66,16 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
     private boolean deployOnlyIfSuccessful;
     private boolean deleteTempImage;
 
-    private
     @CheckForNull
+    private
     String sourceDirectory;
-    private
+
     @CheckForNull
+    private
     String targetDirectory;
-    private
+
     @CheckForNull
+    private
     String slotName;
 
     @DataBoundConstructor
@@ -175,8 +177,8 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         this.sourceDirectory = Util.fixNull(sourceDirectory);
     }
 
-    public
     @CheckForNull
+    public
     String getSourceDirectory() {
         return sourceDirectory;
     }
@@ -186,8 +188,8 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         this.targetDirectory = Util.fixNull(targetDirectory);
     }
 
-    public
     @CheckForNull
+    public
     String getTargetDirectory() {
         return targetDirectory;
     }
@@ -197,8 +199,8 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         this.slotName = Util.fixNull(slotName);
     }
 
-    public
     @CheckForNull
+    public
     String getSlotName() {
         return slotName;
     }
@@ -289,8 +291,8 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         dockerBuildInfo.withLinuxFxVersion(linuxFxVersion);
 
         // docker image tag
-        final String tag = StringUtils.isBlank(dockerImageTag) ?
-                String.valueOf(run.getNumber()) : envVars.expand(dockerImageTag);
+        final String tag = StringUtils.isBlank(dockerImageTag)
+                ? String.valueOf(run.getNumber()) : envVars.expand(dockerImageTag);
         dockerBuildInfo.withDockerImageTag(tag);
 
         // docker image name
@@ -373,8 +375,9 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
             if (jenkins != null) {
                 return (DockerRegistryEndpoint.DescriptorImpl)
                         jenkins.getDescriptor(DockerRegistryEndpoint.class);
-            } else
+            } else {
                 return null;
+            }
         }
 
         public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
@@ -418,9 +421,9 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
             return model;
         }
 
-        public final FormValidation doVerifyConfiguration(final @AncestorInPath Item owner,
-                                                          final @QueryParameter String url,
-                                                          final @QueryParameter String credentialsId) {
+        public FormValidation doVerifyConfiguration(@AncestorInPath final Item owner,
+                                                    @QueryParameter final String url,
+                                                    @QueryParameter final String credentialsId) {
 
             final DockerPingCommand pingCommand = new DockerPingCommand();
             try {

@@ -13,9 +13,9 @@ import java.util.HashMap;
 
 public interface ICommandServiceData {
 
-    public Class getStartCommandClass();
+    Class getStartCommandClass();
 
-    public HashMap<Class, TransitionInfo> getCommands();
+    HashMap<Class, TransitionInfo> getCommands();
 
-    public IBaseCommandData getDataForCommand(ICommand command);
+    IBaseCommandData getDataForCommand(ICommand command);
 }

@@ -12,7 +12,11 @@ import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
 
 import java.util.HashMap;
 
-public class CommandService {
+public final class CommandService {
+
+    private CommandService() {
+        // Hide
+    }
 
     public static boolean executeCommands(ICommandServiceData commandServiceData) {
         Class startCommand = commandServiceData.getStartCommandClass();

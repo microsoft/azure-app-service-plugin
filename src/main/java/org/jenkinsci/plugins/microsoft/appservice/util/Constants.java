@@ -7,14 +7,11 @@ package org.jenkinsci.plugins.microsoft.appservice.util;
 
 import com.microsoft.rest.LogLevel;
 
-public class Constants {
+public final class Constants {
 
-    /**
-     * Status messages
-     */
-    public static final String OP_SUCCESS = "Success";
-
-    /////////////////////
+    private Constants() {
+        // Hide
+    }
 
     public static final String PLUGIN_NAME = "AzureJenkinsAppService";
 
