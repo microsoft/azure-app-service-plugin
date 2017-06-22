@@ -32,10 +32,6 @@
                      help="/plugin/azure-app-service/help-dockerfile.html">
                 <f:textbox value="${it.getDockerFilePath()}" default="**/Dockerfile"/>
             </f:entry>
-            <f:entry title="${%Dockerfile_Path}" field="dockerFilePath"
-                                 help="/plugin/azure-app-service/help-dockerfile.html">
-                            <f:textbox value="${it.getDockerFilePath()}" default="**/Dockerfile"/>
-            </f:entry>
             <f:entry field="dockerRegistryEndpoint">
                 <f:property propertyDescriptor="${descriptor.dockerRegistryEndpointDescriptor}" />
             </f:entry>
