@@ -9,6 +9,8 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.*;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import org.apache.commons.lang.StringUtils;
@@ -27,20 +29,38 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     public static final String PUBLISH_TYPE_DOCKER = "docker";
 
     private final String filePath;
-    private final String publishType;
-    private final String slotName;
-    private final DockerBuildInfo dockerBuildInfo;
+    private String publishType;
+    private DockerBuildInfo dockerBuildInfo;
+    private String sourceDirectory;
+    private String targetDirectory;
+    private String slotName;
 
     private PublishingProfile pubProfile;
     private WebApp webApp;
 
-    public AppServiceDeploymentCommandContext(final String filePath,
-                                              final String publishType,
-                                              final String slotName,
-                                              final DockerBuildInfo dockerBuildInfo) {
+    public AppServiceDeploymentCommandContext(final String filePath) {
         this.filePath = filePath;
+        this.sourceDirectory = "";
+        this.targetDirectory = "";
+    }
+
+    public void setSourceDirectory(String sourceDirectory) {
+        this.sourceDirectory = Util.fixNull(sourceDirectory);
+    }
+
+    public void setTargetDirectory(String targetDirectory) {
+        this.targetDirectory = Util.fixNull(targetDirectory);
+    }
+
+    public void setSlotName(String slotName) {
         this.slotName = slotName;
+    }
+
+    public void setPublishType(String publishType) {
         this.publishType = publishType;
+    }
+
+    public void setDockerBuildInfo(DockerBuildInfo dockerBuildInfo) {
         this.dockerBuildInfo = dockerBuildInfo;
     }
 
@@ -61,7 +81,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         HashMap<Class, TransitionInfo> commands = new HashMap<>();
 
         Class startCommandClass;
-        if (publishType.equalsIgnoreCase(PUBLISH_TYPE_DOCKER)) {
+        if (StringUtils.isNotBlank(publishType) && publishType.equalsIgnoreCase(PUBLISH_TYPE_DOCKER)) {
             startCommandClass = DockerBuildCommand.class;
             this.webApp = app;
             commands.put(DockerBuildCommand.class, new TransitionInfo(new DockerBuildCommand(), DockerPushCommand.class, null));
@@ -89,6 +109,20 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     @Override
     public String getFilePath() {
         return filePath;
+    }
+
+    @Override
+    public String getSourceDirectory() {
+        return sourceDirectory;
+    }
+
+    @Override
+    public String getTargetDirectory() {
+        return targetDirectory;
+    }
+
+    public String getPublishType() {
+        return publishType;
     }
 
     @Override

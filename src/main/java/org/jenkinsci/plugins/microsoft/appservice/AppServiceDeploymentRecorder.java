@@ -64,6 +64,12 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
     private
     @CheckForNull
+    String sourceDirectory;
+    private
+    @CheckForNull
+    String targetDirectory;
+    private
+    @CheckForNull
     String slotName;
 
     @DataBoundConstructor
@@ -125,6 +131,28 @@ public class AppServiceDeploymentRecorder extends Recorder {
     }
 
     @DataBoundSetter
+    public void setSourceDirectory(@CheckForNull String sourceDirectory) {
+        this.sourceDirectory = Util.fixNull(sourceDirectory);
+    }
+
+    public
+    @CheckForNull
+    String getSourceDirectory() {
+        return sourceDirectory;
+    }
+
+    @DataBoundSetter
+    public void setTargetDirectory(@CheckForNull String targetDirectory) {
+        this.targetDirectory = Util.fixNull(targetDirectory);
+    }
+
+    public
+    @CheckForNull
+    String getTargetDirectory() {
+        return targetDirectory;
+    }
+
+    @DataBoundSetter
     public void setSlotName(@CheckForNull String slotName) {
         this.slotName = Util.fixNull(slotName);
     }
@@ -159,7 +187,6 @@ public class AppServiceDeploymentRecorder extends Recorder {
         }
 
         final String expandedFilePath = build.getEnvironment(listener).expand(filePath);
-
         final DockerBuildInfo dockerBuildInfo;
         try {
             dockerBuildInfo = validateDockerBuildInfo(build, listener, app);
@@ -167,8 +194,12 @@ public class AppServiceDeploymentRecorder extends Recorder {
             listener.getLogger().println(e.getMessage());
             return false;
         }
-        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(
-                expandedFilePath, publishType, slotName, dockerBuildInfo, azureCredentialsId);
+        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath);
+        commandContext.setSourceDirectory(sourceDirectory);
+        commandContext.setTargetDirectory(targetDirectory);
+        commandContext.setSlotName(slotName);
+        commandContext.setPublishType(publishType);
+        commandContext.setDockerBuildInfo(dockerBuildInfo);
 
         try {
             commandContext.configure(build, listener, app);
@@ -284,8 +315,12 @@ public class AppServiceDeploymentRecorder extends Recorder {
         }
 
         public DockerRegistryEndpoint.DescriptorImpl getDockerRegistryEndpointDescriptor() {
-            return (DockerRegistryEndpoint.DescriptorImpl)
-                    Jenkins.getInstance().getDescriptor(DockerRegistryEndpoint.class);
+            final Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins != null) {
+                return (DockerRegistryEndpoint.DescriptorImpl)
+                        jenkins.getDescriptor(DockerRegistryEndpoint.class);
+            } else
+                return null;
         }
 
         public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
