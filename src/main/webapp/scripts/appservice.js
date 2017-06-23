@@ -104,7 +104,7 @@
                 var azureCredentialsId = getElementValue("SELECT[name$=azureCredentialsId]")
                 var resourceGroup = getElementValue("SELECT[name$=resourceGroup]")
                 if (azureCredentialsId) {
-                    descriptor.isWebAppOnLinux(azureCredentialsId, resourceGroup, app.value, function (t) {
+                    appservice_descriptor.isWebAppOnLinux(azureCredentialsId, resourceGroup, app.value, function (t) {
                         if (t.responseObject()) {
                             appService.showAllRadioBlocks(true);
                         } else {
