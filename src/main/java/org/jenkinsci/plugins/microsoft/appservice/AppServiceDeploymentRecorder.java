@@ -17,6 +17,7 @@ import com.microsoft.azure.management.appservice.implementation.SiteConfigResour
 import com.microsoft.azure.management.appservice.implementation.SiteInner;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.util.AzureCredentials;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
@@ -59,6 +60,8 @@ public class AppServiceDeploymentRecorder extends Recorder {
     private final String appService;
     private String publishType;
     private String filePath;
+    private String dockerImageName;
+    private String dockerImageTag;
     private String dockerFilePath;
     private DockerRegistryEndpoint dockerRegistryEndpoint;
 
@@ -100,6 +103,24 @@ public class AppServiceDeploymentRecorder extends Recorder {
     @DataBoundSetter
     public void setDockerRegistryEndpoint(final DockerRegistryEndpoint dockerRegistryEndpoint) {
         this.dockerRegistryEndpoint = dockerRegistryEndpoint;
+    }
+
+    @DataBoundSetter
+    public void setDockerImageName(String dockerImageName) {
+        this.dockerImageName = dockerImageName;
+    }
+
+    @DataBoundSetter
+    public void setDockerImageTag(String dockerImageTag) {
+        this.dockerImageTag = dockerImageTag;
+    }
+
+    public String getDockerImageName() {
+        return dockerImageName;
+    }
+
+    public String getDockerImageTag() {
+        return dockerImageTag;
     }
 
     public DockerRegistryEndpoint getDockerRegistryEndpoint() {
@@ -231,34 +252,29 @@ public class AppServiceDeploymentRecorder extends Recorder {
             return dockerBuildInfo;
         }
 
+        final EnvVars envVars = build.getEnvironment(listener);
 
-        dockerBuildInfo.setDockerfile(build.getEnvironment(listener).expand(dockerFilePath));
-        if (StringUtils.isBlank(dockerBuildInfo.getDockerfile())) {
-            throw new AzureCloudException("Docker file is cannot be null or empty.");
-        }
+        // docker file
+        String dockerfile = StringUtils.isBlank(dockerFilePath) ? "**/Dockerfile" : dockerFilePath;
+        dockerBuildInfo.setDockerfile(envVars.expand(dockerfile));
+
+        // AuthConfig for registry
         dockerBuildInfo.setAuthConfig(getAuthConfig(build.getParent(), dockerRegistryEndpoint));
+
+        // the original docker image on Azure
         dockerBuildInfo.setLinuxFxVersion(linuxFxVersion);
-        dockerBuildInfo.setDockerImageTag(String.valueOf(build.getNumber()));
 
-        // the linuxFxVersion should be "DOCKER|registry/repo/name:tag"
-        final String originalImageName = linuxFxVersion.substring(linuxFxVersion.indexOf("|") + 1).toLowerCase();
-        // Change "xxx.azurecr.io/someRepo/a/b/c:latest" to "<username>/a/b/c:<buildNumber>"
-        final NameParser.ReposTag reposTag = NameParser.parseRepositoryTag(originalImageName);
-        final String imageNameWithoutTagAndRegistry = NameParser.resolveRepositoryName(reposTag.repos).reposName;
+        // docker image tag
+        String tag = StringUtils.isBlank(dockerImageTag) ? String.valueOf(build.getNumber()) : envVars.expand(dockerImageTag);
+        dockerBuildInfo.setDockerImageTag(tag);
 
-        final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(dockerBuildInfo.getAuthConfig().getUsername())
-                .append("/");
-        final String[] nameParts = imageNameWithoutTagAndRegistry.split("/", 2);
-        if (nameParts.length == 1) {
-            stringBuilder.append(imageNameWithoutTagAndRegistry);
-        } else {
-            stringBuilder.append(nameParts[1]);
-        }
-        dockerBuildInfo.setDockerImage(stringBuilder.toString());
+        // docker image name
+        String imageName = StringUtils.isBlank(dockerImageName) ? "" : envVars.expand(dockerImageName);
+        dockerBuildInfo.setDockerImage(imageName);
 
         return dockerBuildInfo;
     }
+
 
     private static AuthConfig getAuthConfig(final Item project, final DockerRegistryEndpoint endpoint) throws AzureCloudException {
         if (endpoint == null || StringUtils.isBlank(endpoint.getCredentialsId())) {
@@ -273,7 +289,11 @@ public class AppServiceDeploymentRecorder extends Recorder {
         final String[] credentials = new String(Base64.decodeBase64(dockerRegistryToken.getToken()), Charsets.UTF_8).split(":");
         final AuthConfig authConfig = new AuthConfig();
 
-        authConfig.withRegistryAddress(StringUtils.isBlank(endpoint.getUrl()) ? AuthConfig.DEFAULT_SERVER_ADDRESS : endpoint.getUrl());
+        String registryAddress = StringUtils.isBlank(endpoint.getUrl()) ? AuthConfig.DEFAULT_SERVER_ADDRESS : endpoint.getUrl();
+        if (!registryAddress.toLowerCase().matches("^\\w+://.*")) {
+            registryAddress = "http://" + registryAddress;
+        }
+        authConfig.withRegistryAddress(registryAddress);
         authConfig.withUsername(credentials[0]);
         authConfig.withPassword(credentials[1]);
 

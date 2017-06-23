@@ -34,11 +34,11 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
     @Override
     public void execute(final IDockerBuildCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
-        context.getListener().getLogger().println(String.format("Begin to build docker image %s:%s",
+        context.logStatus(String.format("Begin to build docker image %s:%s",
                 dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
 
         try {
-            final String image = imageAndTagAndRegistry(dockerBuildInfo);
+            final String image = imageAndTag(dockerBuildInfo);
             final FilePath workspace = context.getBuild().getWorkspace();
             if (workspace == null) {
                 throw new AzureCloudException("workspace is not available at this time.");
@@ -47,11 +47,11 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
             final FileSet fileSet = Util.createFileSet(workspaceDir, dockerBuildInfo.getDockerfile());
             final String[] files = fileSet.getDirectoryScanner().getIncludedFiles();
             if (files.length > 1) {
-                context.getListener().getLogger().println("multiple Dockerfile found in the specific path.");
+                context.logStatus("multiple Dockerfile found in the specific path.");
                 context.setDeploymentState(DeploymentState.HasError);
                 return;
             } else if (files.length == 0) {
-                context.getListener().getLogger().println("No Dockerfile found in the specific path.");
+                context.logStatus("No Dockerfile found in the specific path.");
                 context.setDeploymentState(DeploymentState.HasError);
                 return;
             }
@@ -60,21 +60,21 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
             if (!dockerfile.exists()) {
                 throw new AzureCloudException("Dockerfile cannot be found:" + dockerBuildInfo.getDockerfile());
             }
-            context.getListener().getLogger().println("Dockerfile found: " + dockerfile.getAbsolutePath());
+            context.logStatus("Dockerfile found: " + dockerfile.getAbsolutePath());
 
             final DockerClient client = getDockerClient(dockerBuildInfo.getAuthConfig());
             final BuildImageResultCallback callback = new BuildImageResultCallback() {
                 @Override
                 public void onNext(final BuildResponseItem buildResponseItem) {
                     if (buildResponseItem.isBuildSuccessIndicated()) {
-                        context.getListener().getLogger().println("Build successful, the image Id: " + buildResponseItem.getImageId());
-                        context.getListener().getLogger().println(buildResponseItem.toString());
+                        context.logStatus("Build successful, the image Id: " + buildResponseItem.getImageId());
+                        context.logStatus(buildResponseItem.toString());
                         dockerBuildInfo.setImageid(buildResponseItem.getImageId());
                     } else if (buildResponseItem.isErrorIndicated()) {
-                        context.getListener().getLogger().println("Build docker image failed");
+                        context.logStatus("Build docker image failed");
                         ResponseItem.ErrorDetail detail = buildResponseItem.getErrorDetail();
                         if (detail != null) {
-                            context.getListener().getLogger().println("The error detail: " + detail.toString());
+                            context.logStatus("The error detail: " + detail.toString());
                         }
                         context.setDeploymentState(DeploymentState.HasError);
                     }
@@ -82,7 +82,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
 
                 @Override
                 public void onError(Throwable throwable) {
-                    context.getListener().getLogger().println("Fail to build docker image:" + throwable.getMessage());
+                    context.logStatus("Fail to build docker image:" + throwable.getMessage());
                     context.setDeploymentState(DeploymentState.HasError);
                     super.onError(throwable);
                 }
@@ -93,7 +93,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
                     .awaitCompletion();
             context.setDeploymentState(DeploymentState.Success);
         } catch (AzureCloudException | InterruptedException e) {
-            context.getListener().getLogger().println("Build failed for " + e.getMessage());
+            context.logStatus("Build failed for " + e.getMessage());
             context.setDeploymentState(DeploymentState.HasError);
         }
     }

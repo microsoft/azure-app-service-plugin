@@ -31,7 +31,8 @@ public class DockerDeployCommand extends DockerCommand implements ICommand<Docke
     @Override
     public void execute(IDockerDeployCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
-        context.getListener().getLogger().println(String.format("Begin to update web app configuration, the docker image %s:%s",
+        context.logStatus(String.format("Begin to update web app `%s` configuration, the docker image %s:%s",
+                context.getWebApp().name(),
                 dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
 
         try {
@@ -50,7 +51,7 @@ public class DockerDeployCommand extends DockerCommand implements ICommand<Docke
             update.apply();
             context.setDeploymentState(DeploymentState.Success);
         } catch (Exception e) {
-            context.getListener().getLogger().println("fail to update webapp, the cause:" + e.getLocalizedMessage());
+            context.logError("fail to update webapp", e);
             context.setDeploymentState(DeploymentState.HasError);
         }
     }

@@ -21,6 +21,7 @@ import com.github.dockerjava.api.model.AuthConfig;
 import com.github.dockerjava.api.model.AuthConfigurations;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.dockerjava.core.NameParser;
 import com.github.dockerjava.core.SSLConfig;
 import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -58,8 +59,38 @@ public abstract class DockerCommand {
                 .withDockerCmdExecFactory(dockerCmdExecFactory).build();
     }
 
-    protected String imageAndTag(final DockerBuildInfo dockerBuildInfo) {
-        return String.format("%s:%s", dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag());
+    protected String getFullImageName(final DockerBuildInfo dockerBuildInfo) throws AzureCloudException {
+        if (StringUtils.isNotBlank(dockerBuildInfo.getDockerImage()))
+            return dockerBuildInfo.getDockerImage();
+
+        final String linuxFxVersion = dockerBuildInfo.getLinuxFxVersion();
+        // the linuxFxVersion should be "DOCKER|<registry>/repo:tag"
+        // <registry>/repo:tag
+        final String originalImageName = linuxFxVersion.substring(linuxFxVersion.indexOf("|") + 1).toLowerCase();
+
+        final String newRegistry = getRegistryHostname(dockerBuildInfo.getAuthConfig().getRegistryAddress());
+        final StringBuilder stringBuilder = new StringBuilder();
+        if (!newRegistry.contains("index.docker.io")) {
+            // append the registry host as part of the image name, it's required for non-dockerHub registry
+            stringBuilder.append(newRegistry).append("/");
+        }
+        // append user name
+        stringBuilder.append(dockerBuildInfo.getAuthConfig().getUsername()).append("/");
+        // append the original repo part after username
+        final NameParser.ReposTag reposTag = NameParser.parseRepositoryTag(originalImageName);
+        final String imageNameWithoutTagAndRegistry = NameParser.resolveRepositoryName(reposTag.repos).reposName;
+        final String[] nameParts = imageNameWithoutTagAndRegistry.split("/", 2);
+        if (nameParts.length == 1) {
+            stringBuilder.append(imageNameWithoutTagAndRegistry);
+        } else {
+            stringBuilder.append(nameParts[1]);
+        }
+
+        return stringBuilder.toString();
+    }
+
+    protected String imageAndTag(final DockerBuildInfo dockerBuildInfo) throws AzureCloudException {
+        return String.format("%s:%s", getFullImageName(dockerBuildInfo), dockerBuildInfo.getDockerImageTag());
     }
 
     protected boolean isDockerHub(final AuthConfig authConfig) {
@@ -67,19 +98,16 @@ public abstract class DockerCommand {
                 AuthConfig.DEFAULT_SERVER_ADDRESS.equalsIgnoreCase(authConfig.getRegistryAddress());
     }
 
-    protected String imageAndTagAndRegistry(final DockerBuildInfo dockerBuildInfo)
-            throws AzureCloudException {
-        final AuthConfig authConfig = dockerBuildInfo.getAuthConfig();
-        if (isDockerHub(authConfig)) {
-            return imageAndTag(dockerBuildInfo);
-        } else {
-            try {
-                final URI uri = new URI(authConfig.getRegistryAddress());
-                final String registry = uri.getHost();
-                return String.format("%s/%s", registry, imageAndTag(dockerBuildInfo));
-            } catch (URISyntaxException e) {
-                throw new AzureCloudException("The docker registry is not a valid URI", e);
+    private String getRegistryHostname(String registryAddress) throws AzureCloudException {
+        try {
+            if (!registryAddress.toLowerCase().matches("^\\w+://.*")) {
+                registryAddress = "http://" + registryAddress;
             }
+
+            final URI uri = new URI(registryAddress);
+            return uri.getHost();
+        } catch (URISyntaxException e) {
+            throw new AzureCloudException("The docker registry is not a valid URI", e);
         }
     }
 }

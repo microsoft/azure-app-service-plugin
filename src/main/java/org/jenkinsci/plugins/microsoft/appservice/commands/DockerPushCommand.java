@@ -24,23 +24,23 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
     @Override
     public void execute(final IDockerPushCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
-        context.getListener().getLogger().println(String.format("Begin to push docker image %s:%s to registry %s",
+        context.logStatus(String.format("Begin to push docker image %s:%s to registry %s",
                 dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag(), dockerBuildInfo.getAuthConfig().getRegistryAddress()));
 
         try {
-            final String image = imageAndTagAndRegistry(dockerBuildInfo);
+            final String image = imageAndTag(dockerBuildInfo);
             final DockerClient dockerClient = getDockerClient(dockerBuildInfo.getAuthConfig());
 
             final PushImageResultCallback callback = new PushImageResultCallback() {
                 @Override
                 public void onNext(final PushResponseItem item) {
-                    context.getListener().getLogger().println(item.toString());
+                    context.logStatus(item.toString());
                     super.onNext(item);
                 }
 
                 @Override
                 public void onError(Throwable throwable) {
-                    context.getListener().getLogger().println("Fail to push docker image:" + throwable.getMessage());
+                    context.logStatus("Fail to push docker image:" + throwable.getMessage());
                     context.setDeploymentState(DeploymentState.HasError);
                     super.onError(throwable);
                 }
@@ -50,7 +50,7 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
                     .withTag(dockerBuildInfo.getDockerImageTag())
                     .exec(callback)
                     .awaitSuccess();
-            context.getListener().getLogger().println("Push completed");
+            context.logStatus("Push completed");
             context.setDeploymentState(DeploymentState.Success);
         } catch (AzureCloudException e) {
             context.getListener().getLogger().println("Build failed for " + e.getMessage());
