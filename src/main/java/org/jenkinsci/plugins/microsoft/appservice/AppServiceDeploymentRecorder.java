@@ -6,6 +6,7 @@
 package org.jenkinsci.plugins.microsoft.appservice;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.github.dockerjava.api.model.AuthConfig;
@@ -30,6 +31,7 @@ import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.Charsets;
@@ -52,6 +54,7 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 import javax.annotation.CheckForNull;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 public class AppServiceDeploymentRecorder extends Recorder {
 
@@ -281,19 +284,26 @@ public class AppServiceDeploymentRecorder extends Recorder {
             throw new AzureCloudException("docker registry configuration is not valid");
         }
 
-        final DockerRegistryToken dockerRegistryToken = endpoint.getToken(project);
+        return getAuthConfig(endpoint.getUrl(), endpoint.getToken(project));
+    }
+
+    private static AuthConfig getAuthConfig(final String registryAddress, final DockerRegistryToken dockerRegistryToken)
+            throws AzureCloudException {
         if (dockerRegistryToken == null) {
             throw new AzureCloudException("cannot find the docker registry credential.");
         }
 
-        final String[] credentials = new String(Base64.decodeBase64(dockerRegistryToken.getToken()), Charsets.UTF_8).split(":");
         final AuthConfig authConfig = new AuthConfig();
 
-        String registryAddress = StringUtils.isBlank(endpoint.getUrl()) ? AuthConfig.DEFAULT_SERVER_ADDRESS : endpoint.getUrl();
-        if (!registryAddress.toLowerCase().matches("^\\w+://.*")) {
-            registryAddress = "http://" + registryAddress;
+        // formulated registry address
+        String url = StringUtils.isBlank(registryAddress) ? AuthConfig.DEFAULT_SERVER_ADDRESS : registryAddress;
+        if (!url.toLowerCase().matches("^\\w+://.*")) {
+            url = "http://" + registryAddress;
         }
-        authConfig.withRegistryAddress(registryAddress);
+        authConfig.withRegistryAddress(url);
+
+        // registry credential
+        final String[] credentials = new String(Base64.decodeBase64(dockerRegistryToken.getToken()), Charsets.UTF_8).split(":");
         authConfig.withUsername(credentials[0]);
         authConfig.withPassword(credentials[1]);
 
@@ -390,14 +400,23 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
             DockerPingCommand pingCommand = new DockerPingCommand();
             try {
-                final DockerRegistryEndpoint dockerRegistryEndpoint = new DockerRegistryEndpoint(url, credentialsId);
-                final AuthConfig authConfig = getAuthConfig(null, dockerRegistryEndpoint);
-                pingCommand.ping(authConfig);
+                IdCredentials idCredentials = null;
+                for (IdCredentials credential : CredentialsProvider.lookupCredentials(
+                        IdCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList())) {
+                    if (credential.getId().equalsIgnoreCase(credentialsId)) {
+                        idCredentials = credential;
+                        break;
+                    }
+                }
+                if (idCredentials == null) {
+                    return FormValidation.error("credential cannot be found");
+                }
+                final DockerRegistryToken token = AuthenticationTokens.convert(DockerRegistryToken.class, idCredentials);
+                final AuthConfig authConfig = getAuthConfig(url, token);
+                return pingCommand.ping(authConfig);
             } catch (AzureCloudException e) {
                 return FormValidation.error(e.getMessage());
             }
-
-            return FormValidation.ok("Successfully verified the docker configuration");
         }
 
         @JavaScriptMethod

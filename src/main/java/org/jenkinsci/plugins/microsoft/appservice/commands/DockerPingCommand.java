@@ -16,17 +16,36 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.exception.UnauthorizedException;
 import com.github.dockerjava.api.model.AuthConfig;
+import com.github.dockerjava.api.model.PullResponseItem;
+import com.github.dockerjava.core.command.PullImageResultCallback;
+import hudson.util.FormValidation;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 public class DockerPingCommand extends DockerCommand {
-    public void ping(final AuthConfig authConfig)
-            throws AzureCloudException {
+    public FormValidation ping(final AuthConfig authConfig) {
         DockerClient dockerClient = getDockerClient(authConfig);
+
         try {
+            // make sure local docker is running
             dockerClient.pingCmd().exec();
         } catch (Exception e) {
-            throw new AzureCloudException("Cannot connect to docker for:" + e.getMessage(), e);
+            return FormValidation.error("Docker is not running on Jenkins master server thus the verification cannot continue. " +
+                    "You can proceed to save the configuration. But you need to make sure Docker is properly installed and " +
+                    "running on your build agents. The detailed message:" + e.getMessage());
         }
+
+
+        try {
+            // validate the remote docker registry
+            dockerClient.authCmd().withAuthConfig(authConfig).exec();
+        } catch (UnauthorizedException un) {
+            return FormValidation.error(String.format("Unauthorized access to %s: incorrect username or password.",
+                    authConfig.getRegistryAddress()));
+        } catch (Exception e) {
+            return FormValidation.error("Validation fails: " + e.getMessage());
+        }
+        return FormValidation.ok();
     }
 }
