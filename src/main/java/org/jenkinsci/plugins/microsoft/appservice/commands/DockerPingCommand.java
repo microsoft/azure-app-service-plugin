@@ -46,6 +46,7 @@ public class DockerPingCommand extends DockerCommand {
         } catch (Exception e) {
             return FormValidation.error("Validation fails: " + e.getMessage());
         }
-        return FormValidation.ok();
+        return FormValidation.ok("Docker registry configuration verified. NOTE that you still need make sure docker is " +
+                "installed correctly on you build agents.");
     }
 }
