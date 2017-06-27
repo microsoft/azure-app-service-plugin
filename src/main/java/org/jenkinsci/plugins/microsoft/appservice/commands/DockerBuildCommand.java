@@ -1,23 +1,12 @@
-/*
- Copyright 2017 Microsoft Open Technologies, Inc.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+/**
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for
+ * license information.
  */
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.model.AuthConfig;
-import com.github.dockerjava.api.model.AuthConfigurations;
 import com.github.dockerjava.api.model.BuildResponseItem;
 import com.github.dockerjava.api.model.ResponseItem;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
@@ -29,13 +18,18 @@ import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 import java.io.File;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class DockerBuildCommand extends DockerCommand implements ICommand<DockerBuildCommand.IDockerBuildCommandData> {
 
     @Override
     public void execute(final IDockerBuildCommandData context) {
+        if (context == null)
+            return;
+        checkNotNull(context, "input data cannot be null.");
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
-        context.logStatus(String.format("Begin to build docker image %s:%s",
-                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
+//        context.logStatus(String.format("Begin to build docker image %s:%s",
+//                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
 
         try {
             final String image = imageAndTag(dockerBuildInfo);
@@ -69,7 +63,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
                     if (buildResponseItem.isBuildSuccessIndicated()) {
                         context.logStatus("Build successful, the image Id: " + buildResponseItem.getImageId());
                         context.logStatus(buildResponseItem.toString());
-                        dockerBuildInfo.setImageid(buildResponseItem.getImageId());
+                        dockerBuildInfo.setImageId(buildResponseItem.getImageId());
                     } else if (buildResponseItem.isErrorIndicated()) {
                         context.logStatus("Build docker image failed");
                         ResponseItem.ErrorDetail detail = buildResponseItem.getErrorDetail();

@@ -258,22 +258,23 @@ public class AppServiceDeploymentRecorder extends Recorder {
         final EnvVars envVars = build.getEnvironment(listener);
 
         // docker file
-        String dockerfile = StringUtils.isBlank(dockerFilePath) ? "**/Dockerfile" : dockerFilePath;
-        dockerBuildInfo.setDockerfile(envVars.expand(dockerfile));
+        final String dockerfile = StringUtils.isBlank(dockerFilePath) ? "**/Dockerfile" : dockerFilePath;
+        dockerBuildInfo.withDockerfile(envVars.expand(dockerfile));
 
         // AuthConfig for registry
-        dockerBuildInfo.setAuthConfig(getAuthConfig(build.getParent(), dockerRegistryEndpoint));
+        dockerBuildInfo.withAuthConfig(getAuthConfig(build.getParent(), dockerRegistryEndpoint));
 
         // the original docker image on Azure
-        dockerBuildInfo.setLinuxFxVersion(linuxFxVersion);
+        dockerBuildInfo.withLinuxFxVersion(linuxFxVersion);
 
         // docker image tag
-        String tag = StringUtils.isBlank(dockerImageTag) ? String.valueOf(build.getNumber()) : envVars.expand(dockerImageTag);
-        dockerBuildInfo.setDockerImageTag(tag);
+        final String tag = StringUtils.isBlank(dockerImageTag) ?
+                String.valueOf(build.getNumber()) : envVars.expand(dockerImageTag);
+        dockerBuildInfo.withDockerImageTag(tag);
 
         // docker image name
-        String imageName = StringUtils.isBlank(dockerImageName) ? "" : envVars.expand(dockerImageName);
-        dockerBuildInfo.setDockerImage(imageName);
+        final String imageName = StringUtils.isBlank(dockerImageName) ? "" : envVars.expand(dockerImageName);
+        dockerBuildInfo.withDockerImage(imageName);
 
         return dockerBuildInfo;
     }
@@ -303,7 +304,8 @@ public class AppServiceDeploymentRecorder extends Recorder {
         authConfig.withRegistryAddress(url);
 
         // registry credential
-        final String[] credentials = new String(Base64.decodeBase64(dockerRegistryToken.getToken()), Charsets.UTF_8).split(":");
+        final String[] credentials = new String(Base64.decodeBase64(dockerRegistryToken.getToken()), Charsets.UTF_8)
+                .split(":", 2);
         authConfig.withUsername(credentials[0]);
         authConfig.withPassword(credentials[1]);
 
@@ -314,7 +316,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         // https://github.com/Azure/azure-sdk-for-java/issues/1761
         // access the field via reflection for now
         try {
-            SiteConfigResourceInner siteConfig = (SiteConfigResourceInner) FieldUtils.readField(webApp, "siteConfig", true);
+            final SiteConfigResourceInner siteConfig = (SiteConfigResourceInner) FieldUtils.readField(webApp, "siteConfig", true);
             if (siteConfig != null) {
                 return siteConfig.linuxFxVersion();
             }
@@ -361,7 +363,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         }
 
         public ListBoxModel doFillResourceGroupItems(@QueryParameter final String azureCredentialsId) {
-            ListBoxModel model = new ListBoxModel();
+            final ListBoxModel model = new ListBoxModel();
             // list all app service
             if (StringUtils.isNotBlank(azureCredentialsId)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
@@ -377,12 +379,12 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
         public ListBoxModel doFillAppServiceItems(@QueryParameter final String azureCredentialsId,
                                                   @QueryParameter final String resourceGroup) {
-            ListBoxModel model = new ListBoxModel();
+            final ListBoxModel model = new ListBoxModel();
             // list all app service
             // https://github.com/Azure/azure-sdk-for-java/issues/1762
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                PagedList<SiteInner> list = azureClient.webApps().inner().listByResourceGroup(resourceGroup);
+                final PagedList<SiteInner> list = azureClient.webApps().inner().listByResourceGroup(resourceGroup);
                 list.loadAll();
                 for (final SiteInner webApp : list) {
                     model.add(webApp.name());
@@ -398,7 +400,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
                                                           final @QueryParameter String url,
                                                           final @QueryParameter String credentialsId) {
 
-            DockerPingCommand pingCommand = new DockerPingCommand();
+            final DockerPingCommand pingCommand = new DockerPingCommand();
             try {
                 IdCredentials idCredentials = null;
                 for (IdCredentials credential : CredentialsProvider.lookupCredentials(
@@ -423,7 +425,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         public boolean isWebAppOnLinux(final String azureCredentialsId, final String resourceGroup, final String appService) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                SiteConfigResourceInner siteConfig = azureClient.webApps().inner().getConfiguration(resourceGroup, appService);
+                final SiteConfigResourceInner siteConfig = azureClient.webApps().inner().getConfiguration(resourceGroup, appService);
                 if (siteConfig != null) {
                     return StringUtils.isNotBlank(siteConfig.linuxFxVersion())
                             && !isBuiltInDockerImage(siteConfig.linuxFxVersion());

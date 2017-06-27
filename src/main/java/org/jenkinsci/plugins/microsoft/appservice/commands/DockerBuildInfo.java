@@ -1,16 +1,7 @@
-/*
- Copyright 2017 Microsoft Open Technologies, Inc.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
+/**
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for
+ * license information.
  */
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
@@ -24,53 +15,58 @@ public class DockerBuildInfo {
     private AuthConfig authConfig;
     private String dockerImage;
     private String dockerImageTag;
-    private String imageid; // the image Id after build successfully
+    private String imageId; // the image Id after build successfully
 
     public String getLinuxFxVersion() {
         return linuxFxVersion;
     }
 
-    public void setLinuxFxVersion(String linuxFxVersion) {
+    public DockerBuildInfo withLinuxFxVersion(final String linuxFxVersion) {
         this.linuxFxVersion = linuxFxVersion;
+        return this;
     }
 
     public String getDockerImage() {
         return dockerImage;
     }
 
-    public void setDockerImage(String dockerImage) {
+    public DockerBuildInfo withDockerImage(final String dockerImage) {
         this.dockerImage = dockerImage;
+        return this;
     }
 
     public String getDockerImageTag() {
         return dockerImageTag;
     }
 
-    public void setDockerImageTag(String dockerImageTag) {
+    public DockerBuildInfo withDockerImageTag(final String dockerImageTag) {
         this.dockerImageTag = dockerImageTag;
+        return this;
     }
 
     public String getDockerfile() {
         return dockerfile;
     }
 
-    public void setDockerfile(String dockerfile) {
+    public DockerBuildInfo withDockerfile(final String dockerfile) {
         this.dockerfile = dockerfile;
+        return this;
     }
 
     public AuthConfig getAuthConfig() {
         return authConfig;
     }
 
-    public void setAuthConfig(final AuthConfig authConfig) {
+    public DockerBuildInfo withAuthConfig(final AuthConfig authConfig) {
         this.authConfig = authConfig;
+        return this;
     }
 
-    public String getImageid() {
-        return imageid;
+    public String getImageId() {
+        return imageId;
     }
 
-    public void setImageid(String imageid) {
-        this.imageid = imageid;
+    public void setImageId(final String imageId) {
+        this.imageId = imageId;
     }
 }
