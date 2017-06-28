@@ -24,15 +24,12 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
 
     @Override
     public void execute(final IDockerBuildCommandData context) {
-        if (context == null)
-            return;
-        checkNotNull(context, "input data cannot be null.");
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
-//        context.logStatus(String.format("Begin to build docker image %s:%s",
-//                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
 
         try {
             final String image = imageAndTag(dockerBuildInfo);
+            context.logStatus(String.format("Building new docker image `%s`", image));
+
             final FilePath workspace = context.getBuild().getWorkspace();
             if (workspace == null) {
                 throw new AzureCloudException("workspace is not available at this time.");
@@ -92,6 +89,6 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
     }
 
     public interface IDockerBuildCommandData extends IBaseCommandData {
-        public DockerBuildInfo getDockerBuildInfo();
+        DockerBuildInfo getDockerBuildInfo();
     }
 }

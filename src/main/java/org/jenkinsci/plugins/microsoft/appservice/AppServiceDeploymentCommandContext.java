@@ -9,7 +9,6 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.appservice.*;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -24,6 +23,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         GitDeployCommand.IGitDeployCommandData,
         DockerBuildCommand.IDockerBuildCommandData,
         DockerPushCommand.IDockerPushCommandData,
+        DockerRemoveImageCommand.IDockerRemoveImageCommandData,
         DockerDeployCommand.IDockerDeployCommandData {
 
     public static final String PUBLISH_TYPE_DOCKER = "docker";
@@ -86,7 +86,8 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
             this.webApp = app;
             commands.put(DockerBuildCommand.class, new TransitionInfo(new DockerBuildCommand(), DockerPushCommand.class, null));
             commands.put(DockerPushCommand.class, new TransitionInfo(new DockerPushCommand(), DockerDeployCommand.class, null));
-            commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), null, null));
+            commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), DockerRemoveImageCommand.class, null));
+            commands.put(DockerRemoveImageCommand.class, new TransitionInfo(new DockerRemoveImageCommand(), null, null));
         } else if (app.javaVersion() != JavaVersion.OFF) {
             // For Java application, use FTP-based deployment as it's the recommended way
             startCommandClass = FTPDeployCommand.class;

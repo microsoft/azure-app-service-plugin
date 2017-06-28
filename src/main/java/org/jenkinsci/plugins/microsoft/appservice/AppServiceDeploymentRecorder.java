@@ -67,6 +67,8 @@ public class AppServiceDeploymentRecorder extends Recorder {
     private String dockerImageTag;
     private String dockerFilePath;
     private DockerRegistryEndpoint dockerRegistryEndpoint;
+    private boolean deployOnlyIfSuccessful;
+    private boolean deleteTempImage;
 
     private
     @CheckForNull
@@ -89,7 +91,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
     }
 
     @DataBoundSetter
-    public void setFilePath(String filePath) {
+    public void setFilePath(final String filePath) {
         this.filePath = filePath;
     }
 
@@ -109,13 +111,23 @@ public class AppServiceDeploymentRecorder extends Recorder {
     }
 
     @DataBoundSetter
-    public void setDockerImageName(String dockerImageName) {
+    public void setDockerImageName(final String dockerImageName) {
         this.dockerImageName = dockerImageName;
     }
 
     @DataBoundSetter
-    public void setDockerImageTag(String dockerImageTag) {
+    public void setDockerImageTag(final String dockerImageTag) {
         this.dockerImageTag = dockerImageTag;
+    }
+
+    @DataBoundSetter
+    public void setDeployOnlyIfSuccessful(final boolean deployOnlyIfSuccessful) {
+        this.deployOnlyIfSuccessful = deployOnlyIfSuccessful;
+    }
+
+    @DataBoundSetter
+    public void setDeleteTempImage(final boolean deleteTempImage) {
+        this.deleteTempImage = deleteTempImage;
     }
 
     public String getDockerImageName() {
@@ -152,6 +164,14 @@ public class AppServiceDeploymentRecorder extends Recorder {
 
     public String getDockerFilePath() {
         return dockerFilePath;
+    }
+
+    public boolean isDeployOnlyIfSuccessful() {
+        return deployOnlyIfSuccessful;
+    }
+
+    public boolean isDeleteTempImage() {
+        return deleteTempImage;
     }
 
     @DataBoundSetter
@@ -200,6 +220,12 @@ public class AppServiceDeploymentRecorder extends Recorder {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws IOException, InterruptedException {
+        // only deploy on build succeeds
+        if (build.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
+            listener.getLogger().println("Deploy to Azure app service: SKIPPED.");
+            return false;
+        }
+
         listener.getLogger().println("Starting Azure App Service Deployment");
 
         // Get app info

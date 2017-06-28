@@ -26,17 +26,17 @@
             </f:entry>
             <f:entry title="${%Source_Directory}" field="sourceDirectory"
                      help="/plugin/azure-app-service/help-sourceDirectory.html">
-                <f:textbox />
+                <f:textbox/>
             </f:entry>
 
             <f:entry title="${%Target_Directory}" field="targetDirectory"
                      help="/plugin/azure-app-service/help-targetDirectory.html">
-                <f:textbox />
+                <f:textbox/>
             </f:entry>
 
             <f:entry title="${%Slot_Name}" field="slotName"
                      help="/plugin/azure-app-service/help-slotName.html">
-                <f:textbox />
+                <f:textbox/>
             </f:entry>
         </f:radioBlock>
         <f:radioBlock name="publishType" value="docker" title="${%Publish_via_Docker}" inline="true"
@@ -44,19 +44,27 @@
                       help="/plugin/azure-app-service/help-publishViaDocker.html">
             <f:entry title="${%Dockerfile_Path}" field="dockerFilePath"
                      help="/plugin/azure-app-service/help-dockerfile.html">
-                <f:textbox value="${it.getDockerFilePath()}" default="**/Dockerfile"/>
+                <f:textbox default="**/Dockerfile"/>
             </f:entry>
             <f:entry field="dockerRegistryEndpoint">
-                <f:property propertyDescriptor="${descriptor.dockerRegistryEndpointDescriptor}" />
+                <f:property propertyDescriptor="${descriptor.dockerRegistryEndpointDescriptor}"/>
             </f:entry>
-            <f:advanced>
+            <f:advanced align="left">
                 <f:entry title="${%Docker_Image}" field="dockerImageName"
                          help="/plugin/azure-app-service/help-dockerImageName.html">
-                    <f:textbox value="${it.getDockerImageName()}"/>
+                    <f:textbox/>
                 </f:entry>
                 <f:entry title="${%Docker_Image_Tag}" field="dockerImageTag"
                          help="/plugin/azure-app-service/help-dockerImageTag.html">
-                    <f:textbox value="${it.getDockerImageTag()}" default="${BUILD_NUMBER}"/>
+                    <f:textbox default="${BUILD_NUMBER}"/>
+                </f:entry>
+                <f:entry field="deployOnlyIfSuccessful"
+                         help="/plugin/azure-app-service/help-deployOnlyIfSuccessful.html">
+                    <f:checkbox title="${%Deploy_Only_If_Successful}" default="true"/>
+                </f:entry>
+                <f:entry field="deleteTempImage"
+                         help="/plugin/azure-app-service/help-deleteTempImage.html">
+                    <f:checkbox title="${%Delete_Temporary_Image}" default="true"/>
                 </f:entry>
             </f:advanced>
             <f:validateButton title="${%VerifyConfiguration}" progress="${%VerifyingMsg}" method="verifyConfiguration"
