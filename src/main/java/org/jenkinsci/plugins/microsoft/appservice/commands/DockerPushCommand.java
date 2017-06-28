@@ -9,6 +9,7 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.PushResponseItem;
 import com.github.dockerjava.core.command.PushImageResultCallback;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 public class DockerPushCommand extends DockerCommand implements ICommand<DockerPushCommand.IDockerPushCommandData> {
@@ -25,7 +26,7 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
             final PushImageResultCallback callback = new PushImageResultCallback() {
                 @Override
                 public void onNext(final PushResponseItem item) {
-                    context.logStatus(item.toString());
+                    context.logStatus(outputResponseItem(item));
                     super.onNext(item);
                 }
 
@@ -47,6 +48,20 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
             context.getListener().getLogger().println("Build failed for " + e.getMessage());
             context.setDeploymentState(DeploymentState.HasError);
         }
+    }
+
+    private String outputResponseItem(final PushResponseItem item) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        if (StringUtils.isNotBlank(item.getId())) {
+            stringBuilder.append(item.getId()).append(": ");
+        }
+        if (StringUtils.isNotBlank(item.getStatus())) {
+            stringBuilder.append(item.getStatus());
+        }
+        if (StringUtils.isNotBlank(item.getProgress())) {
+            stringBuilder.append(item.getProgress());
+        }
+        return stringBuilder.toString();
     }
 
     public interface IDockerPushCommandData extends IBaseCommandData {

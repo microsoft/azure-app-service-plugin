@@ -61,8 +61,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
                 @Override
                 public void onNext(final BuildResponseItem buildResponseItem) {
                     if (buildResponseItem.isBuildSuccessIndicated()) {
-                        context.logStatus("Build successful, the image Id: " + buildResponseItem.getImageId());
-                        context.logStatus(buildResponseItem.toString());
+                        context.logStatus(buildResponseItem.getStream());
                         dockerBuildInfo.setImageId(buildResponseItem.getImageId());
                     } else if (buildResponseItem.isErrorIndicated()) {
                         context.logStatus("Build docker image failed");
