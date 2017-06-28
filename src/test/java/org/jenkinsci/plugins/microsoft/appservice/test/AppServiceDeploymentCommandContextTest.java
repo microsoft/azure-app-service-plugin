@@ -10,10 +10,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import org.jenkinsci.plugins.microsoft.appservice.AppServiceDeploymentCommandContext;
-import org.jenkinsci.plugins.microsoft.appservice.commands.DeploymentState;
-import org.jenkinsci.plugins.microsoft.appservice.commands.GitDeployCommand;
-import org.jenkinsci.plugins.microsoft.appservice.commands.TransitionInfo;
-import org.jenkinsci.plugins.microsoft.appservice.commands.FTPDeployCommand;
+import org.jenkinsci.plugins.microsoft.appservice.commands.*;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -74,6 +71,8 @@ public class AppServiceDeploymentCommandContextTest {
         HashMap<Class, TransitionInfo> commands = ctx.getCommands();
         Assert.assertTrue(commands.containsKey(GitDeployCommand.class));
         Assert.assertFalse(commands.containsKey(FTPDeployCommand.class));
+        Assert.assertEquals(1, commands.size());
+        Assert.assertEquals(ctx.getStartCommandClass().getName(), GitDeployCommand.class.getName());
 
         // Java Application
         when(app.javaVersion()).thenReturn(JavaVersion.JAVA_8_NEWEST);
@@ -81,6 +80,20 @@ public class AppServiceDeploymentCommandContextTest {
         commands = ctx.getCommands();
         Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
         Assert.assertTrue(commands.containsKey(FTPDeployCommand.class));
+        Assert.assertEquals(1, commands.size());
+        Assert.assertEquals(ctx.getStartCommandClass().getName(), FTPDeployCommand.class.getName());
+
+        // Docker
+        ctx.setPublishType(AppServiceDeploymentCommandContext.PUBLISH_TYPE_DOCKER);
+        ctx.configure(build, listener, app);
+        commands = ctx.getCommands();
+        Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
+        Assert.assertFalse(commands.containsKey(FTPDeployCommand.class));
+        Assert.assertTrue(commands.containsKey(DockerBuildCommand.class));
+        Assert.assertTrue(commands.containsKey(DockerPushCommand.class));
+        Assert.assertTrue(commands.containsKey(DockerDeployCommand.class));
+        Assert.assertEquals(3, commands.size());
+        Assert.assertEquals(ctx.getStartCommandClass().getName(), DockerBuildCommand.class.getName());
     }
 
     @Test

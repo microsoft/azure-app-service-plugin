@@ -5,26 +5,38 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice;
 
+import com.microsoft.azure.management.appservice.DeploymentSlot;
+import com.microsoft.azure.management.appservice.JavaVersion;
+import com.microsoft.azure.management.appservice.PublishingProfile;
+import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.*;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import java.util.HashMap;
-
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.microsoft.appservice.commands.*;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
+import java.util.HashMap;
+
 public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         implements FTPDeployCommand.IFTPDeployCommandData,
-        GitDeployCommand.IGitDeployCommandData {
+        GitDeployCommand.IGitDeployCommandData,
+        DockerBuildCommand.IDockerBuildCommandData,
+        DockerPushCommand.IDockerPushCommandData,
+        DockerDeployCommand.IDockerDeployCommandData {
+
+    public static final String PUBLISH_TYPE_DOCKER = "docker";
 
     private final String filePath;
+    private String publishType;
+    private DockerBuildInfo dockerBuildInfo;
     private String sourceDirectory;
     private String targetDirectory;
     private String slotName;
 
     private PublishingProfile pubProfile;
+    private WebApp webApp;
 
     public AppServiceDeploymentCommandContext(final String filePath) {
         this.filePath = filePath;
@@ -44,6 +56,14 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         this.slotName = slotName;
     }
 
+    public void setPublishType(String publishType) {
+        this.publishType = publishType;
+    }
+
+    public void setDockerBuildInfo(DockerBuildInfo dockerBuildInfo) {
+        this.dockerBuildInfo = dockerBuildInfo;
+    }
+
     public void configure(AbstractBuild<?, ?> build, BuildListener listener, WebApp app) throws AzureCloudException {
         if (StringUtils.isBlank(slotName)) {
             // Deploy to default
@@ -60,18 +80,24 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
 
         HashMap<Class, TransitionInfo> commands = new HashMap<>();
 
-        Class deployCommandClass = null;
-        if (app.javaVersion() != JavaVersion.OFF) {
+        Class startCommandClass;
+        if (StringUtils.isNotBlank(publishType) && publishType.equalsIgnoreCase(PUBLISH_TYPE_DOCKER)) {
+            startCommandClass = DockerBuildCommand.class;
+            this.webApp = app;
+            commands.put(DockerBuildCommand.class, new TransitionInfo(new DockerBuildCommand(), DockerPushCommand.class, null));
+            commands.put(DockerPushCommand.class, new TransitionInfo(new DockerPushCommand(), DockerDeployCommand.class, null));
+            commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), null, null));
+        } else if (app.javaVersion() != JavaVersion.OFF) {
             // For Java application, use FTP-based deployment as it's the recommended way
-            deployCommandClass = FTPDeployCommand.class;
+            startCommandClass = FTPDeployCommand.class;
             commands.put(FTPDeployCommand.class, new TransitionInfo(new FTPDeployCommand(), null, null));
         } else {
             // For non-Java application, use Git-based deployment
-            deployCommandClass = GitDeployCommand.class;
+            startCommandClass = GitDeployCommand.class;
             commands.put(GitDeployCommand.class, new TransitionInfo(new GitDeployCommand(), null, null));
         }
 
-        super.configure(build, listener, commands, deployCommandClass);
+        super.configure(build, listener, commands, startCommandClass);
         this.setDeploymentState(DeploymentState.Running);
     }
 
@@ -95,8 +121,22 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         return targetDirectory;
     }
 
+    public String getPublishType() {
+        return publishType;
+    }
+
     @Override
     public PublishingProfile getPublishingProfile() {
         return pubProfile;
+    }
+
+    @Override
+    public DockerBuildInfo getDockerBuildInfo() {
+        return dockerBuildInfo;
+    }
+
+    @Override
+    public WebApp getWebApp() {
+        return webApp;
     }
 }

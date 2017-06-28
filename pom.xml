@@ -22,6 +22,8 @@
         <powermock.version>1.7.0RC2</powermock.version>
         <azuresdk.version>1.1.0</azuresdk.version>
         <azure-credentials.version>1.0</azure-credentials.version>
+        <version.docker-java>3.0.10</version.docker-java>
+        <version.jenkins.docker-commons>1.4.0</version.jenkins.docker-commons>
     </properties>
 
     <name>Azure App Service</name>
@@ -37,14 +39,9 @@
 
     <developers>
         <developer>
-            <id>arroyc_microsoft</id>
-            <name>Arjun Roy Chaudhuri</name>
-            <email>arroyc@microsoft.com</email>
-        </developer>
-        <developer>
-            <id>clguiman</id>
-            <name>Claudiu Guiman</name>
-            <email>clguiman@microsoft.com</email>
+            <id>vscjenkins</id>
+            <name>Visual Studio China Jenkins Team</name>
+            <email>vscjenkins@microsoft.com</email>
         </developer>
     </developers>
     <scm>
@@ -92,6 +89,13 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java</artifactId>
+            <!-- use latest version https://github.com/docker-java/docker-java/releases -->
+            <version>${version.docker-java}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>git-client</artifactId>
             <version>2.4.6</version>
@@ -117,6 +121,12 @@
             <groupId>com.jcraft</groupId>
             <artifactId>jsch</artifactId>
             <version>0.1.53</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>docker-commons</artifactId>
+            <version>${version.jenkins.docker-commons}</version>
         </dependency>
     
         <dependency>
