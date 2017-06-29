@@ -34,6 +34,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     private String sourceDirectory;
     private String targetDirectory;
     private String slotName;
+    private boolean deleteTempImage;
 
     private PublishingProfile pubProfile;
     private WebApp webApp;
@@ -44,24 +45,28 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         this.targetDirectory = "";
     }
 
-    public void setSourceDirectory(String sourceDirectory) {
+    public void setSourceDirectory(final String sourceDirectory) {
         this.sourceDirectory = Util.fixNull(sourceDirectory);
     }
 
-    public void setTargetDirectory(String targetDirectory) {
+    public void setTargetDirectory(final String targetDirectory) {
         this.targetDirectory = Util.fixNull(targetDirectory);
     }
 
-    public void setSlotName(String slotName) {
+    public void setSlotName(final String slotName) {
         this.slotName = slotName;
     }
 
-    public void setPublishType(String publishType) {
+    public void setPublishType(final String publishType) {
         this.publishType = publishType;
     }
 
-    public void setDockerBuildInfo(DockerBuildInfo dockerBuildInfo) {
+    public void setDockerBuildInfo(final DockerBuildInfo dockerBuildInfo) {
         this.dockerBuildInfo = dockerBuildInfo;
+    }
+
+    public void setDeleteTempImage(final boolean deleteTempImage) {
+        this.deleteTempImage = deleteTempImage;
     }
 
     public void configure(AbstractBuild<?, ?> build, BuildListener listener, WebApp app) throws AzureCloudException {
@@ -86,8 +91,12 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
             this.webApp = app;
             commands.put(DockerBuildCommand.class, new TransitionInfo(new DockerBuildCommand(), DockerPushCommand.class, null));
             commands.put(DockerPushCommand.class, new TransitionInfo(new DockerPushCommand(), DockerDeployCommand.class, null));
-            commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), DockerRemoveImageCommand.class, null));
-            commands.put(DockerRemoveImageCommand.class, new TransitionInfo(new DockerRemoveImageCommand(), null, null));
+            if (deleteTempImage) {
+                commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), DockerRemoveImageCommand.class, null));
+                commands.put(DockerRemoveImageCommand.class, new TransitionInfo(new DockerRemoveImageCommand(), null, null));
+            } else {
+                commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), null, null));
+            }
         } else if (app.javaVersion() != JavaVersion.OFF) {
             // For Java application, use FTP-based deployment as it's the recommended way
             startCommandClass = FTPDeployCommand.class;

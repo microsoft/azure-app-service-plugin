@@ -250,6 +250,7 @@ public class AppServiceDeploymentRecorder extends Recorder {
         commandContext.setSlotName(slotName);
         commandContext.setPublishType(publishType);
         commandContext.setDockerBuildInfo(dockerBuildInfo);
+        commandContext.setDeleteTempImage(deleteTempImage);
 
         try {
             commandContext.configure(build, listener, app);
