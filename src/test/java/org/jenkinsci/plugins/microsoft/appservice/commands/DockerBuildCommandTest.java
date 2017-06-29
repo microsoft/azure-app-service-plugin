@@ -109,6 +109,5 @@ public class DockerBuildCommandTest extends AbstractDockerCommandTest {
         verify(buildImageCmd, times(1)).withTags(any(Set.class));
         verify(buildImageCmd, times(1)).exec(any(BuildImageResultCallback.class));
         verify(callback, times(1)).awaitCompletion();
-        verify(commandData, times(1)).setDeploymentState(DeploymentState.Success);
     }
 }

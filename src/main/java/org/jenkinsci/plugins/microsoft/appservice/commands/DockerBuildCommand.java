@@ -24,15 +24,12 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
 
     @Override
     public void execute(final IDockerBuildCommandData context) {
-        if (context == null)
-            return;
-        checkNotNull(context, "input data cannot be null.");
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
-//        context.logStatus(String.format("Begin to build docker image %s:%s",
-//                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag()));
 
         try {
             final String image = imageAndTag(dockerBuildInfo);
+            context.logStatus(String.format("Building new docker image `%s`", image));
+
             final FilePath workspace = context.getBuild().getWorkspace();
             if (workspace == null) {
                 throw new AzureCloudException("workspace is not available at this time.");
@@ -57,12 +54,13 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
             context.logStatus("Dockerfile found: " + dockerfile.getAbsolutePath());
 
             final DockerClient client = getDockerClient(dockerBuildInfo.getAuthConfig());
-            final BuildImageResultCallback callback = new BuildImageResultCallback() {
+            BuildImageResultCallback callback = new BuildImageResultCallback() {
                 @Override
                 public void onNext(final BuildResponseItem buildResponseItem) {
                     if (buildResponseItem.isBuildSuccessIndicated()) {
                         context.logStatus(buildResponseItem.getStream());
                         dockerBuildInfo.setImageId(buildResponseItem.getImageId());
+                        context.setDeploymentState(DeploymentState.Success);
                     } else if (buildResponseItem.isErrorIndicated()) {
                         context.logStatus("Build docker image failed");
                         ResponseItem.ErrorDetail detail = buildResponseItem.getErrorDetail();
@@ -84,7 +82,6 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
                     .withTags(Sets.newHashSet(image))
                     .exec(callback)
                     .awaitCompletion();
-            context.setDeploymentState(DeploymentState.Success);
         } catch (AzureCloudException | InterruptedException e) {
             context.logStatus("Build failed for " + e.getMessage());
             context.setDeploymentState(DeploymentState.HasError);
@@ -92,6 +89,6 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
     }
 
     public interface IDockerBuildCommandData extends IBaseCommandData {
-        public DockerBuildInfo getDockerBuildInfo();
+        DockerBuildInfo getDockerBuildInfo();
     }
 }

@@ -7,6 +7,7 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
+import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.api.model.PushResponseItem;
 import com.github.dockerjava.core.command.PushImageResultCallback;
 import org.apache.commons.lang.StringUtils;
@@ -16,11 +17,12 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
     @Override
     public void execute(final IDockerPushCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
-        context.logStatus(String.format("Begin to push docker image %s:%s to registry %s",
-                dockerBuildInfo.getDockerImage(), dockerBuildInfo.getDockerImageTag(), dockerBuildInfo.getAuthConfig().getRegistryAddress()));
 
         try {
             final String image = imageAndTag(dockerBuildInfo);
+            context.logStatus(String.format("Push docker image `%s` to %s",
+                    image, dockerBuildInfo.getAuthConfig().getRegistryAddress()));
+
             final DockerClient dockerClient = getDockerClient(dockerBuildInfo.getAuthConfig());
 
             final PushImageResultCallback callback = new PushImageResultCallback() {
@@ -38,12 +40,17 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
                 }
             };
 
-            dockerClient.pushImageCmd(image)
-                    .withTag(dockerBuildInfo.getDockerImageTag())
-                    .exec(callback)
-                    .awaitSuccess();
-            context.logStatus("Push completed");
-            context.setDeploymentState(DeploymentState.Success);
+            try {
+                dockerClient.pushImageCmd(image)
+                        .withTag(dockerBuildInfo.getDockerImageTag())
+                        .exec(callback)
+                        .awaitSuccess();
+                context.logStatus("Push completed.");
+                context.setDeploymentState(DeploymentState.Success);
+            } catch (DockerClientException docker) {
+                context.logError(docker);
+                context.setDeploymentState(DeploymentState.HasError);
+            }
         } catch (AzureCloudException e) {
             context.getListener().getLogger().println("Build failed for " + e.getMessage());
             context.setDeploymentState(DeploymentState.HasError);

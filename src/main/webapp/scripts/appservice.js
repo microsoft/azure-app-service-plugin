@@ -31,7 +31,6 @@
             return radioBlocks;
         };
 
-
         var showSingleRadioBlock = function (radioBlock, show) {
             var n = $(radioBlock.start);
             while (n != radioBlock.end) {
