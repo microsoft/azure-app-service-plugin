@@ -12,11 +12,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
-import org.apache.tools.ant.DirectoryScanner;
-import org.apache.tools.ant.types.FileSet;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -85,19 +81,13 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
 
             context.logStatus(String.format("Working directory: %s", ftpClient.printWorkingDirectory()));
 
-            final File sourceDir = new File(workspace.getRemote(), Util.fixNull(context.getSourceDirectory()));
-            FileSet fs = Util.createFileSet(sourceDir, context.getFilePath());
-            DirectoryScanner ds = fs.getDirectoryScanner();
-            String[] files = ds.getIncludedFiles();
-            for (String file : files) {
-                uploadFile(context, ftpClient, new File(sourceDir, file), file);
+            final FilePath sourceDir = workspace.child(Util.fixNull(context.getSourceDirectory()));
+            final FilePath[] files = sourceDir.list(context.getFilePath());
+            for (final FilePath file : files) {
+                uploadFile(context, ftpClient, sourceDir, file);
             }
-        } catch (FTPException e) {
-            context.logError(e);
-            context.setDeploymentState(DeploymentState.HasError);
-        } catch (IOException e) {
-            e.printStackTrace();
-            context.logError("Fail to deploy to FTP: "  + e.getMessage());
+        } catch (FTPException | IOException | InterruptedException e) {
+            context.logError("Fail to deploy to FTP: " + e.getMessage());
             context.setDeploymentState(DeploymentState.HasError);
         } finally {
             if (ftpClient.isConnected()) {
@@ -151,8 +141,10 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         }
     }
 
-    private void uploadFile(IFTPDeployCommandData context, FTPClient ftpClient, File file, String remoteName)
-            throws IOException, FTPException {
+    private void uploadFile(IFTPDeployCommandData context, FTPClient ftpClient, FilePath sourceDir, FilePath file)
+            throws IOException, FTPException, InterruptedException {
+
+        final String remoteName = getRemoteFileName(sourceDir, file);
         context.logStatus(String.format("Uploading %s", remoteName));
 
         // Need some preparation in some cases
@@ -162,12 +154,23 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             throw new FTPException("Fail to set FTP file type to binary");
         }
 
-        try (InputStream stream = new FileInputStream(file)) {
+        try (InputStream stream = file.read()) {
             if (!ftpClient.storeFile(remoteName, stream)) {
                 throw new FTPException("Fail to upload file to: " + remoteName);
             }
         }
     }
+
+    private String getRemoteFileName(FilePath sourceDir, FilePath file) {
+        final String prefix = sourceDir.getRemote();
+        final String filePath = file.getRemote();
+        if (filePath.startsWith(prefix)) {
+            return FilenameUtils.separatorsToUnix(filePath.substring(prefix.length() + 1));
+        } else {
+            return FilenameUtils.separatorsToUnix(filePath);
+        }
+    }
+
 
     private void prepareDirectory(IFTPDeployCommandData context, FTPClient ftpClient, String fileName)
             throws IOException, FTPException {
