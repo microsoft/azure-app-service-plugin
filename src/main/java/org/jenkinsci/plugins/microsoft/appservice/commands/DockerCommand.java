@@ -6,12 +6,7 @@
 
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
-import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.DockerCmdExecFactory;
-import com.github.dockerjava.api.model.AuthConfig;
-import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.NameParser;
-import com.github.dockerjava.jaxrs.JerseyDockerCmdExecFactory;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
@@ -22,26 +17,6 @@ import java.net.URISyntaxException;
  * To provide some common docker-related methods for docker commands.
  */
 public abstract class DockerCommand {
-
-    private static final int CONNECT_TIMEOUT = 1000;
-    private static final int MAX_TOTAL_CONNECTIONS = 1;
-    private static final int MAX_PER_ROUTE_CONNECTIONS = 1;
-
-    protected DockerClient getDockerClient(final AuthConfig authConfig) {
-        final AzureDockerClientConfig.Builder builder = AzureDockerClientConfig.createDefaultConfigBuilder()
-                .withRegistryUsername(authConfig.getUsername())
-                .withRegistryPassword(authConfig.getPassword())
-                .withRegistryUrl(authConfig.getRegistryAddress())
-                .withRegistryEmail(authConfig.getEmail());
-
-        final DockerCmdExecFactory dockerCmdExecFactory = new JerseyDockerCmdExecFactory()
-                .withConnectTimeout(CONNECT_TIMEOUT)
-                .withMaxTotalConnections(MAX_TOTAL_CONNECTIONS)
-                .withMaxPerRouteConnections(MAX_PER_ROUTE_CONNECTIONS);
-
-        return DockerClientBuilder.getInstance(builder.build())
-                .withDockerCmdExecFactory(dockerCmdExecFactory).build();
-    }
 
     protected String getFullImageName(final DockerBuildInfo dockerBuildInfo) throws AzureCloudException {
         if (StringUtils.isNotBlank(dockerBuildInfo.getDockerImage())) {

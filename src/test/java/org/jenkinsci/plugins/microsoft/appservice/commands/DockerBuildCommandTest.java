@@ -7,14 +7,13 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.BuildImageCmd;
-import com.github.dockerjava.api.model.AuthConfig;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.google.common.io.Files;
 import hudson.FilePath;
-import hudson.model.*;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.helpers.SyslogQuietWriter;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -58,12 +57,12 @@ public class DockerBuildCommandTest extends AbstractDockerCommandTest {
         File workspaceDir = Files.createTempDir();
         workspaceDir.deleteOnExit();
         workspace = new FilePath(workspaceDir);
+        when(commandData.getWorkspace()).thenReturn(workspace);
         dockerfileDir = new TemporaryFolder(workspaceDir);
         dockerfileDir.create();
 
         // Mock run
         final Run run = mock(Run.class);
-        when(commandData.getWorkspace()).thenReturn(workspace);
         when(commandData.getRun()).thenReturn(run);
 
         // Mock task listener
@@ -71,8 +70,8 @@ public class DockerBuildCommandTest extends AbstractDockerCommandTest {
         when(commandData.getListener()).thenReturn(listener);
 
         // Mock docker client
-//        dockerClient = spy(command.getDockerClient(defaultExampleAuthConfig()));
         dockerClient = mock(DockerClient.class);
+        when(commandData.getDockerClientBuilder()).thenReturn(new MockDockerClientBuilder(dockerClient));
     }
 
     @Test
@@ -93,7 +92,6 @@ public class DockerBuildCommandTest extends AbstractDockerCommandTest {
     @Test
     public void dockerBuildCmdTest() throws Exception {
         when(commandData.getDockerBuildInfo()).thenReturn(defaultExampleBuildInfo());
-        when(command.getDockerClient(defaultExampleAuthConfig())).thenReturn(dockerClient);
         createTestDockerfile(1);
 
         BuildImageCmd buildImageCmd = mock(BuildImageCmd.class);

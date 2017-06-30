@@ -7,20 +7,23 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
-import com.github.dockerjava.api.command.BuildImageCmd;
 import com.github.dockerjava.api.command.PushImageCmd;
-import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.github.dockerjava.core.command.PushImageResultCallback;
+import com.google.common.io.Files;
+import hudson.FilePath;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.util.StreamTaskListener;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.springframework.util.Assert;
 
 import java.io.File;
-import java.util.Set;
+import java.nio.charset.Charset;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * Created by juniwang on 27/06/2017.
@@ -33,16 +36,26 @@ public class DockerPushCommandTest extends AbstractDockerCommandTest {
 
     @Before
     public void setup() {
-        command = spy(new DockerPushCommand());
+        command = new DockerPushCommand();
         commandData = mock(DockerPushCommand.IDockerPushCommandData.class);
-        dockerClient = spy(command.getDockerClient(defaultExampleAuthConfig()));
+        dockerClient = mock(DockerClient.class);
+        when(commandData.getDockerClientBuilder()).thenReturn(new MockDockerClientBuilder(dockerClient));
+
+        // Create workspace
+        File workspaceDir = Files.createTempDir();
+        workspaceDir.deleteOnExit();
+        FilePath workspace = new FilePath(workspaceDir);
+        when(commandData.getWorkspace()).thenReturn(workspace);
+
+        // Mock task listener
+        final TaskListener listener = new StreamTaskListener(System.out, Charset.defaultCharset());
+        when(commandData.getListener()).thenReturn(listener);
     }
 
     @Test
     public void dockerPushCmdTest() throws Exception {
         DockerBuildInfo dockerBuildInfo = defaultExampleBuildInfo();
         when(commandData.getDockerBuildInfo()).thenReturn(dockerBuildInfo);
-        when(command.getDockerClient(defaultExampleAuthConfig())).thenReturn(dockerClient);
 
         PushImageCmd pushImageCmd = mock(PushImageCmd.class);
         when(dockerClient.pushImageCmd(command.imageAndTag(dockerBuildInfo))).thenReturn(pushImageCmd);

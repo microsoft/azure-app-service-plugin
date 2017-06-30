@@ -11,9 +11,9 @@ import com.github.dockerjava.api.exception.UnauthorizedException;
 import com.github.dockerjava.api.model.AuthConfig;
 import hudson.util.FormValidation;
 
-public class DockerPingCommand extends DockerCommand {
+public class DockerPingCommand {
     public FormValidation ping(final AuthConfig authConfig) {
-        DockerClient dockerClient = getDockerClient(authConfig);
+        DockerClient dockerClient = new DefaultDockerClientBuilder().build(authConfig);
 
         try {
             // make sure local docker is running

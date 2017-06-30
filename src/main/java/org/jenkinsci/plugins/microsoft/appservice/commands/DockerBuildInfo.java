@@ -8,7 +8,9 @@ package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.model.AuthConfig;
 
-public class DockerBuildInfo {
+import java.io.Serializable;
+
+public class DockerBuildInfo implements Serializable {
     private String dockerfile;
     private String linuxFxVersion; // the original docker image
     private AuthConfig authConfig;

@@ -11,7 +11,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.powermock.api.mockito.PowerMockito.spy;
 
 /**
@@ -25,12 +24,6 @@ public class DockerCommandTest extends AbstractDockerCommandTest {
     public void setup() {
         dockerCommand = spy(new DockerCommand() {
         });
-    }
-
-    @Test
-    public void getDockerClientTest() {
-        DockerClient dockerClient = dockerCommand.getDockerClient(defaultExampleAuthConfig());
-        Assert.assertThat("", dockerClient.authConfig(), equalTo(defaultExampleAuthConfig()));
     }
 
     @Test
