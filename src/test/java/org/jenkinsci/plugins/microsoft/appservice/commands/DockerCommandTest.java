@@ -5,7 +5,6 @@
  */
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
-import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.AuthConfig;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.junit.Assert;

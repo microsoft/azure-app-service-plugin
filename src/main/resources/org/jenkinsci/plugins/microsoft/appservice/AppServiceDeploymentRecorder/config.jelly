@@ -3,7 +3,8 @@
   ~ Licensed under the MIT License. See License.txt in the project root for
   ~ license information.
   -->
-<j:jelly xmlns:j="jelly:core"  xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:section title="${%Azure_Profile_Configuration}">
         <f:entry title="${%Azure_Credentials}" field="azureCredentialsId"
                  help="/plugin/azure-app-service/help-azureCredentials.html">
@@ -37,6 +38,7 @@
                 <f:textbox/>
             </f:entry>
         </f:radioBlock>
+
         <f:radioBlock name="publishType" value="docker" title="${%Publish_via_Docker}" inline="true"
                       checked="${instance.getPublishType() == 'docker'}"
                       help="/plugin/azure-app-service/help-publishViaDocker.html">
