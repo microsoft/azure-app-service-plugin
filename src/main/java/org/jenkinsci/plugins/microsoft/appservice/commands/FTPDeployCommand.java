@@ -12,6 +12,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
+import org.jenkinsci.plugins.microsoft.appservice.util.FilePathUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -144,7 +145,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
     private void uploadFile(IFTPDeployCommandData context, FTPClient ftpClient, FilePath sourceDir, FilePath file)
             throws IOException, FTPException, InterruptedException {
 
-        final String remoteName = getRemoteFileName(sourceDir, file);
+        final String remoteName = FilenameUtils.separatorsToUnix(FilePathUtils.trimDirectoryPrefix(sourceDir, file));
         context.logStatus(String.format("Uploading %s", remoteName));
 
         // Need some preparation in some cases
@@ -160,17 +161,6 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             }
         }
     }
-
-    private String getRemoteFileName(FilePath sourceDir, FilePath file) {
-        final String prefix = sourceDir.getRemote();
-        final String filePath = file.getRemote();
-        if (filePath.startsWith(prefix)) {
-            return FilenameUtils.separatorsToUnix(filePath.substring(prefix.length() + 1));
-        } else {
-            return FilenameUtils.separatorsToUnix(filePath);
-        }
-    }
-
 
     private void prepareDirectory(IFTPDeployCommandData context, FTPClient ftpClient, String fileName)
             throws IOException, FTPException {

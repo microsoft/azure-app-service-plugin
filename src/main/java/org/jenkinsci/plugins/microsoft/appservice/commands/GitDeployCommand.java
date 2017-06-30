@@ -11,14 +11,14 @@ import com.microsoft.azure.management.appservice.PublishingProfile;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Util;
+import hudson.model.AbstractBuild;
+import hudson.model.Node;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitTool;
 import hudson.remoting.VirtualChannel;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.tools.ant.DirectoryScanner;
-import org.apache.tools.ant.types.FileSet;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheBuildIterator;
 import org.eclipse.jgit.dircache.DirCacheBuilder;
@@ -33,6 +33,7 @@ import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
+import org.jenkinsci.plugins.microsoft.appservice.util.FilePathUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,8 +61,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
                 return;
             }
             final FilePath repo = ws.child(DEPLOY_REPO);
-            final String gitExe = getGitExe(env);
-
+            final String gitExe = getGitExe(run, listener);
 
             GitClient git = Git.with(listener, env)
                 .in(repo)
@@ -107,12 +107,22 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
         }
     }
 
-
-    private String getGitExe(EnvVars env) {
+    private String getGitExe(Run run, TaskListener listener) throws IOException, InterruptedException {
         GitTool tool = GitTool.getDefaultInstallation();
+
+        final EnvVars env = run.getEnvironment(listener);
         if (env != null) {
             tool = tool.forEnvironment(env);
         }
+
+        Node node = null;
+        if (run instanceof AbstractBuild) {
+            node = ((AbstractBuild) run).getBuiltOn();
+        }
+        if (node != null) {
+            tool = tool.forNode(node, listener);
+        }
+
         return tool.getGitExe();
     }
 
@@ -120,50 +130,53 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
      * Remove all existing files in the working directory, from both git and disk
      *
      * This method is modified from RmCommand in JGit.
+     *
      * @param git Git client
      * @throws IOException
      * @throws InterruptedException
      */
     private void cleanWorkingDirectory(GitClient git) throws IOException, InterruptedException {
-        git.withRepository(new RepositoryCallback<Void>() {
-            @Override
-            public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-                DirCache dc = null;
+        git.withRepository(new CleanWorkingDirectoryCallback());
+    }
 
-                try (final TreeWalk tw = new TreeWalk(repo)) {
-                    dc = repo.lockDirCache();
-                    DirCacheBuilder builder = dc.builder();
-                    tw.reset(); // drop the first empty tree, which we do not need here
-                    tw.setRecursive(true);
-                    tw.setFilter(TreeFilter.ALL);
-                    tw.addTree(new DirCacheBuildIterator(builder));
+    private static final class CleanWorkingDirectoryCallback implements RepositoryCallback<Void> {
+        @Override
+        public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+            DirCache dc = null;
 
-                    while (tw.next()) {
-                        final FileMode mode = tw.getFileMode(0);
-                        if (mode.getObjectType() == Constants.OBJ_BLOB) {
-                            final File path = new File(repo.getWorkTree(),
-                                    tw.getPathString());
-                            // Deleting a blob is simply a matter of removing
-                            // the file or symlink named by the tree entry.
-                            delete(repo, path);
-                        }
-                    }
-                    builder.commit();
-                } finally {
-                    if (dc != null) {
-                        dc.unlock();
+            try (final TreeWalk tw = new TreeWalk(repo)) {
+                dc = repo.lockDirCache();
+                DirCacheBuilder builder = dc.builder();
+                tw.reset(); // drop the first empty tree, which we do not need here
+                tw.setRecursive(true);
+                tw.setFilter(TreeFilter.ALL);
+                tw.addTree(new DirCacheBuildIterator(builder));
+
+                while (tw.next()) {
+                    final FileMode mode = tw.getFileMode(0);
+                    if (mode.getObjectType() == Constants.OBJ_BLOB) {
+                        final File path = new File(repo.getWorkTree(),
+                                tw.getPathString());
+                        // Deleting a blob is simply a matter of removing
+                        // the file or symlink named by the tree entry.
+                        delete(repo, path);
                     }
                 }
-
-                return null;
-            }
-
-            private void delete(Repository repo, File p) {
-                while (p != null && !p.equals(repo.getWorkTree()) && p.delete()) {
-                    p = p.getParentFile();
+                builder.commit();
+            } finally {
+                if (dc != null) {
+                    dc.unlock();
                 }
             }
-        });
+
+            return null;
+        }
+
+        private void delete(Repository repo, File p) {
+            while (p != null && !p.equals(repo.getWorkTree()) && p.delete()) {
+                p = p.getParentFile();
+            }
+        }
     }
 
     /**
@@ -179,16 +192,14 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
      */
     private void copyAndAddFiles(GitClient git, FilePath repo, FilePath sourceDir, String targetDir, String filesPattern)
             throws IOException, InterruptedException {
-        FileSet fs = Util.createFileSet(new File(sourceDir.getRemote()), filesPattern);
-        DirectoryScanner ds = fs.getDirectoryScanner();
-        String[] files = ds.getIncludedFiles();
-        for (String file: files) {
-            FilePath srcPath = new FilePath(sourceDir, file);
-            FilePath repoPath = new FilePath(repo.child(targetDir), file);
-            srcPath.copyTo(repoPath);
+        final FilePath[] files = sourceDir.list(filesPattern);
+        for (final FilePath file: files) {
+            final String fileName = FilePathUtils.trimDirectoryPrefix(sourceDir, file);
+            FilePath repoPath = new FilePath(repo.child(targetDir), fileName);
+            file.copyTo(repoPath);
 
             // Git always use Unix file path
-            String filePathInGit = FilenameUtils.separatorsToUnix(FilenameUtils.concat(targetDir, file));
+            String filePathInGit = FilenameUtils.separatorsToUnix(FilenameUtils.concat(targetDir, fileName));
             git.add(filePathInGit);
         }
     }
@@ -197,19 +208,21 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
      * Check if working tree changed.
      *
      * @param git Git client
-     * @return If working tree changed.
+     * @return If working tree changed
      * @throws IOException
      * @throws InterruptedException
      */
     private boolean isWorkingTreeChanged(GitClient git) throws IOException, InterruptedException {
-        return git.withRepository(new RepositoryCallback<Boolean>() {
-            @Override
-            public Boolean invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
-                FileTreeIterator workingTreeIt = new FileTreeIterator(repo);
-                IndexDiff diff = new IndexDiff(repo, Constants.HEAD, workingTreeIt);
-                return diff.diff();
-            }
-        });
+        return git.withRepository(new IsWorkingTreeChangedCallback());
+    }
+
+    private static final class IsWorkingTreeChangedCallback implements RepositoryCallback<Boolean> {
+        @Override
+        public Boolean invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+            FileTreeIterator workingTreeIt = new FileTreeIterator(repo);
+            IndexDiff diff = new IndexDiff(repo, Constants.HEAD, workingTreeIt);
+            return diff.diff();
+        }
     }
 
     public interface IGitDeployCommandData extends IBaseCommandData {
