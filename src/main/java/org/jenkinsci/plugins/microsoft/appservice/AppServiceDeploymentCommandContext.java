@@ -147,6 +147,11 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     }
 
     @Override
+    public DockerClientBuilder getDockerClientBuilder() {
+        return new DefaultDockerClientBuilder();
+    }
+
+    @Override
     public WebApp getWebApp() {
         return webApp;
     }

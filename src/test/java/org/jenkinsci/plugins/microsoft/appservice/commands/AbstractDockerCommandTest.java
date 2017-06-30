@@ -1,11 +1,26 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
+import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.AuthConfig;
 
 /**
  * Created by juniwang on 27/06/2017.
  */
 public class AbstractDockerCommandTest {
+
+    protected static final class MockDockerClientBuilder implements DockerClientBuilder {
+        private final DockerClient dockerClient;
+
+        public MockDockerClientBuilder(DockerClient dockerClient) {
+            this.dockerClient = dockerClient;
+        }
+
+
+        @Override
+        public DockerClient build(AuthConfig authConfig) {
+            return dockerClient;
+        }
+    }
 
     protected AuthConfig defaultExampleAuthConfig() {
         return new AuthConfig()
@@ -23,4 +38,5 @@ public class AbstractDockerCommandTest {
                 .withLinuxFxVersion("DOCKER|foo/bar:tag")
                 .withAuthConfig(defaultExampleAuthConfig());
     }
+
 }

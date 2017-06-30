@@ -344,7 +344,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
                 return siteConfig.linuxFxVersion();
             }
         } catch (IllegalAccessException e) {
-            throw new AzureCloudException(String.format("Cannot get the dcoker container info of web app %s", webApp.name()));
+            throw new AzureCloudException(String.format("Cannot get the docker container info of web app %s", webApp.name()));
         }
         return "";
     }

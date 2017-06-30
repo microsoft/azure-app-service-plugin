@@ -7,6 +7,10 @@
 package org.jenkinsci.plugins.microsoft.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
+import jenkins.security.MasterToSlaveCallable;
+import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
+
+import java.io.IOException;
 
 /**
  * Created by juniwang on 28/06/2017.
@@ -20,15 +24,39 @@ public class DockerRemoveImageCommand extends DockerCommand implements ICommand<
         final String imageId = dockerBuildInfo.getImageId();
         context.logStatus(String.format("Removing docker image `%s` from current build agent.", imageId));
 
-        final DockerClient dockerClient = getDockerClient(dockerBuildInfo.getAuthConfig());
-        dockerClient.removeImageCmd(imageId)
-                .withForce(true)
-                .exec();
-        context.logStatus("Remove completed.");
-        context.setDeploymentState(DeploymentState.Success);
+        try {
+            context.getWorkspace().act(new DockerRemoveCommandOnSlave(context.getDockerClientBuilder(), dockerBuildInfo, imageId));
+            context.logStatus("Remove completed.");
+            context.setDeploymentState(DeploymentState.Success);
+        } catch (IOException | InterruptedException | AzureCloudException e) {
+            context.logError("Fail to remove docker image: " + e.getMessage());
+            context.setDeploymentState(DeploymentState.HasError);
+        }
+    }
+
+    private static final class DockerRemoveCommandOnSlave extends MasterToSlaveCallable<Void, AzureCloudException> {
+        private final DockerClientBuilder dockerClientBuilder;
+        private final DockerBuildInfo dockerBuildInfo;
+        private final String imageId;
+
+        private DockerRemoveCommandOnSlave(DockerClientBuilder dockerClientBuilder, DockerBuildInfo dockerBuildInfo, String imageId) {
+            this.dockerClientBuilder = dockerClientBuilder;
+            this.dockerBuildInfo = dockerBuildInfo;
+            this.imageId = imageId;
+        }
+
+        @Override
+        public Void call() throws AzureCloudException {
+            final DockerClient dockerClient = dockerClientBuilder.build(dockerBuildInfo.getAuthConfig());
+            dockerClient.removeImageCmd(imageId)
+                    .withForce(true)
+                    .exec();
+            return null;
+        }
     }
 
     public interface IDockerRemoveImageCommandData extends IBaseCommandData {
+        DockerClientBuilder getDockerClientBuilder();
         DockerBuildInfo getDockerBuildInfo();
     }
 }
