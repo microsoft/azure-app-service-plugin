@@ -359,7 +359,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
     }
 
     @Extension
-    @Symbol("azureAppServicePublish")
+    @Symbol("azureWebAppPublish")
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
