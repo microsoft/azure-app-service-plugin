@@ -52,7 +52,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
         try {
             final FilePath[] files = workspace.list(pattern);
             if (files.length > 1) {
-                throw new AzureCloudException("multiple Dockerfile found in the specific path.");
+                throw new AzureCloudException("Multiple Dockerfile found in the specified path.");
             } else if (files.length == 0) {
                 throw new AzureCloudException("No Dockerfile found in the specific path.");
             }
