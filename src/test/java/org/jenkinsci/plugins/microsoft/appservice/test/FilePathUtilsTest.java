@@ -23,6 +23,7 @@ public class FilePathUtilsTest {
     public void trimDirectoryPrefix() throws Exception {
         assertTrimDirectoryPrefix("a", "a/b/c.txt", "b/c.txt");
         assertTrimDirectoryPrefix("a", "a/b.txt", "b.txt");
+        assertTrimDirectoryPrefix("a/", "a/b.txt", "b.txt");
         assertTrimDirectoryPrefix("", "c.txt", "c.txt");
     }
 
