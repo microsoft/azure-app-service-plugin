@@ -56,7 +56,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
 
     private final String azureCredentialsId;
     private final String resourceGroup;
-    private final String appService;
+    private final String webApp;
     private String publishType;
     private String filePath;
     private String dockerImageName;
@@ -81,11 +81,14 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
     @DataBoundConstructor
     public AppServiceDeploymentRecorder(
             final String azureCredentialsId,
-            final String appService,
+            final String webApp,
             final String resourceGroup) {
         this.azureCredentialsId = azureCredentialsId;
         this.resourceGroup = resourceGroup;
-        this.appService = appService;
+        this.webApp = webApp;
+        this.dockerFilePath = "**/Dockerfile";
+        this.deployOnlyIfSuccessful = true;
+        this.deleteTempImage = true;
     }
 
     @DataBoundSetter
@@ -148,8 +151,8 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         return azureCredentialsId;
     }
 
-    public String getAppService() {
-        return appService;
+    public String getWebApp() {
+        return webApp;
     }
 
     public String getResourceGroup() {
@@ -219,8 +222,10 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
     public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener)
             throws InterruptedException, IOException {
         // Only deploy on build succeeds
-        if (run.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
-            listener.getLogger().println("Deploy to Azure app service: SKIPPED.");
+        // Also check if result is null here because in pipeline web app deploy is not run as a post-build action.
+        // In this case result is null and pipeline will stop if previous step failed. So no need to check result in this case.
+        if (run.getResult() != null && run.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
+            listener.getLogger().println("Deploy to Azure Web App is skipped due to previous steps failed.");
             return;
         }
 
@@ -228,10 +233,9 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
 
         // Get app info
         final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-        final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appService);
+        final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, webApp);
         if (app == null) {
-            listener.getLogger().println(String.format("App %s in resource group %s not found", appService, resourceGroup));
-            return;
+            throw new AbortException(String.format("Web app %s in resource group %s not found", webApp, resourceGroup));
         }
 
         final String expandedFilePath = run.getEnvironment(listener).expand(filePath);
@@ -239,8 +243,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         try {
             dockerBuildInfo = validateDockerBuildInfo(run, listener, app);
         } catch (AzureCloudException e) {
-            listener.getLogger().println(e.getMessage());
-            return;
+            throw new AbortException(e.getMessage());
         }
 
         final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath);
@@ -255,14 +258,15 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         try {
             commandContext.configure(run, workspace, listener, app);
         } catch (AzureCloudException e) {
-            listener.fatalError(e.getMessage());
-            return;
+            throw new AbortException(e.getMessage());
         }
 
         CommandService.executeCommands(commandContext);
 
         if (!commandContext.getHasError()) {
-            listener.getLogger().println("Done Azure App Service Deployment");
+            listener.getLogger().println("Done Azure Web App deployment.");
+        } else {
+            throw new AbortException("Azue Web App deployment failed.");
         }
     }
 
@@ -403,7 +407,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
             return model;
         }
 
-        public ListBoxModel doFillAppServiceItems(@QueryParameter final String azureCredentialsId,
+        public ListBoxModel doFillWebAppItems(@QueryParameter final String azureCredentialsId,
                                                   @QueryParameter final String resourceGroup) {
             final ListBoxModel model = new ListBoxModel();
             // list all app service
