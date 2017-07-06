@@ -33,10 +33,6 @@
             <f:entry title="${%Target_Directory}" field="targetDirectory">
                 <f:textbox/>
             </f:entry>
-
-            <f:entry title="${%Slot_Name}" field="slotName">
-                <f:textbox/>
-            </f:entry>
         </f:radioBlock>
 
         <f:radioBlock name="publishType" value="docker" title="${%Publish_via_Docker}" inline="true"
@@ -65,6 +61,9 @@
             <f:validateButton title="${%VerifyConfiguration}" progress="${%VerifyingMsg}" method="verifyConfiguration"
                               with="url,credentialsId"/>
         </f:radioBlock>
+        <f:entry title="${%Slot_Name}" field="slotName">
+            <f:textbox/>
+        </f:entry>
     </f:section>
     <script>
         var appservice_descriptor =

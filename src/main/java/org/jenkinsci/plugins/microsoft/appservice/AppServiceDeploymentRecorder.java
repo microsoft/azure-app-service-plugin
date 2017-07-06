@@ -250,6 +250,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         commandContext.setPublishType(publishType);
         commandContext.setDockerBuildInfo(dockerBuildInfo);
         commandContext.setDeleteTempImage(deleteTempImage);
+        commandContext.setAzureCredentialsId(azureCredentialsId);
 
         try {
             commandContext.configure(run, workspace, listener, app);
