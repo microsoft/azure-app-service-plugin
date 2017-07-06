@@ -4,9 +4,6 @@
  * license information.
  */
 
-/**
- * Created by juniwang on 6/14/2017.
- */
 (function () {
     var appService = (function () {
         var getRadioBlocks = function () {
@@ -99,7 +96,7 @@
             return n.value
     };
 
-    Behaviour.specify("SELECT[name$=appService]", "azureAppService", 10000, function (app) {
+    Behaviour.specify("SELECT[name$=webApp]", "azureAppService", 10000, function (app) {
         var oldChange = app.onchange;
         app.onclick = app.onchange = function () {
             if (oldChange) {
@@ -113,7 +110,7 @@
                         if (t.responseObject()) {
                             appService.showAllRadioBlocks(true);
                         } else {
-                            appService.showRadioBlockByValues(["git"], true);
+                            appService.showRadioBlockByValues(["file"], true);
                         }
                     })
                 } else {
@@ -128,7 +125,7 @@
     Behaviour.specify("INPUT[name$=publishType]", "azureAppService", 10000, function () {
         var azureCredentialsId = getElementValue("SELECT[name$=azureCredentialsId]")
         var resourceGroup = getElementValue("SELECT[name$=resourceGroup]")
-        var webApp = getElementValue("SELECT[name$=appService]")
+        var webApp = getElementValue("SELECT[name$=webApp]")
         if (!azureCredentialsId || !resourceGroup || !webApp) {
             appService.showAllRadioBlocks(false);
         }

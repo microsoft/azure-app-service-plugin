@@ -17,12 +17,12 @@
             <f:select/>
         </f:entry>
 
-        <f:entry title="${%Azure_Web_App}" field="appService">
+        <f:entry title="${%Azure_Web_App}" field="webApp">
             <f:select/>
         </f:entry>
 
-        <f:radioBlock name="publishType" value="git" inline="true" title="${%Publish_via_Git}"
-                      checked="${ instance.getPublishType()==null || instance.getPublishType() == 'git'}">
+        <f:radioBlock name="publishType" value="file" inline="true" title="${%Publish_via_File}"
+                      checked="${ instance.getPublishType()==null || instance.getPublishType() == 'file'}">
             <f:entry title="${%File_Path}" field="filePath">
                 <f:textbox/>
             </f:entry>
