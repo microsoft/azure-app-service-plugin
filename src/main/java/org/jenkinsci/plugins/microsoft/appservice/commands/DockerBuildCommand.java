@@ -14,6 +14,7 @@ import com.google.common.collect.Sets;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import jenkins.security.MasterToSlaveCallable;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 import java.io.File;
@@ -102,6 +103,8 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
                             listener.getLogger().println("The error detail: " + detail.toString());
                         }
                         hasError[0] = true;
+                    } else if (StringUtils.isNotBlank(buildResponseItem.getStream())) {
+                        listener.getLogger().println(buildResponseItem.getStream());
                     }
                     super.onNext(buildResponseItem);
                 }
@@ -133,6 +136,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
 
     public interface IDockerBuildCommandData extends IBaseCommandData {
         DockerBuildInfo getDockerBuildInfo();
+
         DockerClientBuilder getDockerClientBuilder();
     }
 }

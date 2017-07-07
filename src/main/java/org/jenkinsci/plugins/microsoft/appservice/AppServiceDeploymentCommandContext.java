@@ -36,6 +36,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     private String targetDirectory;
     private String slotName;
     private boolean deleteTempImage;
+    private String azureCredentialsId;
 
     private PublishingProfile pubProfile;
     private WebApp webApp;
@@ -70,13 +71,17 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
         this.deleteTempImage = deleteTempImage;
     }
 
+    public void setAzureCredentialsId(final String azureCredentialsId) {
+        this.azureCredentialsId = azureCredentialsId;
+    }
+
     public void configure(Run<?, ?> run, FilePath workspace, TaskListener listener, WebApp app) throws AzureCloudException {
         if (StringUtils.isBlank(slotName)) {
             // Deploy to default
             pubProfile = app.getPublishingProfile();
         } else {
             // Deploy to slot
-            DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
+            final DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
             if (slot == null) {
                 throw new AzureCloudException(String.format("Slot %s not found", slotName));
             }
@@ -154,5 +159,15 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     @Override
     public WebApp getWebApp() {
         return webApp;
+    }
+
+    @Override
+    public String getSlotName() {
+        return this.slotName;
+    }
+
+    @Override
+    public String getAzureCredentialsId() {
+        return this.azureCredentialsId;
     }
 }
