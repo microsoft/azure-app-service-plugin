@@ -56,6 +56,8 @@ public class DockerDeployCommand extends DockerCommand implements ICommand<Docke
                 update.withTags(new HashedMap());
                 webApp.inner().withKind("app");
                 update.apply();
+                webApp.stop();
+                webApp.start();
             } else {
                 final DeploymentSlot slot = webApp.deploymentSlots().getByName(slotName);
                 checkNotNull(slot, "Deployment slot not found:" + slotName);
