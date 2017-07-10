@@ -32,8 +32,8 @@
         <version.jenkins.docker-commons>1.4.0</version.jenkins.docker-commons>
     </properties>
 
-    <name>Azure App Service</name>
-    <description>Deploys apps in the Azure App Service</description>
+    <name>Azure App Service Plugin</name>
+    <description>A Jenkins plugin to deploys apps to Azure App Service</description>
     <url>https://wiki.jenkins-ci.org/display/JENKINS/Azure+App+Service+Plugin</url>
 
     <licenses>
