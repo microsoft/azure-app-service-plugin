@@ -19,7 +19,7 @@ import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 
 import java.util.HashMap;
 
-public class AppServiceDeploymentCommandContext extends AbstractCommandContext
+public class WebAppDeploymentCommandContext extends AbstractCommandContext
         implements FTPDeployCommand.IFTPDeployCommandData,
         GitDeployCommand.IGitDeployCommandData,
         DockerBuildCommand.IDockerBuildCommandData,
@@ -41,7 +41,7 @@ public class AppServiceDeploymentCommandContext extends AbstractCommandContext
     private PublishingProfile pubProfile;
     private WebApp webApp;
 
-    public AppServiceDeploymentCommandContext(final String filePath) {
+    public WebAppDeploymentCommandContext(final String filePath) {
         this.filePath = filePath;
         this.sourceDirectory = "";
         this.targetDirectory = "";

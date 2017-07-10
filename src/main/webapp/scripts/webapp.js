@@ -5,7 +5,7 @@
  */
 
 (function () {
-    var appService = (function () {
+    var webAppController = (function () {
         var getRadioBlocks = function () {
             var radioBlocks = {};
             var radios = document.getElementsBySelector("INPUT.radio-block-control[name$=publishType]");
@@ -96,7 +96,7 @@
             return n.value
     };
 
-    Behaviour.specify("SELECT[name$=webApp]", "azureAppService", 10000, function (app) {
+    Behaviour.specify("SELECT[name$=appName]", "azureAppService", 10000, function (app) {
         var oldChange = app.onchange;
         app.onclick = app.onchange = function () {
             if (oldChange) {
@@ -106,18 +106,18 @@
                 var azureCredentialsId = getElementValue("SELECT[name$=azureCredentialsId]")
                 var resourceGroup = getElementValue("SELECT[name$=resourceGroup]")
                 if (azureCredentialsId) {
-                    appservice_descriptor.isWebAppOnLinux(azureCredentialsId, resourceGroup, app.value, function (t) {
+                    azureWebAppDescriptor.isWebAppOnLinux(azureCredentialsId, resourceGroup, app.value, function (t) {
                         if (t.responseObject()) {
-                            appService.showAllRadioBlocks(true);
+                            webAppController.showAllRadioBlocks(true);
                         } else {
-                            appService.showRadioBlockByValues(["file"], true);
+                            webAppController.showRadioBlockByValues(["file"], true);
                         }
                     })
                 } else {
-                    appService.showAllRadioBlocks(false);
+                    webAppController.showAllRadioBlocks(false);
                 }
             } else {
-                appService.showAllRadioBlocks(false);
+                webAppController.showAllRadioBlocks(false);
             }
         }
     });
@@ -125,9 +125,9 @@
     Behaviour.specify("INPUT[name$=publishType]", "azureAppService", 10000, function () {
         var azureCredentialsId = getElementValue("SELECT[name$=azureCredentialsId]")
         var resourceGroup = getElementValue("SELECT[name$=resourceGroup]")
-        var webApp = getElementValue("SELECT[name$=webApp]")
-        if (!azureCredentialsId || !resourceGroup || !webApp) {
-            appService.showAllRadioBlocks(false);
+        var appName = getElementValue("SELECT[name$=appName]")
+        if (!azureCredentialsId || !resourceGroup || !appName) {
+            webAppController.showAllRadioBlocks(false);
         }
     });
 })()

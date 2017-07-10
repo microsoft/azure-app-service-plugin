@@ -52,11 +52,11 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collections;
 
-public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuildStep {
+public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildStep {
 
     private final String azureCredentialsId;
     private final String resourceGroup;
-    private final String webApp;
+    private final String appName;
     private String publishType;
     private String filePath;
     private String dockerImageName;
@@ -79,13 +79,13 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
     String slotName;
 
     @DataBoundConstructor
-    public AppServiceDeploymentRecorder(
+    public WebAppDeploymentRecorder(
             final String azureCredentialsId,
-            final String webApp,
+            final String appName,
             final String resourceGroup) {
         this.azureCredentialsId = azureCredentialsId;
         this.resourceGroup = resourceGroup;
-        this.webApp = webApp;
+        this.appName = appName;
         this.dockerFilePath = "**/Dockerfile";
         this.deployOnlyIfSuccessful = true;
         this.deleteTempImage = true;
@@ -151,8 +151,8 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         return azureCredentialsId;
     }
 
-    public String getWebApp() {
-        return webApp;
+    public String getAppName() {
+        return appName;
     }
 
     public String getResourceGroup() {
@@ -229,13 +229,13 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
             return;
         }
 
-        listener.getLogger().println("Starting Azure App Service Deployment");
+        listener.getLogger().println("Starting Azure Web App Deployment");
 
         // Get app info
         final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-        final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, webApp);
+        final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
         if (app == null) {
-            throw new AbortException(String.format("Web app %s in resource group %s not found", webApp, resourceGroup));
+            throw new AbortException(String.format("Web App %s in resource group %s not found", appName, resourceGroup));
         }
 
         final String expandedFilePath = run.getEnvironment(listener).expand(filePath);
@@ -246,7 +246,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
             throw new AbortException(e.getMessage());
         }
 
-        final AppServiceDeploymentCommandContext commandContext = new AppServiceDeploymentCommandContext(expandedFilePath);
+        final WebAppDeploymentCommandContext commandContext = new WebAppDeploymentCommandContext(expandedFilePath);
         commandContext.setSourceDirectory(sourceDirectory);
         commandContext.setTargetDirectory(targetDirectory);
         commandContext.setSlotName(slotName);
@@ -277,7 +277,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         final String linuxFxVersion = getLinuxFxVersion(app);
         if (StringUtils.isBlank(linuxFxVersion) || isBuiltInDockerImage(linuxFxVersion)) {
             // windows app doesn't need any docker config
-            if (StringUtils.isNotBlank(this.publishType) && this.publishType.equals(AppServiceDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
+            if (StringUtils.isNotBlank(this.publishType) && this.publishType.equals(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
                 throw new AzureCloudException("Publish a windows or built-in image web app through docker is not currently supported.");
             }
             return dockerBuildInfo;
@@ -407,7 +407,7 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
             return model;
         }
 
-        public ListBoxModel doFillWebAppItems(@QueryParameter final String azureCredentialsId,
+        public ListBoxModel doFillAppNameItems(@QueryParameter final String azureCredentialsId,
                                                   @QueryParameter final String resourceGroup) {
             final ListBoxModel model = new ListBoxModel();
             // list all app service
@@ -452,10 +452,10 @@ public class AppServiceDeploymentRecorder extends Recorder implements SimpleBuil
         }
 
         @JavaScriptMethod
-        public boolean isWebAppOnLinux(final String azureCredentialsId, final String resourceGroup, final String appService) {
+        public boolean isWebAppOnLinux(final String azureCredentialsId, final String resourceGroup, final String appName) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                final SiteConfigResourceInner siteConfig = azureClient.webApps().inner().getConfiguration(resourceGroup, appService);
+                final SiteConfigResourceInner siteConfig = azureClient.webApps().inner().getConfiguration(resourceGroup, appName);
                 if (siteConfig != null) {
                     return StringUtils.isNotBlank(siteConfig.linuxFxVersion())
                             && !isBuiltInDockerImage(siteConfig.linuxFxVersion());
