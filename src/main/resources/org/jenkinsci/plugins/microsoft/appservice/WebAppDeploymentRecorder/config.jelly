@@ -6,23 +6,23 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
     <f:section title="${%Azure_Profile_Configuration}">
-        <f:entry title="${%Azure_Credentials}" field="azureCredentialsId"
-                 help="/plugin/azure-app-service/help-azureCredentials.html">
+        <f:entry title="${%Azure_Credentials}" field="azureCredentialsId">
             <c:select expressionAllowed="false"/>
         </f:entry>
     </f:section>
 
-    <f:section title="${%Webapp_Profile_Configuration}">
+    <f:section title="${%App_Profile_Configuration}">
         <f:entry title="${%Resource_Group_Name}" field="resourceGroup">
             <f:select/>
         </f:entry>
 
-        <f:entry title="${%Azure_Web_App}" field="webApp">
+        <f:entry title="${%App_Name}" field="appName">
             <f:select/>
         </f:entry>
 
         <f:radioBlock name="publishType" value="file" inline="true" title="${%Publish_via_File}"
-                      checked="${ instance.getPublishType()==null || instance.getPublishType() == 'file'}">
+                      checked="${ instance.getPublishType()==null || instance.getPublishType() == 'file'}"
+                      help="/${descriptor.descriptorUrl}/help/publishViaFile">
             <f:entry title="${%File_Path}" field="filePath">
                 <f:textbox/>
             </f:entry>
@@ -37,7 +37,7 @@
 
         <f:radioBlock name="publishType" value="docker" title="${%Publish_via_Docker}" inline="true"
                       checked="${instance.getPublishType() == 'docker'}"
-                      help="/plugin/azure-app-service/help-publishViaDocker.html">
+                      help="/${descriptor.descriptorUrl}/help/publishViaDocker">
             <f:entry title="${%Dockerfile_Path}" field="dockerFilePath">
                 <f:textbox default="**/Dockerfile"/>
             </f:entry>
@@ -67,8 +67,8 @@
         </f:entry>
     </f:section>
     <script>
-        var appservice_descriptor =
+        var azureWebAppDescriptor =
         <st:bind value="${descriptor}"/>;
     </script>
-    <script src="${rootURL}/plugin/azure-app-service/scripts/appservice.js"/>
+    <script src="${rootURL}/plugin/azure-app-service/scripts/webapp.js"/>
 </j:jelly>

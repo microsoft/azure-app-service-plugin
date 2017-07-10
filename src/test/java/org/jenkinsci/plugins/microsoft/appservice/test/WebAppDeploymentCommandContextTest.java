@@ -9,7 +9,7 @@ import com.microsoft.azure.management.appservice.*;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import org.jenkinsci.plugins.microsoft.appservice.AppServiceDeploymentCommandContext;
+import org.jenkinsci.plugins.microsoft.appservice.WebAppDeploymentCommandContext;
 import org.jenkinsci.plugins.microsoft.appservice.commands.*;
 import org.jenkinsci.plugins.microsoft.exceptions.AzureCloudException;
 import org.junit.Assert;
@@ -21,11 +21,11 @@ import java.util.HashMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class AppServiceDeploymentCommandContextTest {
+public class WebAppDeploymentCommandContextTest {
 
     @Test
     public void getterSetter() throws AzureCloudException {
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
+        WebAppDeploymentCommandContext ctx = new WebAppDeploymentCommandContext("sample.war");
 
         Assert.assertEquals("", ctx.getSourceDirectory());
         Assert.assertEquals("", ctx.getTargetDirectory());
@@ -62,7 +62,7 @@ public class AppServiceDeploymentCommandContextTest {
 
     @Test
     public void configure() throws AzureCloudException {
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
+        WebAppDeploymentCommandContext ctx = new WebAppDeploymentCommandContext("sample.war");
 
         final Run run = mock(Run.class);
         final FilePath workspace = new FilePath(new File("workspace"));
@@ -88,7 +88,7 @@ public class AppServiceDeploymentCommandContextTest {
         Assert.assertEquals(ctx.getStartCommandClass().getName(), FTPDeployCommand.class.getName());
 
         // Docker
-        ctx.setPublishType(AppServiceDeploymentCommandContext.PUBLISH_TYPE_DOCKER);
+        ctx.setPublishType(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER);
         ctx.configure(run, workspace, listener, app);
         commands = ctx.getCommands();
         Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
@@ -126,19 +126,19 @@ public class AppServiceDeploymentCommandContextTest {
         when(app.getPublishingProfile()).thenReturn(defaultPubProfile);
 
         // Configure default
-        AppServiceDeploymentCommandContext ctx = new AppServiceDeploymentCommandContext("sample.war");
+        WebAppDeploymentCommandContext ctx = new WebAppDeploymentCommandContext("sample.war");
         ctx.configure(run, workspace, listener, app);
         Assert.assertEquals("default-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure slot
-        ctx = new AppServiceDeploymentCommandContext("sample.war");
+        ctx = new WebAppDeploymentCommandContext("sample.war");
         ctx.setSlotName("staging");
         ctx.configure(run, workspace, listener, app);
         Assert.assertEquals("slot-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure not existing slot
         try {
-            ctx = new AppServiceDeploymentCommandContext("sample.war");
+            ctx = new WebAppDeploymentCommandContext("sample.war");
             ctx.setSlotName("not-found");
             ctx.configure(run, workspace, listener, app);
             Assert.fail("Should throw exception when slot not found");
