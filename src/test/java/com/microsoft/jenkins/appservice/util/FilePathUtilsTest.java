@@ -4,7 +4,7 @@
  * license information.
  */
 
-package com.microsoft.jenkins.appservice.test;
+package com.microsoft.jenkins.appservice.util;
 
 import hudson.FilePath;
 import org.apache.commons.io.FilenameUtils;

@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
  */
-package com.microsoft.jenkins.appservice.test;
+package com.microsoft.jenkins.appservice.integration;
 
 import com.microsoft.azure.management.appservice.*;
 import com.microsoft.azure.management.resources.ResourceGroup;
