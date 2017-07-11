@@ -9,11 +9,11 @@ package com.microsoft.jenkins.appservice.commands;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.PushResponseItem;
 import com.github.dockerjava.core.command.PushImageResultCallback;
+import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
 import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.lang.StringUtils;
-import com.microsoft.jenkins.exceptions.AzureCloudException;
 
 import java.io.IOException;
 

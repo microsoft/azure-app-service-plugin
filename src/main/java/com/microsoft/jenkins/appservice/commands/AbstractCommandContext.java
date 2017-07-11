@@ -5,10 +5,10 @@
  */
 package com.microsoft.jenkins.appservice.commands;
 
+import com.microsoft.jenkins.services.ICommandServiceData;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import com.microsoft.jenkins.services.ICommandServiceData;
 
 import java.util.HashMap;
 

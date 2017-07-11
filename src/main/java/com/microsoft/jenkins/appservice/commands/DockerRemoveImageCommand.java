@@ -7,8 +7,8 @@
 package com.microsoft.jenkins.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
-import jenkins.security.MasterToSlaveCallable;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
+import jenkins.security.MasterToSlaveCallable;
 
 import java.io.IOException;
 

@@ -1,0 +1,41 @@
+<!--
+  ~ Copyright (c) Microsoft Corporation. All rights reserved.
+  ~ Licensed under the MIT License. See License.txt in the project root for
+  ~ license information.
+  -->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
+    <f:section title="${%Azure_Profile_Configuration}">
+        <f:entry title="${%Azure_Credentials}" field="azureCredentialsId">
+            <c:select expressionAllowed="false"/>
+        </f:entry>
+    </f:section>
+
+    <f:section title="${%App_Profile_Configuration}">
+        <f:entry title="${%Resource_Group_Name}" field="resourceGroup">
+            <f:select/>
+        </f:entry>
+
+        <f:entry title="${%App_Name}" field="appName">
+            <f:select/>
+        </f:entry>
+
+        <f:entry title="${%File_Path}" field="filePath">
+            <f:textbox/>
+        </f:entry>
+
+        <f:entry title="${%Source_Directory}" field="sourceDirectory">
+            <f:textbox/>
+        </f:entry>
+
+        <f:entry title="${%Target_Directory}" field="targetDirectory">
+            <f:textbox/>
+        </f:entry>
+
+        <f:advanced align="left">
+            <f:entry field="deployOnlyIfSuccessful">
+                <f:checkbox title="${%Deploy_Only_If_Successful}" default="true"/>
+            </f:entry>
+        </f:advanced>
+    </f:section>
+</j:jelly>

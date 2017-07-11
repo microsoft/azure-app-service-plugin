@@ -7,8 +7,8 @@
 package com.microsoft.jenkins.appservice.commands;
 
 import com.github.dockerjava.core.NameParser;
-import org.apache.commons.lang.StringUtils;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
+import org.apache.commons.lang.StringUtils;
 
 import java.net.URI;
 import java.net.URISyntaxException;

@@ -13,9 +13,9 @@ import com.microsoft.azure.management.appservice.NameValuePair;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
 import com.microsoft.azure.util.AzureCredentials;
+import com.microsoft.jenkins.appservice.util.TokenCache;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
-import com.microsoft.jenkins.appservice.util.TokenCache;
 
 import java.util.ArrayList;
 import java.util.List;

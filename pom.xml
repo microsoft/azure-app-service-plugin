@@ -238,6 +238,7 @@
                     <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
+                    <resourceIncludes>**/*.properties,**/*.jelly,**/*.html</resourceIncludes>
                 </configuration>
             </plugin>
         </plugins>

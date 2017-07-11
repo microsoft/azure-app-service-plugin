@@ -59,7 +59,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     private String dockerImageTag;
     private String dockerFilePath;
     private DockerRegistryEndpoint dockerRegistryEndpoint;
-    private boolean deployOnlyIfSuccessful;
     private boolean deleteTempImage;
 
     @CheckForNull
@@ -73,7 +72,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             final String resourceGroup) {
         super(azureCredentialsId, resourceGroup, appName);
         this.dockerFilePath = "**/Dockerfile";
-        this.deployOnlyIfSuccessful = true;
         this.deleteTempImage = true;
     }
     @DataBoundSetter
@@ -102,11 +100,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     }
 
     @DataBoundSetter
-    public void setDeployOnlyIfSuccessful(final boolean deployOnlyIfSuccessful) {
-        this.deployOnlyIfSuccessful = deployOnlyIfSuccessful;
-    }
-
-    @DataBoundSetter
     public void setDeleteTempImage(final boolean deleteTempImage) {
         this.deleteTempImage = deleteTempImage;
     }
@@ -129,10 +122,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
 
     public String getDockerFilePath() {
         return dockerFilePath;
-    }
-
-    public boolean isDeployOnlyIfSuccessful() {
-        return deployOnlyIfSuccessful;
     }
 
     public boolean isDeleteTempImage() {
@@ -197,7 +186,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         if (!commandContext.getHasError()) {
             listener.getLogger().println("Done Azure Web App deployment.");
         } else {
-            throw new AbortException("Azue Web App deployment failed.");
+            throw new AbortException("Azure Web App deployment failed.");
         }
     }
 
@@ -298,6 +287,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     @Symbol("azureWebAppPublish")
     public static final class DescriptorImpl extends BaseDeploymentRecorder.DescriptorImpl {
 
+        @Override
         public String getDisplayName() {
             return "Publish an Azure Web App";
         }

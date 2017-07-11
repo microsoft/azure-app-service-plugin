@@ -8,6 +8,7 @@ package com.microsoft.jenkins.appservice.commands;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.microsoft.azure.management.appservice.PublishingProfile;
+import com.microsoft.jenkins.appservice.util.FilePathUtils;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Util;
@@ -33,7 +34,6 @@ import org.eclipse.jgit.treewalk.filter.TreeFilter;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import com.microsoft.jenkins.appservice.util.FilePathUtils;
 
 import java.io.File;
 import java.io.IOException;

@@ -6,6 +6,7 @@
 package com.microsoft.jenkins.appservice.commands;
 
 import com.microsoft.azure.management.appservice.PublishingProfile;
+import com.microsoft.jenkins.appservice.util.FilePathUtils;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.TaskListener;
@@ -14,7 +15,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
-import com.microsoft.jenkins.appservice.util.FilePathUtils;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -9,13 +9,26 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.jenkins.appservice.commands.AbstractCommandContext;
+import com.microsoft.jenkins.appservice.commands.DefaultDockerClientBuilder;
+import com.microsoft.jenkins.appservice.commands.DeploymentState;
+import com.microsoft.jenkins.appservice.commands.DockerBuildCommand;
+import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
+import com.microsoft.jenkins.appservice.commands.DockerClientBuilder;
+import com.microsoft.jenkins.appservice.commands.DockerDeployCommand;
+import com.microsoft.jenkins.appservice.commands.DockerPushCommand;
+import com.microsoft.jenkins.appservice.commands.DockerRemoveImageCommand;
+import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
+import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
+import com.microsoft.jenkins.appservice.commands.IBaseCommandData;
+import com.microsoft.jenkins.appservice.commands.ICommand;
+import com.microsoft.jenkins.appservice.commands.TransitionInfo;
+import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.apache.commons.lang.StringUtils;
-import com.microsoft.jenkins.appservice.commands.*;
-import com.microsoft.jenkins.exceptions.AzureCloudException;
 
 import java.util.HashMap;
 
