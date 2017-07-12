@@ -165,6 +165,14 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
          */
         private void removeFtpDirectory(FTPClient ftpClient, String dir)
                 throws IOException, FTPException {
+            String cwd = ftpClient.printWorkingDirectory();
+            // Return if folder does not exist
+            if (!ftpClient.changeWorkingDirectory(dir)) {
+                return;
+            }
+
+            ftpClient.changeWorkingDirectory(cwd);
+
             listener.getLogger().println("Removing remote directory: " + dir);
 
             FTPFile[] subFiles = ftpClient.listFiles(dir);
