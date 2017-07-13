@@ -130,4 +130,14 @@
             webAppController.showAllRadioBlocks(false);
         }
     });
+
+    Behaviour.specify("select.select", "azureAppService", 10000, function (e) {
+        var oldClick = e.onclick;
+        e.onclick = function () {
+            if (oldClick) {
+                oldClick();
+            }
+            fireEvent(e, "change");
+        };
+    });
 })()
