@@ -88,7 +88,11 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
         this.azureCredentialsId = azureCredentialsId;
     }
 
-    public void configure(Run<?, ?> run, FilePath workspace, TaskListener listener, WebApp app) throws AzureCloudException {
+    public void configure(
+            final Run<?, ?> run,
+            final FilePath workspace,
+            final TaskListener listener,
+            final WebApp app) throws AzureCloudException {
         if (StringUtils.isBlank(slotName)) {
             // Deploy to default
             pubProfile = app.getPublishingProfile();
@@ -108,22 +112,29 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
         if (StringUtils.isNotBlank(publishType) && publishType.equalsIgnoreCase(PUBLISH_TYPE_DOCKER)) {
             startCommandClass = DockerBuildCommand.class;
             this.webApp = app;
-            commands.put(DockerBuildCommand.class, new TransitionInfo(new DockerBuildCommand(), DockerPushCommand.class, null));
-            commands.put(DockerPushCommand.class, new TransitionInfo(new DockerPushCommand(), DockerDeployCommand.class, null));
+            commands.put(DockerBuildCommand.class, new TransitionInfo(
+                    new DockerBuildCommand(), DockerPushCommand.class, null));
+            commands.put(DockerPushCommand.class, new TransitionInfo(
+                    new DockerPushCommand(), DockerDeployCommand.class, null));
             if (deleteTempImage) {
-                commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), DockerRemoveImageCommand.class, null));
-                commands.put(DockerRemoveImageCommand.class, new TransitionInfo(new DockerRemoveImageCommand(), null, null));
+                commands.put(DockerDeployCommand.class, new TransitionInfo(
+                        new DockerDeployCommand(), DockerRemoveImageCommand.class, null));
+                commands.put(DockerRemoveImageCommand.class, new TransitionInfo(
+                        new DockerRemoveImageCommand(), null, null));
             } else {
-                commands.put(DockerDeployCommand.class, new TransitionInfo(new DockerDeployCommand(), null, null));
+                commands.put(DockerDeployCommand.class, new TransitionInfo(
+                        new DockerDeployCommand(), null, null));
             }
         } else if (app.javaVersion() != JavaVersion.OFF) {
             // For Java application, use FTP-based deployment as it's the recommended way
             startCommandClass = FTPDeployCommand.class;
-            commands.put(FTPDeployCommand.class, new TransitionInfo(new FTPDeployCommand(), null, null));
+            commands.put(FTPDeployCommand.class, new TransitionInfo(
+                    new FTPDeployCommand(), null, null));
         } else {
             // For non-Java application, use Git-based deployment
             startCommandClass = GitDeployCommand.class;
-            commands.put(GitDeployCommand.class, new TransitionInfo(new GitDeployCommand(), null, null));
+            commands.put(GitDeployCommand.class, new TransitionInfo(
+                    new GitDeployCommand(), null, null));
         }
 
         super.configure(run, workspace, listener, commands, startCommandClass);
@@ -131,7 +142,7 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
     }
 
     @Override
-    public IBaseCommandData getDataForCommand(ICommand command) {
+    public IBaseCommandData getDataForCommand(final ICommand command) {
         return this;
     }
 

@@ -44,7 +44,10 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
     @CheckForNull protected String targetDirectory;
     protected boolean deployOnlyIfSuccessful;
 
-    protected BaseDeploymentRecorder(String azureCredentialsId, String resourceGroup, String appName) {
+    protected BaseDeploymentRecorder(
+            final String azureCredentialsId,
+            final String resourceGroup,
+            final String appName) {
         this.azureCredentialsId = azureCredentialsId;
         this.resourceGroup = resourceGroup;
         this.appName = appName;
@@ -64,7 +67,7 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
     }
 
     @DataBoundSetter
-    public void setFilePath(@CheckForNull String filePath) {
+    public void setFilePath(@CheckForNull final String filePath) {
         this.filePath = Util.fixNull(filePath);
     }
 
@@ -73,7 +76,7 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
     }
 
     @DataBoundSetter
-    public void setSourceDirectory(@CheckForNull String sourceDirectory) {
+    public void setSourceDirectory(@CheckForNull final String sourceDirectory) {
         this.sourceDirectory = Util.fixNull(sourceDirectory);
     }
 
@@ -83,7 +86,7 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
     }
 
     @DataBoundSetter
-    public void setTargetDirectory(@CheckForNull String targetDirectory) {
+    public void setTargetDirectory(@CheckForNull final String targetDirectory) {
         this.targetDirectory = Util.fixNull(targetDirectory);
     }
 
@@ -119,11 +122,11 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
 
     protected static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
             return true;
         }
 
-        protected ListBoxModel listAzureCredentialsIdItems(Item owner) {
+        protected ListBoxModel listAzureCredentialsIdItems(final Item owner) {
             return new StandardListBoxModel()
                     .withEmptySelection()
                     .withAll(CredentialsProvider.lookupCredentials(

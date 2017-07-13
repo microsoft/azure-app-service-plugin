@@ -96,7 +96,7 @@
 
         <!-- Checks for imports                              -->
         <!-- See http://checkstyle.sf.net/config_import.html -->
-        <!-- <module name="AvoidStarImport"/> -->
+        <module name="AvoidStarImport"/>
         <module name="IllegalImport"/> <!-- defaults to sun.* packages -->
         <module name="RedundantImport"/>
         <module name="UnusedImports">
@@ -105,9 +105,14 @@
 
         <!-- Checks for Size Violations.                    -->
         <!-- See http://checkstyle.sf.net/config_sizes.html -->
-        <!-- <module name="LineLength"/> -->
-        <!-- <module name="MethodLength"/> -->
-        <!-- <module name="ParameterNumber"/> -->
+        <module name="LineLength">
+            <property name="max" value="120" />
+        </module>
+        <module name="MethodLength"/>
+        <module name="ParameterNumber">
+            <property name="max" value="10" />
+            <property name="tokens" value="METHOD_DEF" />
+        </module>
 
         <!-- Checks for whitespace                               -->
         <!-- See http://checkstyle.sf.net/config_whitespace.html -->
@@ -137,10 +142,13 @@
 
         <!-- Checks for common coding problems               -->
         <!-- See http://checkstyle.sf.net/config_coding.html -->
-        <!--<module name="AvoidInlineConditionals"/> -->
+        <!-- <module name="AvoidInlineConditionals"/> -->
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
-        <!-- <module name="HiddenField"/> -->
+        <module name="HiddenField">
+            <property name="ignoreSetter" value="true" />
+            <property name="ignoreConstructorParameter" value="true" />
+        </module>
         <module name="IllegalInstantiation"/>
         <module name="InnerAssignment"/>
         <module name="MagicNumber"/>
@@ -154,15 +162,20 @@
         <module name="FinalClass"/>
         <module name="HideUtilityClassConstructor"/>
         <module name="InterfaceIsType"/>
-        <!-- <module name="VisibilityModifier" /> -->
+        <module name="VisibilityModifier">
+            <property name="protectedAllowed" value="true" />
+        </module>
 
         <!-- Miscellaneous other checks.                   -->
         <!-- See http://checkstyle.sf.net/config_misc.html -->
         <module name="ArrayTypeStyle"/>
-        <!-- <module name="FinalParameters"/> -->
+        <module name="FinalParameters"/>
         <module name="TodoComment"/>
         <module name="UpperEll"/>
+        <module name="FileContentsHolder" />
 
     </module>
+
+    <module name="SuppressionCommentFilter" />
 
 </module>

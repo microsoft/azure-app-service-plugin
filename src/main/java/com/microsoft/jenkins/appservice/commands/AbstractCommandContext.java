@@ -17,18 +17,21 @@ public abstract class AbstractCommandContext implements ICommandServiceData {
     private Run<?, ?> run;
     private FilePath workspace;
     private TaskListener listener;
-    private DeploymentState deployState = DeploymentState.Unknown;
+    private DeploymentState deploymentState = DeploymentState.Unknown;
     private HashMap<Class, TransitionInfo> commands;
     private Class startCommandClass;
 
-    protected void configure(Run<?, ?> run, FilePath workspace, TaskListener listener,
-                             HashMap<Class, TransitionInfo> commands,
-                             Class startCommandClass) {
-        this.run = run;
-        this.workspace = workspace;
-        this.listener = listener;
-        this.commands = commands;
-        this.startCommandClass = startCommandClass;
+    protected void configure(
+            final Run<?, ?> aRun,
+            final FilePath aWorkspace,
+            final TaskListener aListener,
+            final HashMap<Class, TransitionInfo> aCommands,
+            final Class aStartCommandClass) {
+        this.run = aRun;
+        this.workspace = aWorkspace;
+        this.listener = aListener;
+        this.commands = aCommands;
+        this.startCommandClass = aStartCommandClass;
 
     }
 
@@ -42,21 +45,21 @@ public abstract class AbstractCommandContext implements ICommandServiceData {
 
     public abstract IBaseCommandData getDataForCommand(ICommand command);
 
-    public void setDeploymentState(DeploymentState deployState) {
-        this.deployState = deployState;
+    public void setDeploymentState(final DeploymentState deployState) {
+        this.deploymentState = deployState;
     }
 
     public DeploymentState getDeploymentState() {
-        return this.deployState;
+        return this.deploymentState;
     }
 
     public boolean getHasError() {
-        return this.deployState.equals(DeploymentState.HasError);
+        return this.deploymentState.equals(DeploymentState.HasError);
     }
 
     public boolean getIsFinished() {
-        return this.deployState.equals(DeploymentState.HasError)
-                || this.deployState.equals(DeploymentState.Done);
+        return this.deploymentState.equals(DeploymentState.HasError)
+                || this.deploymentState.equals(DeploymentState.Done);
     }
 
     public Run<?, ?> getRun() {
@@ -71,22 +74,22 @@ public abstract class AbstractCommandContext implements ICommandServiceData {
         return workspace;
     }
 
-    public void logStatus(String status) {
+    public void logStatus(final String status) {
         listener.getLogger().println(status);
     }
 
-    public void logError(Exception ex) {
+    public void logError(final Exception ex) {
         this.logError("Error: ", ex);
     }
 
-    public void logError(String prefix, Exception ex) {
+    public void logError(final String prefix, final Exception ex) {
         this.listener.error(prefix + ex.getMessage());
         ex.printStackTrace();
-        this.deployState = DeploymentState.HasError;
+        this.deploymentState = DeploymentState.HasError;
     }
 
-    public void logError(String message) {
+    public void logError(final String message) {
         this.listener.error(message);
-        this.deployState = DeploymentState.HasError;
+        this.deploymentState = DeploymentState.HasError;
     }
 }

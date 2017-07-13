@@ -19,8 +19,10 @@ public class DockerPingCommand {
             // make sure local docker is running
             dockerClient.pingCmd().exec();
         } catch (Exception e) {
-            return FormValidation.error("Docker is not running on Jenkins master server thus the verification cannot continue. "
-                    + "You can proceed to save the configuration. But you need to make sure Docker is properly installed and "
+            return FormValidation.error(
+                    "Docker is not running on Jenkins master server thus the verification cannot continue. "
+                    + "You can proceed to save the configuration. "
+                    + "But you need to make sure Docker is properly installed and "
                     + "running on your build agents. The detailed message:" + e.getMessage());
         }
 

@@ -15,17 +15,19 @@ import java.io.IOException;
 /**
  * Created by juniwang on 28/06/2017.
  */
-public class DockerRemoveImageCommand extends DockerCommand implements ICommand<DockerRemoveImageCommand.IDockerRemoveImageCommandData> {
+public class DockerRemoveImageCommand extends DockerCommand
+        implements ICommand<DockerRemoveImageCommand.IDockerRemoveImageCommandData> {
 
     @Override
-    public void execute(IDockerRemoveImageCommandData context) {
+    public void execute(final IDockerRemoveImageCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
 
         final String imageId = dockerBuildInfo.getImageId();
         context.logStatus(String.format("Removing docker image `%s` from current build agent.", imageId));
 
         try {
-            context.getWorkspace().act(new DockerRemoveCommandOnSlave(context.getDockerClientBuilder(), dockerBuildInfo, imageId));
+            context.getWorkspace().act(new DockerRemoveCommandOnSlave(
+                    context.getDockerClientBuilder(), dockerBuildInfo, imageId));
             context.logStatus("Remove completed.");
             context.setDeploymentState(DeploymentState.Success);
         } catch (IOException | InterruptedException | AzureCloudException e) {
@@ -39,7 +41,10 @@ public class DockerRemoveImageCommand extends DockerCommand implements ICommand<
         private final DockerBuildInfo dockerBuildInfo;
         private final String imageId;
 
-        private DockerRemoveCommandOnSlave(DockerClientBuilder dockerClientBuilder, DockerBuildInfo dockerBuildInfo, String imageId) {
+        private DockerRemoveCommandOnSlave(
+                final DockerClientBuilder dockerClientBuilder,
+                final DockerBuildInfo dockerBuildInfo,
+                final String imageId) {
             this.dockerClientBuilder = dockerClientBuilder;
             this.dockerBuildInfo = dockerBuildInfo;
             this.imageId = imageId;

@@ -56,13 +56,14 @@ public abstract class DockerCommand {
         return String.format("%s:%s", getFullImageName(dockerBuildInfo), dockerBuildInfo.getDockerImageTag());
     }
 
-    protected String getRegistryHostname(String registryAddress) throws AzureCloudException {
+    protected String getRegistryHostname(final String registryAddress) throws AzureCloudException {
         try {
-            if (!registryAddress.toLowerCase().matches("^\\w+://.*")) {
-                registryAddress = "http://" + registryAddress;
+            String uriStr = registryAddress;
+            if (!uriStr.toLowerCase().matches("^\\w+://.*")) {
+                uriStr = "http://" + uriStr;
             }
 
-            final URI uri = new URI(registryAddress);
+            final URI uri = new URI(uriStr);
             return uri.getHost();
         } catch (URISyntaxException e) {
             throw new AzureCloudException("The docker registry is not a valid URI", e);

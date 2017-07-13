@@ -29,17 +29,17 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
 
     private static final class FTPException extends Exception {
 
-        FTPException(String msg) {
+        FTPException(final String msg) {
             super(msg);
         }
 
-        FTPException(Exception ex) {
+        FTPException(final Exception ex) {
             super(ex);
         }
 
     }
 
-    public void execute(IFTPDeployCommandData context) {
+    public void execute(final IFTPDeployCommandData context) {
         final FilePath workspace = context.getWorkspace();
         final PublishingProfile pubProfile = context.getPublishingProfile();
 
@@ -89,14 +89,14 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         private final String filePath;
 
         private FTPDeployCommandOnSlave(
-                TaskListener listener,
-                String ftpUrl,
-                String ftpUserName,
-                String ftpPassword,
-                FilePath workspace,
-                String sourceDirectory,
-                String targetDirectory,
-                String filePath) {
+                final TaskListener listener,
+                final String ftpUrl,
+                final String ftpUserName,
+                final String ftpPassword,
+                final FilePath workspace,
+                final String sourceDirectory,
+                final String targetDirectory,
+                final String filePath) {
             this.listener = listener;
             this.ftpUrl = ftpUrl;
             this.ftpUserName = ftpUserName;
@@ -169,7 +169,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
          * @param dir Directory to remove
          * @throws IOException
          */
-        private void removeFtpDirectory(FTPClient ftpClient, String dir)
+        private void removeFtpDirectory(final FTPClient ftpClient, final String dir)
                 throws IOException, FTPException {
             String cwd = ftpClient.printWorkingDirectory();
             // Return if folder does not exist
@@ -210,10 +210,11 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             }
         }
 
-        private void uploadFile(FTPClient ftpClient, FilePath sourceDir, FilePath file)
+        private void uploadFile(final FTPClient ftpClient, final FilePath sourceDir, final FilePath file)
                 throws IOException, FTPException, InterruptedException {
 
-            final String remoteName = FilenameUtils.separatorsToUnix(FilePathUtils.trimDirectoryPrefix(sourceDir, file));
+            final String remoteName = FilenameUtils.separatorsToUnix(
+                    FilePathUtils.trimDirectoryPrefix(sourceDir, file));
             listener.getLogger().println(String.format("Uploading %s", remoteName));
 
             // Need some preparation in some cases
@@ -230,7 +231,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             }
         }
 
-        private void prepareDirectory(FTPClient ftpClient, String fileName)
+        private void prepareDirectory(final FTPClient ftpClient, final String fileName)
                 throws IOException, FTPException {
             // Deployment to tomcat root requires removing root directory first
             final String targetFilePath = FilenameUtils.concat(ftpClient.printWorkingDirectory(), fileName);

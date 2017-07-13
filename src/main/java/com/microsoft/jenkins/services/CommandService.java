@@ -18,7 +18,7 @@ public final class CommandService {
         // Hide
     }
 
-    public static boolean executeCommands(ICommandServiceData commandServiceData) {
+    public static boolean executeCommands(final ICommandServiceData commandServiceData) {
         Class startCommand = commandServiceData.getStartCommandClass();
         HashMap<Class, TransitionInfo> commands = commandServiceData.getCommands();
         if (!commands.isEmpty() && startCommand != null) {

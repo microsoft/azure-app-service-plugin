@@ -129,7 +129,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     }
 
     @DataBoundSetter
-    public void setSlotName(@CheckForNull String slotName) {
+    public void setSlotName(@CheckForNull final String slotName) {
         this.slotName = Util.fixNull(slotName);
     }
 
@@ -139,11 +139,15 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener)
-            throws InterruptedException, IOException {
+    public void perform(
+            @Nonnull final Run<?, ?> run,
+            @Nonnull final FilePath workspace,
+            @Nonnull final Launcher launcher,
+            @Nonnull final TaskListener listener) throws InterruptedException, IOException {
         // Only deploy on build succeeds
         // Also check if result is null here because in pipeline web app deploy is not run as a post-build action.
-        // In this case result is null and pipeline will stop if previous step failed. So no need to check result in this case.
+        // In this case result is null and pipeline will stop if previous step failed. So no need to check result in
+        // this case.
         if (run.getResult() != null && run.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
             listener.getLogger().println("Deploy to Azure Web App is skipped due to previous steps failed.");
             return;
@@ -152,10 +156,12 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         listener.getLogger().println("Starting Azure Web App Deployment");
 
         // Get app info
-        final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+        final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId))
+                .getAzureClient();
         final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
         if (app == null) {
-            throw new AbortException(String.format("Web App %s in resource group %s not found", appName, resourceGroup));
+            throw new AbortException(String.format("Web App %s in resource group %s not found",
+                    appName, resourceGroup));
         }
 
         final String expandedFilePath = run.getEnvironment(listener).expand(filePath);
@@ -197,8 +203,10 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         final String linuxFxVersion = getLinuxFxVersion(app);
         if (StringUtils.isBlank(linuxFxVersion) || isBuiltInDockerImage(linuxFxVersion)) {
             // windows app doesn't need any docker config
-            if (StringUtils.isNotBlank(this.publishType) && this.publishType.equals(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
-                throw new AzureCloudException("Publish a windows or built-in image web app through docker is not currently supported.");
+            if (StringUtils.isNotBlank(this.publishType)
+                    && this.publishType.equals(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
+                throw new AzureCloudException(
+                        "Publish a windows or built-in image web app through docker is not currently supported.");
             }
             return dockerBuildInfo;
         }
@@ -228,7 +236,8 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     }
 
 
-    private static AuthConfig getAuthConfig(final Item project, final DockerRegistryEndpoint endpoint) throws AzureCloudException {
+    private static AuthConfig getAuthConfig(final Item project, final DockerRegistryEndpoint endpoint)
+            throws AzureCloudException {
         if (endpoint == null || StringUtils.isBlank(endpoint.getCredentialsId())) {
             throw new AzureCloudException("docker registry configuration is not valid");
         }
@@ -264,12 +273,14 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         // https://github.com/Azure/azure-sdk-for-java/issues/1761
         // access the field via reflection for now
         try {
-            final SiteConfigResourceInner siteConfig = (SiteConfigResourceInner) FieldUtils.readField(webApp, "siteConfig", true);
+            final SiteConfigResourceInner siteConfig = (SiteConfigResourceInner) FieldUtils.readField(
+                    webApp, "siteConfig", true);
             if (siteConfig != null) {
                 return siteConfig.linuxFxVersion();
             }
         } catch (IllegalAccessException e) {
-            throw new AzureCloudException(String.format("Cannot get the docker container info of web app %s", webApp.name()));
+            throw new AzureCloudException(String.format("Cannot get the docker container info of web app %s",
+                    webApp.name()));
         }
         return "";
     }
@@ -302,7 +313,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             }
         }
 
-        public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
+        public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath final Item owner) {
             return listAzureCredentialsIdItems(owner);
         }
 
@@ -338,7 +349,8 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
                 if (idCredentials == null) {
                     return FormValidation.error("credential cannot be found");
                 }
-                final DockerRegistryToken token = AuthenticationTokens.convert(DockerRegistryToken.class, idCredentials);
+                final DockerRegistryToken token = AuthenticationTokens.convert(
+                        DockerRegistryToken.class, idCredentials);
                 final AuthConfig authConfig = getAuthConfig(url, token);
                 return pingCommand.ping(authConfig);
             } catch (AzureCloudException e) {
@@ -347,10 +359,15 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         }
 
         @JavaScriptMethod
-        public boolean isWebAppOnLinux(final String azureCredentialsId, final String resourceGroup, final String appName) {
+        public boolean isWebAppOnLinux(
+                final String azureCredentialsId,
+                final String resourceGroup,
+                final String appName) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
-                final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                final SiteConfigResourceInner siteConfig = azureClient.webApps().inner().getConfiguration(resourceGroup, appName);
+                final Azure azureClient = TokenCache.getInstance(
+                        AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+                final SiteConfigResourceInner siteConfig =
+                        azureClient.webApps().inner().getConfiguration(resourceGroup, appName);
                 if (siteConfig != null) {
                     return StringUtils.isNotBlank(siteConfig.linuxFxVersion())
                             && !isBuiltInDockerImage(siteConfig.linuxFxVersion());

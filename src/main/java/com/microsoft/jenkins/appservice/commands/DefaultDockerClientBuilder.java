@@ -23,7 +23,7 @@ public class DefaultDockerClientBuilder implements DockerClientBuilder, Serializ
 
 
     @Override
-    public DockerClient build(AuthConfig authConfig) {
+    public DockerClient build(final AuthConfig authConfig) {
         final AzureDockerClientConfig.Builder builder = AzureDockerClientConfig.createDefaultConfigBuilder()
                 .withRegistryUsername(authConfig.getUsername())
                 .withRegistryPassword(authConfig.getPassword())
@@ -31,7 +31,8 @@ public class DefaultDockerClientBuilder implements DockerClientBuilder, Serializ
                 .withRegistryEmail(authConfig.getEmail());
 
         // must enable tcp on windows by check the option "Expose daemon on tcp://localhost:2375 without TLS"
-        // more reading at https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-docker/configure-docker-daemon
+        // more reading at
+        // https://docs.microsoft.com/en-us/virtualization/windowscontainers/manage-docker/configure-docker-daemon
         if (SystemUtils.IS_OS_WINDOWS) {
             builder.withDockerHost(DEFAULT_DOCKER_HOST_ON_WINDOWS);
         }

@@ -22,8 +22,8 @@ public class DockerBuildInfo implements Serializable {
         return linuxFxVersion;
     }
 
-    public DockerBuildInfo withLinuxFxVersion(final String linuxFxVersion) {
-        this.linuxFxVersion = linuxFxVersion;
+    public DockerBuildInfo withLinuxFxVersion(final String aLinuxFxVersion) {
+        this.linuxFxVersion = aLinuxFxVersion;
         return this;
     }
 
@@ -31,8 +31,8 @@ public class DockerBuildInfo implements Serializable {
         return dockerImage;
     }
 
-    public DockerBuildInfo withDockerImage(final String dockerImage) {
-        this.dockerImage = dockerImage;
+    public DockerBuildInfo withDockerImage(final String aDockerImage) {
+        this.dockerImage = aDockerImage;
         return this;
     }
 
@@ -40,8 +40,8 @@ public class DockerBuildInfo implements Serializable {
         return dockerImageTag;
     }
 
-    public DockerBuildInfo withDockerImageTag(final String dockerImageTag) {
-        this.dockerImageTag = dockerImageTag;
+    public DockerBuildInfo withDockerImageTag(final String aDockerImageTag) {
+        this.dockerImageTag = aDockerImageTag;
         return this;
     }
 
@@ -49,8 +49,8 @@ public class DockerBuildInfo implements Serializable {
         return dockerfile;
     }
 
-    public DockerBuildInfo withDockerfile(final String dockerfile) {
-        this.dockerfile = dockerfile;
+    public DockerBuildInfo withDockerfile(final String aDockerfile) {
+        this.dockerfile = aDockerfile;
         return this;
     }
 
@@ -58,8 +58,8 @@ public class DockerBuildInfo implements Serializable {
         return authConfig;
     }
 
-    public DockerBuildInfo withAuthConfig(final AuthConfig authConfig) {
-        this.authConfig = authConfig;
+    public DockerBuildInfo withAuthConfig(final AuthConfig aAuthConfig) {
+        this.authConfig = aAuthConfig;
         return this;
     }
 
@@ -67,7 +67,7 @@ public class DockerBuildInfo implements Serializable {
         return imageId;
     }
 
-    public void setImageId(final String imageId) {
-        this.imageId = imageId;
+    public void setImageId(final String aImageId) {
+        this.imageId = aImageId;
     }
 }

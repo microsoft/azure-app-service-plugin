@@ -22,14 +22,15 @@ import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
-public class DockerDeployCommand extends DockerCommand implements ICommand<DockerDeployCommand.IDockerDeployCommandData> {
+public class DockerDeployCommand extends DockerCommand
+        implements ICommand<DockerDeployCommand.IDockerDeployCommandData> {
     private static final String SETTING_DOCKER_IMAGE = "DOCKER_CUSTOM_IMAGE_NAME";
     private static final String SETTING_REGISTRY_SERVER = "DOCKER_REGISTRY_SERVER_URL";
     private static final String SETTING_REGISTRY_USERNAME = "DOCKER_REGISTRY_SERVER_USERNAME";
     private static final String SETTING_REGISTRY_PASSWORD = "DOCKER_REGISTRY_SERVER_PASSWORD";
 
     @Override
-    public void execute(IDockerDeployCommandData context) {
+    public void execute(final IDockerDeployCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
         final AuthConfig authConfig = dockerBuildInfo.getAuthConfig();
         final WebApp webApp = context.getWebApp();
@@ -37,7 +38,8 @@ public class DockerDeployCommand extends DockerCommand implements ICommand<Docke
 
         try {
             final String image = imageAndTag(dockerBuildInfo);
-            context.logStatus(String.format("Updating configuration of Azure app service `%s`, with new docker image %s.",
+            context.logStatus(String.format(
+                    "Updating configuration of Azure app service `%s`, with new docker image %s.",
                     context.getWebApp().name(), image));
 
             if (StringUtils.isNotBlank(context.getSlotName())) {
@@ -62,7 +64,8 @@ public class DockerDeployCommand extends DockerCommand implements ICommand<Docke
                 final DeploymentSlot slot = webApp.deploymentSlots().getByName(slotName);
                 checkNotNull(slot, "Deployment slot not found:" + slotName);
 
-                final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(context.getAzureCredentialsId());
+                final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(
+                        context.getAzureCredentialsId());
                 final Azure azure = TokenCache.getInstance(sp).getAzureClient();
 
                 final SiteConfigResourceInner siteConfigResourceInner = azure.webApps().inner().getConfigurationSlot(
@@ -70,13 +73,22 @@ public class DockerDeployCommand extends DockerCommand implements ICommand<Docke
                 checkNotNull(siteConfigResourceInner, "Configuration not found for slot:" + slotName);
 
                 List<NameValuePair> appSettings = new ArrayList<>();
-                appSettings.add(new NameValuePair().withName(SETTING_DOCKER_IMAGE).withValue(image));
-                appSettings.add(new NameValuePair().withName(SETTING_REGISTRY_SERVER).withValue(authConfig.getRegistryAddress()));
-                appSettings.add(new NameValuePair().withName(SETTING_REGISTRY_USERNAME).withValue(authConfig.getUsername()));
-                appSettings.add(new NameValuePair().withName(SETTING_REGISTRY_PASSWORD).withValue(authConfig.getPassword()));
+                appSettings.add(new NameValuePair()
+                        .withName(SETTING_DOCKER_IMAGE)
+                        .withValue(image));
+                appSettings.add(new NameValuePair()
+                        .withName(SETTING_REGISTRY_SERVER)
+                        .withValue(authConfig.getRegistryAddress()));
+                appSettings.add(new NameValuePair()
+                        .withName(SETTING_REGISTRY_USERNAME)
+                        .withValue(authConfig.getUsername()));
+                appSettings.add(new NameValuePair()
+                        .withName(SETTING_REGISTRY_PASSWORD)
+                        .withValue(authConfig.getPassword()));
                 siteConfigResourceInner.withLinuxFxVersion(String.format("DOCKER|%s", image));
                 siteConfigResourceInner.withAppSettings(appSettings);
-                azure.webApps().inner().updateConfigurationSlot(webApp.resourceGroupName(), webApp.name(), slot.name(), siteConfigResourceInner);
+                azure.webApps().inner().updateConfigurationSlot(
+                        webApp.resourceGroupName(), webApp.name(), slot.name(), siteConfigResourceInner);
             }
             context.setDeploymentState(DeploymentState.Success);
             context.logStatus("Azure app service updated successfully.");

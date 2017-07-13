@@ -24,18 +24,24 @@ public class TokenCache {
 
     private static TokenCache cache = null;
 
-    protected final AzureCredentials.ServicePrincipal credentials;
+    private final AzureCredentials.ServicePrincipal credentials;
 
     public static TokenCache getInstance(final AzureCredentials.ServicePrincipal servicePrincipal) {
         synchronized (TSAFE) {
             if (cache == null) {
                 cache = new TokenCache(servicePrincipal);
             } else if (cache.credentials == null
-                    || !StringUtils.isEmpty(cache.credentials.getSubscriptionId()) || !cache.credentials.getSubscriptionId().equals(servicePrincipal.getSubscriptionId())
-                    || !StringUtils.isEmpty(cache.credentials.getClientId()) || !cache.credentials.getClientId().equals(servicePrincipal.getClientId())
-                    || !StringUtils.isEmpty(cache.credentials.getClientSecret()) || !cache.credentials.getClientSecret().equals(servicePrincipal.getClientSecret())
-                    || !StringUtils.isEmpty(cache.credentials.getTenant()) || !cache.credentials.getTenant().equals(servicePrincipal.getTenant())
-                    || !StringUtils.isEmpty(cache.credentials.getServiceManagementURL()) || !cache.credentials.getServiceManagementURL().equals(servicePrincipal.getServiceManagementURL())) {
+                    || !StringUtils.isEmpty(cache.credentials.getSubscriptionId())
+                    || !cache.credentials.getSubscriptionId().equals(servicePrincipal.getSubscriptionId())
+                    || !StringUtils.isEmpty(cache.credentials.getClientId())
+                    || !cache.credentials.getClientId().equals(servicePrincipal.getClientId())
+                    || !StringUtils.isEmpty(cache.credentials.getClientSecret())
+                    || !cache.credentials.getClientSecret().equals(servicePrincipal.getClientSecret())
+                    || !StringUtils.isEmpty(cache.credentials.getTenant())
+                    || !cache.credentials.getTenant().equals(servicePrincipal.getTenant())
+                    || !StringUtils.isEmpty(cache.credentials.getServiceManagementURL())
+                    || !cache.credentials.getServiceManagementURL().equals(
+                            servicePrincipal.getServiceManagementURL())) {
                 cache = new TokenCache(servicePrincipal);
             }
         }

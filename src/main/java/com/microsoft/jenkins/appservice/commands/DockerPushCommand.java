@@ -41,15 +41,19 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
         }
     }
 
-    private static final class DockerPushCommandOnSlave extends MasterToSlaveCallable<DeploymentState, AzureCloudException> {
+    private static final class DockerPushCommandOnSlave
+            extends MasterToSlaveCallable<DeploymentState, AzureCloudException> {
 
         private final DockerClientBuilder dockerClientBuilder;
         private final TaskListener listener;
         private final DockerBuildInfo dockerBuildInfo;
         private final String image;
 
-        private DockerPushCommandOnSlave(TaskListener listener, DockerClientBuilder dockerClientBuilder,
-                                         DockerBuildInfo dockerBuildInfo, String image) {
+        private DockerPushCommandOnSlave(
+                final TaskListener listener,
+                final DockerClientBuilder dockerClientBuilder,
+                final DockerBuildInfo dockerBuildInfo,
+                final String image) {
             this.listener = listener;
             this.dockerClientBuilder = dockerClientBuilder;
             this.dockerBuildInfo = dockerBuildInfo;
@@ -68,7 +72,7 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
                 }
 
                 @Override
-                public void onError(Throwable throwable) {
+                public void onError(final Throwable throwable) {
                     listener.getLogger().println("Fail to push docker image:" + throwable.getMessage());
                     state[0] = DeploymentState.HasError;
                     super.onError(throwable);

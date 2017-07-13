@@ -49,7 +49,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
         }
     }
 
-    private FilePath findDockerFile(FilePath workspace, String pattern) throws AzureCloudException {
+    private FilePath findDockerFile(final FilePath workspace, final String pattern) throws AzureCloudException {
         try {
             final FilePath[] files = workspace.list(pattern);
             if (files.length > 1) {
@@ -77,8 +77,12 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
         private final FilePath dockerfile;
         private final String image;
 
-        private DockerBuildCommandOnSlave(TaskListener listener, DockerClientBuilder dockerClientBuilder,
-                                          DockerBuildInfo buildInfo, FilePath dockerfile, String image) {
+        private DockerBuildCommandOnSlave(
+                final TaskListener listener,
+                final DockerClientBuilder dockerClientBuilder,
+                final DockerBuildInfo buildInfo,
+                final FilePath dockerfile,
+                final String image) {
             this.listener = listener;
             this.dockerClientBuilder = dockerClientBuilder;
             this.dockerBuildInfo = buildInfo;
@@ -110,7 +114,7 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
                 }
 
                 @Override
-                public void onError(Throwable throwable) {
+                public void onError(final Throwable throwable) {
                     listener.getLogger().println("Fail to build docker image:" + throwable.getMessage());
                     hasError[0] = true;
                     super.onError(throwable);

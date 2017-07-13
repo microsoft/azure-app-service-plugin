@@ -43,7 +43,11 @@ public class FunctionAppDeploymentCommandContext extends AbstractCommandContext
         this.targetDirectory = Util.fixNull(targetDirectory);
     }
 
-    public void configure(Run<?, ?> run, FilePath workspace, TaskListener listener, FunctionApp app) throws AzureCloudException {
+    public void configure(
+            final Run<?, ?> run,
+            final FilePath workspace,
+            final TaskListener listener,
+            final FunctionApp app) throws AzureCloudException {
         pubProfile = app.getPublishingProfile();
 
         HashMap<Class, TransitionInfo> commands = new HashMap<>();
@@ -56,7 +60,7 @@ public class FunctionAppDeploymentCommandContext extends AbstractCommandContext
     }
 
     @Override
-    public IBaseCommandData getDataForCommand(ICommand command) {
+    public IBaseCommandData getDataForCommand(final ICommand command) {
         return this;
     }
 

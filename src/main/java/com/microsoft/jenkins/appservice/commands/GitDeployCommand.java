@@ -48,7 +48,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
     private static final String DEPLOY_REMOTE_BRANCH = "origin/" + DEPLOY_BRANCH;
 
     @Override
-    public void execute(IGitDeployCommandData context) {
+    public void execute(final IGitDeployCommandData context) {
         try {
             final PublishingProfile pubProfile = context.getPublishingProfile();
             final Run run = context.getRun();
@@ -107,7 +107,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
         }
     }
 
-    private String getGitExe(Run run, TaskListener listener) throws IOException, InterruptedException {
+    private String getGitExe(final Run run, final TaskListener listener) throws IOException, InterruptedException {
         GitTool tool = GitTool.getDefaultInstallation();
 
         final EnvVars env = run.getEnvironment(listener);
@@ -135,13 +135,14 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
      * @throws IOException
      * @throws InterruptedException
      */
-    private void cleanWorkingDirectory(GitClient git) throws IOException, InterruptedException {
+    private void cleanWorkingDirectory(final GitClient git) throws IOException, InterruptedException {
         git.withRepository(new CleanWorkingDirectoryCallback());
     }
 
     private static final class CleanWorkingDirectoryCallback implements RepositoryCallback<Void> {
         @Override
-        public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+        public Void invoke(final Repository repo, final VirtualChannel channel)
+                throws IOException, InterruptedException {
             DirCache dc = null;
 
             try (final TreeWalk tw = new TreeWalk(repo)) {
@@ -172,9 +173,10 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
             return null;
         }
 
-        private void delete(Repository repo, File p) {
-            while (p != null && !p.equals(repo.getWorkTree()) && p.delete()) {
-                p = p.getParentFile();
+        private void delete(final Repository repo, final File target) {
+            File cur = target;
+            while (cur != null && !cur.equals(repo.getWorkTree()) && cur.delete()) {
+                cur = cur.getParentFile();
             }
         }
     }
@@ -190,8 +192,12 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
      * @throws IOException
      * @throws InterruptedException
      */
-    private void copyAndAddFiles(GitClient git, FilePath repo, FilePath sourceDir, String targetDir, String filesPattern)
-            throws IOException, InterruptedException {
+    private void copyAndAddFiles(
+            final GitClient git,
+            final FilePath repo,
+            final FilePath sourceDir,
+            final String targetDir,
+            final String filesPattern) throws IOException, InterruptedException {
         final FilePath[] files = sourceDir.list(filesPattern);
         for (final FilePath file: files) {
             final String fileName = FilePathUtils.trimDirectoryPrefix(sourceDir, file);
@@ -212,13 +218,14 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
      * @throws IOException
      * @throws InterruptedException
      */
-    private boolean isWorkingTreeChanged(GitClient git) throws IOException, InterruptedException {
+    private boolean isWorkingTreeChanged(final GitClient git) throws IOException, InterruptedException {
         return git.withRepository(new IsWorkingTreeChangedCallback());
     }
 
     private static final class IsWorkingTreeChangedCallback implements RepositoryCallback<Boolean> {
         @Override
-        public Boolean invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+        public Boolean invoke(final Repository repo, final VirtualChannel channel)
+                throws IOException, InterruptedException {
             FileTreeIterator workingTreeIt = new FileTreeIterator(repo);
             IndexDiff diff = new IndexDiff(repo, Constants.HEAD, workingTreeIt);
             return diff.diff();

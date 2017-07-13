@@ -14,7 +14,7 @@ public final class FilePathUtils {
         // Hide
     }
 
-    public static String trimDirectoryPrefix(FilePath dir, FilePath file) {
+    public static String trimDirectoryPrefix(final FilePath dir, final FilePath file) {
         final String prefix = dir.getRemote();
         final String filePath = file.getRemote();
         if (filePath.startsWith(prefix)) {

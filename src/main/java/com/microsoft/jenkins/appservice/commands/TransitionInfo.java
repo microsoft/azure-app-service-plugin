@@ -23,7 +23,7 @@ public class TransitionInfo {
         return this.fail;
     }
 
-    public TransitionInfo(ICommand command, Class success, Class fail) {
+    public TransitionInfo(final ICommand command, final Class success, final Class fail) {
         this.command = command;
         this.success = success;
         this.fail = fail;

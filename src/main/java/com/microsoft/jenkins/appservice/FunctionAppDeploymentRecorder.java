@@ -33,15 +33,23 @@ import java.io.IOException;
 public class FunctionAppDeploymentRecorder extends BaseDeploymentRecorder {
 
     @DataBoundConstructor
-    public FunctionAppDeploymentRecorder(String azureCredentialsId, String resourceGroup, String appName) {
+    public FunctionAppDeploymentRecorder(
+            final String azureCredentialsId,
+            final String resourceGroup,
+            final String appName) {
         super(azureCredentialsId, resourceGroup, appName);
     }
 
     @Override
-    public void perform(@Nonnull Run<?, ?> run, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws InterruptedException, IOException {
+    public void perform(
+            @Nonnull final Run<?, ?> run,
+            @Nonnull final FilePath workspace,
+            @Nonnull final Launcher launcher,
+            @Nonnull final TaskListener listener) throws InterruptedException, IOException {
         // Only deploy on build succeeds
         // Also check if result is null here because in pipeline function app deploy is not run as a post-build action.
-        // In this case result is null and pipeline will stop if previous step failed. So no need to check result in this case.
+        // In this case result is null and pipeline will stop if previous step failed. So no need to check result in
+        // this case.
         if (run.getResult() != null && run.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
             listener.getLogger().println("Deploy to Azure Function App is skipped due to previous steps failed.");
             return;
@@ -50,14 +58,17 @@ public class FunctionAppDeploymentRecorder extends BaseDeploymentRecorder {
         listener.getLogger().println("Starting Azure Function App Deployment");
 
         // Get app info
-        final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+        final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId))
+                .getAzureClient();
         final FunctionApp app = azureClient.appServices().functionApps().getByResourceGroup(resourceGroup, appName);
         if (app == null) {
-            throw new AbortException(String.format("Function App %s in resource group %s not found", appName, resourceGroup));
+            throw new AbortException(String.format("Function App %s in resource group %s not found",
+                    appName, resourceGroup));
         }
 
         final String expandedFilePath = run.getEnvironment(listener).expand(filePath);
-        final FunctionAppDeploymentCommandContext commandContext = new FunctionAppDeploymentCommandContext(expandedFilePath);
+        final FunctionAppDeploymentCommandContext commandContext =
+                new FunctionAppDeploymentCommandContext(expandedFilePath);
         commandContext.setSourceDirectory(sourceDirectory);
         commandContext.setTargetDirectory(targetDirectory);
 
@@ -90,7 +101,7 @@ public class FunctionAppDeploymentRecorder extends BaseDeploymentRecorder {
             return "Publish an Azure Function App";
         }
 
-        public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
+        public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath final Item owner) {
             return listAzureCredentialsIdItems(owner);
         }
 
@@ -101,7 +112,8 @@ public class FunctionAppDeploymentRecorder extends BaseDeploymentRecorder {
         public ListBoxModel doFillAppNameItems(@QueryParameter final String azureCredentialsId,
                                                @QueryParameter final String resourceGroup) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
-                final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+                final Azure azureClient = TokenCache.getInstance(
+                        AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
                 return listAppNameItems(azureClient.appServices().functionApps(), resourceGroup);
             } else {
                 return new ListBoxModel(new ListBoxModel.Option(""));

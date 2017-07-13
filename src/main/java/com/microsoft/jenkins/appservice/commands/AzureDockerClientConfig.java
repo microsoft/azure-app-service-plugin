@@ -86,8 +86,15 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
 
     private final RemoteApiVersion apiVersion;
 
-    AzureDockerClientConfig(URI dockerHost, String dockerConfig, String apiVersion, String registryUrl,
-                            String registryUsername, String registryPassword, String registryEmail, SSLConfig sslConfig) {
+    AzureDockerClientConfig(
+            final URI dockerHost,
+            final String dockerConfig,
+            final String apiVersion,
+            final String registryUrl,
+            final String registryUsername,
+            final String registryPassword,
+            final String registryEmail,
+            final SSLConfig sslConfig) {
         this.dockerHost = checkDockerHostScheme(dockerHost);
         this.dockerConfig = dockerConfig;
         this.apiVersion = RemoteApiVersion.parseConfigWithDefault(apiVersion);
@@ -98,7 +105,7 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
         this.registryUrl = registryUrl;
     }
 
-    private URI checkDockerHostScheme(URI dockerHost) {
+    private static URI checkDockerHostScheme(final URI dockerHost) {
         if ("tcp".equals(dockerHost.getScheme()) || "unix".equals(dockerHost.getScheme())) {
             return dockerHost;
         } else {
@@ -107,7 +114,7 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
         }
     }
 
-    private static Properties loadIncludedDockerProperties(Properties systemProperties) {
+    private static Properties loadIncludedDockerProperties(final Properties systemProperties) {
         try (InputStream is = DefaultDockerClientConfig.class.getResourceAsStream("/" + DOCKER_JAVA_PROPERTIES)) {
             Properties p = new Properties();
             p.load(is);
@@ -118,21 +125,22 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
         }
     }
 
-    private static void replaceProperties(Properties properties, Properties replacements) {
+    private static void replaceProperties(final Properties properties, final Properties replacements) {
         for (Object objectKey : properties.keySet()) {
             String key = objectKey.toString();
             properties.setProperty(key, replaceProperties(properties.getProperty(key), replacements));
         }
     }
 
-    private static String replaceProperties(String s, Properties replacements) {
+    private static String replaceProperties(final String s, final Properties replacements) {
+        String result = s;
         for (Map.Entry<Object, Object> entry : replacements.entrySet()) {
             String key = "${" + entry.getKey() + "}";
-            while (s.contains(key)) {
-                s = s.replace(key, String.valueOf(entry.getValue()));
+            while (result.contains(key)) {
+                result = result.replace(key, String.valueOf(entry.getValue()));
             }
         }
-        return s;
+        return result;
     }
 
     /**
@@ -141,7 +149,8 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
      * @param p The original set of properties to override
      * @return A copy of the original Properties with overridden values
      */
-    private static Properties overrideDockerPropertiesWithSettingsFromUserHome(Properties p, Properties systemProperties) {
+    private static Properties overrideDockerPropertiesWithSettingsFromUserHome(
+            final Properties p, final Properties systemProperties) {
         Properties overriddenProperties = new Properties();
         overriddenProperties.putAll(p);
 
@@ -157,7 +166,8 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
         return overriddenProperties;
     }
 
-    private static Properties overrideDockerPropertiesWithEnv(Properties properties, Map<String, String> env) {
+    private static Properties overrideDockerPropertiesWithEnv(
+            final Properties properties, final Map<String, String> env) {
         Properties overriddenProperties = new Properties();
         overriddenProperties.putAll(properties);
 
@@ -182,7 +192,8 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
      * @param p The original set of properties to override
      * @return A copy of the original Properties with overridden values
      */
-    private static Properties overrideDockerPropertiesWithSystemProperties(Properties p, Properties systemProperties) {
+    private static Properties overrideDockerPropertiesWithSystemProperties(
+            final Properties p, final Properties systemProperties) {
         Properties overriddenProperties = new Properties();
         overriddenProperties.putAll(p);
 
@@ -201,7 +212,8 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
     /**
      * Allows you to build the config without system environment interfering for more robust testing.
      */
-    static AzureDockerClientConfig.Builder createDefaultConfigBuilder(Map<String, String> env, Properties systemProperties) {
+    static AzureDockerClientConfig.Builder createDefaultConfigBuilder(
+            final Map<String, String> env, final Properties systemProperties) {
         Properties properties = loadIncludedDockerProperties(systemProperties);
         properties = overrideDockerPropertiesWithSettingsFromUserHome(properties, systemProperties);
         properties = overrideDockerPropertiesWithEnv(properties, env);
@@ -256,7 +268,7 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
     }
 
     @Override
-    public AuthConfig effectiveAuthConfig(String imageName) {
+    public AuthConfig effectiveAuthConfig(final String imageName) {
         return getAuthConfig();
     }
 
@@ -273,7 +285,7 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         return EqualsBuilder.reflectionEquals(this, o);
     }
 
@@ -298,11 +310,11 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
         private SSLConfig customSslConfig = null;
 
         /**
-         * This will set all fields in the builder to those contained in the Properties object. The Properties object should contain the
-         * following docker-java configuration keys: DOCKER_HOST, DOCKER_TLS_VERIFY, api.version, registry.username, registry.password,
-         * registry.email, DOCKER_CERT_PATH, and DOCKER_CONFIG.
+         * This will set all fields in the builder to those contained in the Properties object. The Properties object
+         * should contain the following docker-java configuration keys: DOCKER_HOST, DOCKER_TLS_VERIFY, api.version,
+         * registry.username, registry.password, registry.email, DOCKER_CERT_PATH, and DOCKER_CONFIG.
          */
-        public AzureDockerClientConfig.Builder withProperties(Properties p) {
+        public AzureDockerClientConfig.Builder withProperties(final Properties p) {
             return withDockerHost(p.getProperty(DOCKER_HOST))
                     .withDockerTlsVerify(p.getProperty(DOCKER_TLS_VERIFY))
                     .withDockerConfig(p.getProperty(DOCKER_CONFIG))
@@ -317,55 +329,55 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
         /**
          * configure DOCKER_HOST.
          */
-        public final AzureDockerClientConfig.Builder withDockerHost(String dockerHost) {
-            checkNotNull(dockerHost, "uri was not specified");
-            this.dockerHost = URI.create(dockerHost);
+        public final AzureDockerClientConfig.Builder withDockerHost(final String aDockerHost) {
+            checkNotNull(aDockerHost, "uri was not specified");
+            this.dockerHost = URI.create(aDockerHost);
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withApiVersion(RemoteApiVersion apiVersion) {
-            this.apiVersion = apiVersion.getVersion();
+        public final AzureDockerClientConfig.Builder withApiVersion(final RemoteApiVersion aApiVersion) {
+            this.apiVersion = aApiVersion.getVersion();
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withApiVersion(String apiVersion) {
-            this.apiVersion = apiVersion;
+        public final AzureDockerClientConfig.Builder withApiVersion(final String aApiVersion) {
+            this.apiVersion = aApiVersion;
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withRegistryUsername(String registryUsername) {
-            this.registryUsername = registryUsername;
+        public final AzureDockerClientConfig.Builder withRegistryUsername(final String aRegistryUsername) {
+            this.registryUsername = aRegistryUsername;
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withRegistryPassword(String registryPassword) {
-            this.registryPassword = registryPassword;
+        public final AzureDockerClientConfig.Builder withRegistryPassword(final String aRegistryPassword) {
+            this.registryPassword = aRegistryPassword;
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withRegistryEmail(String registryEmail) {
-            this.registryEmail = registryEmail;
+        public final AzureDockerClientConfig.Builder withRegistryEmail(final String aRegistryEmail) {
+            this.registryEmail = aRegistryEmail;
             return this;
         }
 
-        public AzureDockerClientConfig.Builder withRegistryUrl(String registryUrl) {
-            this.registryUrl = registryUrl;
+        public AzureDockerClientConfig.Builder withRegistryUrl(final String aRegistryUrl) {
+            this.registryUrl = aRegistryUrl;
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withDockerCertPath(String dockerCertPath) {
-            this.dockerCertPath = dockerCertPath;
+        public final AzureDockerClientConfig.Builder withDockerCertPath(final String aDockerCertPath) {
+            this.dockerCertPath = aDockerCertPath;
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withDockerConfig(String dockerConfig) {
-            this.dockerConfig = dockerConfig;
+        public final AzureDockerClientConfig.Builder withDockerConfig(final String aDockerConfig) {
+            this.dockerConfig = aDockerConfig;
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withDockerTlsVerify(String dockerTlsVerify) {
-            if (dockerTlsVerify != null) {
-                String trimmed = dockerTlsVerify.trim();
+        public final AzureDockerClientConfig.Builder withDockerTlsVerify(final String aDockerTlsVerify) {
+            if (aDockerTlsVerify != null) {
+                String trimmed = aDockerTlsVerify.trim();
                 this.dockerTlsVerify = "true".equalsIgnoreCase(trimmed) || "1".equals(trimmed);
             } else {
                 this.dockerTlsVerify = false;
@@ -373,18 +385,20 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
             return this;
         }
 
-        public final AzureDockerClientConfig.Builder withDockerTlsVerify(Boolean dockerTlsVerify) {
-            this.dockerTlsVerify = dockerTlsVerify;
+        public final AzureDockerClientConfig.Builder withDockerTlsVerify(final Boolean aDockerTlsVerify) {
+            this.dockerTlsVerify = aDockerTlsVerify;
             return this;
         }
 
         /**
-         * Overrides the default {@link SSLConfig} that is used when calling {@link DefaultDockerClientConfig.Builder#withDockerTlsVerify(java.lang.Boolean)} and
-         * {@link DefaultDockerClientConfig.Builder#withDockerCertPath(String)}. This way it is possible to pass a custom {@link SSLConfig} to the resulting
-         * {@link DockerClientConfig} that may be created by other means than the local file system.
+         * Overrides the default {@link SSLConfig} that is used when calling
+         * {@link DefaultDockerClientConfig.Builder#withDockerTlsVerify(java.lang.Boolean)} and
+         * {@link DefaultDockerClientConfig.Builder#withDockerCertPath(String)}. This way it is possible to pass a
+         * custom {@link SSLConfig} to the resulting {@link DockerClientConfig} that may be created by other means than
+         * the local file system.
          */
-        public final AzureDockerClientConfig.Builder withCustomSslConfig(SSLConfig customSslConfig) {
-            this.customSslConfig = customSslConfig;
+        public final AzureDockerClientConfig.Builder withCustomSslConfig(final SSLConfig aCustomSslConfig) {
+            this.customSslConfig = aCustomSslConfig;
             return this;
         }
 
@@ -405,10 +419,10 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
                     registryPassword, registryEmail, sslConfig);
         }
 
-        private String checkDockerCertPath(String dockerCertPath) {
+        private static String checkDockerCertPath(final String dockerCertPath) {
             if (StringUtils.isEmpty(dockerCertPath)) {
-                throw new DockerClientException(
-                        "Enabled TLS verification (DOCKER_TLS_VERIFY=1) but certifate path (DOCKER_CERT_PATH) is not defined.");
+                throw new DockerClientException("Enabled TLS verification (DOCKER_TLS_VERIFY=1) but certifate path "
+                        + "(DOCKER_CERT_PATH) is not defined.");
             }
 
             File certPath = new File(dockerCertPath);
@@ -427,4 +441,3 @@ public class AzureDockerClientConfig implements DockerClientConfig, Serializable
         }
     }
 }
-
