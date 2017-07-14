@@ -17,6 +17,7 @@ import com.microsoft.azure.management.appservice.implementation.SiteConfigResour
 import com.microsoft.azure.management.appservice.implementation.SiteInner;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.util.AzureCredentials;
+import com.microsoft.jenkins.appservice.util.Constants;
 import hudson.*;
 import hudson.model.*;
 import hudson.security.ACL;
@@ -181,8 +182,7 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
     }
 
     @CheckForNull
-    public
-    String getSourceDirectory() {
+    public String getSourceDirectory() {
         return sourceDirectory;
     }
 
@@ -192,8 +192,7 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
     }
 
     @CheckForNull
-    public
-    String getTargetDirectory() {
+    public String getTargetDirectory() {
         return targetDirectory;
     }
 
@@ -203,8 +202,7 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
     }
 
     @CheckForNull
-    public
-    String getSlotName() {
+    public String getSlotName() {
         return slotName;
     }
 
@@ -386,14 +384,16 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
         }
 
         public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
-            return new StandardListBoxModel().withAll(
-                    CredentialsProvider.lookupCredentials(
+            return new StandardListBoxModel()
+                    .withEmptySelection()
+                    .withAll(CredentialsProvider.lookupCredentials(
                             AzureCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()
                     ));
         }
 
         public ListBoxModel doFillResourceGroupItems(@QueryParameter final String azureCredentialsId) {
             final ListBoxModel model = new ListBoxModel();
+            model.add(Constants.EMPTY_SELECTION, "");
             // list all app service
             if (StringUtils.isNotBlank(azureCredentialsId)) {
                 final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
@@ -401,15 +401,13 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
                     model.add(rg.name());
                 }
             }
-            if (model.size() == 0) {
-                model.add("");
-            }
             return model;
         }
 
         public ListBoxModel doFillAppNameItems(@QueryParameter final String azureCredentialsId,
-                                                  @QueryParameter final String resourceGroup) {
+                                               @QueryParameter final String resourceGroup) {
             final ListBoxModel model = new ListBoxModel();
+            model.add(Constants.EMPTY_SELECTION, "");
             // list all app service
             // https://github.com/Azure/azure-sdk-for-java/issues/1762
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
@@ -419,9 +417,6 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
                 for (final SiteInner webApp : list) {
                     model.add(webApp.name());
                 }
-            }
-            if (model.size() == 0) {
-                model.add("");
             }
             return model;
         }

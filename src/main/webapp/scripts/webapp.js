@@ -98,24 +98,21 @@
 
     Behaviour.specify("SELECT[name$=appName]", "azureAppService", 10000, function (app) {
         var oldChange = app.onchange;
-        app.onclick = app.onchange = function () {
+        app.onchange = function () {
             if (oldChange) {
                 oldChange();
             }
-            if (app.value) {
-                var azureCredentialsId = getElementValue("SELECT[name$=azureCredentialsId]")
-                var resourceGroup = getElementValue("SELECT[name$=resourceGroup]")
-                if (azureCredentialsId) {
-                    azureWebAppDescriptor.isWebAppOnLinux(azureCredentialsId, resourceGroup, app.value, function (t) {
-                        if (t.responseObject()) {
-                            webAppController.showAllRadioBlocks(true);
-                        } else {
-                            webAppController.showRadioBlockByValues(["file"], true);
-                        }
-                    })
-                } else {
-                    webAppController.showAllRadioBlocks(false);
-                }
+
+            var azureCredentialsId = getElementValue("SELECT[name$=azureCredentialsId]")
+            var resourceGroup = getElementValue("SELECT[name$=resourceGroup]")
+            if (app.value && azureCredentialsId && resourceGroup) {
+                azureWebAppDescriptor.isWebAppOnLinux(azureCredentialsId, resourceGroup, app.value, function (t) {
+                    if (t.responseObject()) {
+                        webAppController.showAllRadioBlocks(true);
+                    } else {
+                        webAppController.showRadioBlockByValues(["file"], true);
+                    }
+                })
             } else {
                 webAppController.showAllRadioBlocks(false);
             }
@@ -131,13 +128,4 @@
         }
     });
 
-    Behaviour.specify("select.select", "azureAppService", 10000, function (e) {
-        var oldClick = e.onclick;
-        e.onclick = function () {
-            if (oldClick) {
-                oldClick();
-            }
-            fireEvent(e, "change");
-        };
-    });
-})()
+})();

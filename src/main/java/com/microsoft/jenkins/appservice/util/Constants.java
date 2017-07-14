@@ -17,4 +17,7 @@ public final class Constants {
 
     public static final LogLevel DEFAULT_AZURE_SDK_LOGGING_LEVEL = LogLevel.NONE;
 
+    // the first option for select element. Keep the same value as jenkins pre-defined default empty value.
+    public static final String EMPTY_SELECTION = "- none -";
+
 }
