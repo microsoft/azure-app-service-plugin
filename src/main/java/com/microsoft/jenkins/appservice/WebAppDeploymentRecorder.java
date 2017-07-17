@@ -7,29 +7,33 @@ package com.microsoft.jenkins.appservice;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.IdCredentials;
-import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.github.dockerjava.api.model.AuthConfig;
-import com.microsoft.azure.PagedList;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
-import com.microsoft.azure.management.appservice.implementation.SiteInner;
-import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.util.AzureCredentials;
+import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
+import com.microsoft.jenkins.appservice.commands.DockerPingCommand;
 import com.microsoft.jenkins.appservice.util.Constants;
-import hudson.*;
-import hudson.model.*;
+import com.microsoft.jenkins.appservice.util.TokenCache;
+import com.microsoft.jenkins.exceptions.AzureCloudException;
+import com.microsoft.jenkins.services.CommandService;
+import hudson.AbortException;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.model.Item;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.security.ACL;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import jenkins.authentication.tokens.api.AuthenticationTokens;
 import jenkins.model.Jenkins;
-import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang.StringUtils;
@@ -37,11 +41,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
-import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
-import com.microsoft.jenkins.appservice.commands.DockerPingCommand;
-import com.microsoft.jenkins.appservice.util.TokenCache;
-import com.microsoft.jenkins.exceptions.AzureCloudException;
-import com.microsoft.jenkins.services.CommandService;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -53,27 +52,15 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collections;
 
-public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildStep {
+public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
 
-    private final String azureCredentialsId;
-    private final String resourceGroup;
-    private final String appName;
     private String publishType;
-    private String filePath;
     private String dockerImageName;
     private String dockerImageTag;
     private String dockerFilePath;
     private DockerRegistryEndpoint dockerRegistryEndpoint;
     private boolean deployOnlyIfSuccessful;
     private boolean deleteTempImage;
-
-    @CheckForNull
-    private
-    String sourceDirectory;
-
-    @CheckForNull
-    private
-    String targetDirectory;
 
     @CheckForNull
     private
@@ -84,19 +71,11 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
             final String azureCredentialsId,
             final String appName,
             final String resourceGroup) {
-        this.azureCredentialsId = azureCredentialsId;
-        this.resourceGroup = resourceGroup;
-        this.appName = appName;
+        super(azureCredentialsId, resourceGroup, appName);
         this.dockerFilePath = "**/Dockerfile";
         this.deployOnlyIfSuccessful = true;
         this.deleteTempImage = true;
     }
-
-    @DataBoundSetter
-    public void setFilePath(final String filePath) {
-        this.filePath = filePath;
-    }
-
     @DataBoundSetter
     public void setPublishType(final String publishType) {
         this.publishType = publishType;
@@ -144,22 +123,6 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
         return dockerRegistryEndpoint;
     }
 
-    public String getFilePath() {
-        return filePath;
-    }
-
-    public String getAzureCredentialsId() {
-        return azureCredentialsId;
-    }
-
-    public String getAppName() {
-        return appName;
-    }
-
-    public String getResourceGroup() {
-        return resourceGroup;
-    }
-
     public String getPublishType() {
         return publishType;
     }
@@ -177,26 +140,6 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
     }
 
     @DataBoundSetter
-    public void setSourceDirectory(@CheckForNull String sourceDirectory) {
-        this.sourceDirectory = Util.fixNull(sourceDirectory);
-    }
-
-    @CheckForNull
-    public String getSourceDirectory() {
-        return sourceDirectory;
-    }
-
-    @DataBoundSetter
-    public void setTargetDirectory(@CheckForNull String targetDirectory) {
-        this.targetDirectory = Util.fixNull(targetDirectory);
-    }
-
-    @CheckForNull
-    public String getTargetDirectory() {
-        return targetDirectory;
-    }
-
-    @DataBoundSetter
     public void setSlotName(@CheckForNull String slotName) {
         this.slotName = Util.fixNull(slotName);
     }
@@ -204,16 +147,6 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
     @CheckForNull
     public String getSlotName() {
         return slotName;
-    }
-
-    @Override
-    public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.NONE;
-    }
-
-    @Override
-    public boolean needsToRunAfterFinalized() {
-        return false;
     }
 
     @Override
@@ -363,11 +296,7 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
 
     @Extension
     @Symbol("azureWebAppPublish")
-    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-
-        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            return true;
-        }
+    public static final class DescriptorImpl extends BaseDeploymentRecorder.DescriptorImpl {
 
         public String getDisplayName() {
             return "Publish an Azure Web App";
@@ -384,41 +313,22 @@ public class WebAppDeploymentRecorder extends Recorder implements SimpleBuildSte
         }
 
         public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath Item owner) {
-            return new StandardListBoxModel()
-                    .withEmptySelection()
-                    .withAll(CredentialsProvider.lookupCredentials(
-                            AzureCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()
-                    ));
+            return listAzureCredentialsIdItems(owner);
         }
 
         public ListBoxModel doFillResourceGroupItems(@QueryParameter final String azureCredentialsId) {
-            final ListBoxModel model = new ListBoxModel();
-            model.add(Constants.EMPTY_SELECTION, "");
-            // list all app service
-            if (StringUtils.isNotBlank(azureCredentialsId)) {
-                final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                for (final ResourceGroup rg : azureClient.resourceGroups().list()) {
-                    model.add(rg.name());
-                }
-            }
-            return model;
+            return listResourceGroupItems(azureCredentialsId);
         }
 
         public ListBoxModel doFillAppNameItems(@QueryParameter final String azureCredentialsId,
                                                @QueryParameter final String resourceGroup) {
-            final ListBoxModel model = new ListBoxModel();
-            model.add(Constants.EMPTY_SELECTION, "");
-            // list all app service
-            // https://github.com/Azure/azure-sdk-for-java/issues/1762
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
-                final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
-                final PagedList<SiteInner> list = azureClient.webApps().inner().listByResourceGroup(resourceGroup);
-                list.loadAll();
-                for (final SiteInner webApp : list) {
-                    model.add(webApp.name());
-                }
+                final Azure azureClient = TokenCache.getInstance(
+                        AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+                return listAppNameItems(azureClient.webApps(), resourceGroup);
+            } else {
+                return new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
             }
-            return model;
         }
 
         public FormValidation doVerifyConfiguration(@AncestorInPath final Item owner,
