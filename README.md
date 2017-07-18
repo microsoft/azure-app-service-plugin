@@ -64,13 +64,18 @@ You can also use this plugin in pipeline (Jenkinsfile). Here are some samples to
 To deploy a Java web app using file upload:
 
 ```groovy
-azureWebAppPublish azureCredentialsId: '<credential_id>', publishType: 'file', resourceGroup: '<resource_group_name>', appName: '<app_name>', filePath: '*.war', sourceDirectory: 'target', targetDirectory: 'webapps'
+azureWebAppPublish azureCredentialsId: '<credential_id>', publishType: 'file',
+                   resourceGroup: '<resource_group_name>', appName: '<app_name>',
+                   filePath: '*.war', sourceDirectory: 'target', targetDirectory: 'webapps'
 ```
 
 To deploy using docker:
 
 ```groovy
-azureWebAppPublish azureCredentialsId: '<credential_id>', publishType: 'docker', resourceGroup: '<resource_group_name>', appName: '<app_name>', dockerImageName: '<image_name>', dockerImageTag: '<image_tag>', dockerRegistryEndpoint: [credentialsId: '<registry_credential_id>', url: "<registry_url>"]
+azureWebAppPublish azureCredentialsId: '<credential_id>', publishType: 'docker',
+                   resourceGroup: '<resource_group_name>', appName: '<app_name>',
+                   dockerImageName: '<image_name>', dockerImageTag: '<image_tag>',
+                   dockerRegistryEndpoint: [credentialsId: '<registry_credential_id>', url: "<registry_url>"]
 ```
 
 For advanced options, you can use Jenkins Pipeline Syntax tool to generate a sample script.
