@@ -2,11 +2,21 @@ package com.microsoft.jenkins.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.AuthConfig;
+import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsGlobalConfig;
+import org.junit.ClassRule;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * Created by juniwang on 27/06/2017.
  */
 public class AbstractDockerCommandTest {
+
+    @ClassRule
+    public static JenkinsRule j = new JenkinsRule();
+
+    protected AbstractDockerCommandTest() {
+        AppInsightsGlobalConfig.get().setAppInsightsEnabled(false);
+    }
 
     protected static final class MockDockerClientBuilder implements DockerClientBuilder {
         private final DockerClient dockerClient;

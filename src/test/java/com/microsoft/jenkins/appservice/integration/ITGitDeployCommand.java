@@ -105,6 +105,7 @@ public class ITGitDeployCommand extends IntegrationTest {
                 .create();
         Assert.assertNotNull(webApp);
         when(commandDataMock.getPublishingProfile()).thenReturn(webApp.getPublishingProfile());
+        when(commandDataMock.getWebAppBase()).thenReturn(webApp);
 
         Utils.extractResourceFile(getClass(), "sample-nodejs-app/index.js", workspace.child("index.js").getRemote());
         Utils.extractResourceFile(getClass(), "sample-nodejs-app/package.json", workspace.child("package.json").getRemote());
@@ -132,6 +133,7 @@ public class ITGitDeployCommand extends IntegrationTest {
                 .create();
         Assert.assertNotNull(webApp);
         when(commandDataMock.getPublishingProfile()).thenReturn(webApp.getPublishingProfile());
+        when(commandDataMock.getWebAppBase()).thenReturn(webApp);
 
         Utils.extractResourceFile(getClass(), "sample-php-app/index.php", workspace.child("index.php").getRemote());
         when(commandDataMock.getFilePath()).thenReturn("*.php");
@@ -157,6 +159,7 @@ public class ITGitDeployCommand extends IntegrationTest {
                 .create();
         Assert.assertNotNull(webApp);
         when(commandDataMock.getPublishingProfile()).thenReturn(webApp.getPublishingProfile());
+        when(commandDataMock.getWebAppBase()).thenReturn(webApp);
 
         Utils.extractResourceFile(getClass(), "sample-python-app/main.py", workspace.child("main.py").getRemote());
         Utils.extractResourceFile(getClass(), "sample-python-app/virtualenv_proxy.py", workspace.child("virtualenv_proxy.py").getRemote());

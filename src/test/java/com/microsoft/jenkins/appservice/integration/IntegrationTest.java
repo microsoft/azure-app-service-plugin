@@ -12,6 +12,7 @@ import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsGlobalConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -101,6 +102,8 @@ public class IntegrationTest {
             blobEndpointSuffixForCloudStorageAccount.put(AZURECHINA, "core.chinacloudapi.cn/");
             blobEndpointSuffixForCloudStorageAccount.put(AZUREUSGOVERMENT, "core.usgovcloudapi.net/");
             blobEndpointSuffixForCloudStorageAccount.put(AZUREGERMAN, "core.cloudapi.de/");
+
+            AppInsightsGlobalConfig.get().setAppInsightsEnabled(false);
         }
 
         private static String loadFromEnv(final String name) {

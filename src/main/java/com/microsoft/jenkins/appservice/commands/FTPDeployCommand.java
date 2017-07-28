@@ -7,11 +7,14 @@ package com.microsoft.jenkins.appservice.commands;
 
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebAppBase;
+import com.microsoft.jenkins.appservice.AzureAppServicePlugin;
+import com.microsoft.jenkins.appservice.util.Constants;
 import com.microsoft.jenkins.appservice.util.FilePathUtils;
 import com.microsoft.jenkins.azurecommons.JobContext;
 import com.microsoft.jenkins.azurecommons.command.CommandState;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
 import com.microsoft.jenkins.azurecommons.command.ICommand;
+import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsUtils;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.TaskListener;
@@ -85,17 +88,23 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
                 context.getTargetDirectory(),
                 context.getFilePath()
             ));
+
+            context.setCommandState(CommandState.Success);
+            AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_FTP_DEPLOY,
+                    "WebApp", AppInsightsUtils.hash(context.getWebAppBase().name()));
         } catch (IOException | FTPException e) {
             context.logError("Fail to deploy to FTP: " + e.getMessage());
+            AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_FTP_DEPLOY_FAILED,
+                    "ResourceGroup", AppInsightsUtils.hash(context.getWebAppBase().resourceGroupName()),
+                    "WebApp", AppInsightsUtils.hash(context.getWebAppBase().name()),
+                    "Message", e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } finally {
+            if (!isStoppedBeforeDeployment) {
+                context.getWebAppBase().start();
+            }
         }
-
-        if (!isStoppedBeforeDeployment) {
-            context.getWebAppBase().start();
-        }
-
-        context.setCommandState(CommandState.Success);
     }
 
     private static final class FTPDeployCommandOnSlave extends MasterToSlaveCallable<Void, FTPException> {
@@ -186,8 +195,9 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
 
         /**
          * Remove FTP directory recursively.
+         *
          * @param ftpClient FTP client
-         * @param dir Directory to remove
+         * @param dir       Directory to remove
          * @throws IOException
          */
         private void removeFtpDirectory(final FTPClient ftpClient, final String dir)
@@ -315,5 +325,6 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         String getTargetDirectory();
 
         WebAppBase getWebAppBase();
+
     }
 }
