@@ -35,14 +35,14 @@ import java.util.Collections;
 
 public abstract class BaseDeploymentRecorder extends Recorder implements SimpleBuildStep {
 
-    protected final String azureCredentialsId;
-    protected final String resourceGroup;
-    protected final String appName;
+    private final String azureCredentialsId;
+    private final String resourceGroup;
+    private final String appName;
 
-    @CheckForNull protected String filePath;
-    @CheckForNull protected String sourceDirectory;
-    @CheckForNull protected String targetDirectory;
-    protected boolean deployOnlyIfSuccessful;
+    @CheckForNull private String filePath;
+    @CheckForNull private String sourceDirectory;
+    @CheckForNull private String targetDirectory;
+    private boolean deployOnlyIfSuccessful;
 
     protected BaseDeploymentRecorder(
             final String azureCredentialsId,

@@ -148,7 +148,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         // Also check if result is null here because in pipeline web app deploy is not run as a post-build action.
         // In this case result is null and pipeline will stop if previous step failed. So no need to check result in
         // this case.
-        if (run.getResult() != null && run.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
+        if (run.getResult() != null && run.getResult() != Result.SUCCESS && isDeployOnlyIfSuccessful()) {
             listener.getLogger().println("Deploy to Azure Web App is skipped due to previous steps failed.");
             return;
         }
@@ -156,15 +156,18 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         listener.getLogger().println("Starting Azure Web App Deployment");
 
         // Get app info
+        final String azureCredentialsId = getAzureCredentialsId();
         final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId))
                 .getAzureClient();
+        final String resourceGroup = getResourceGroup();
+        final String appName = getAppName();
         final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
         if (app == null) {
             throw new AbortException(String.format("Web App %s in resource group %s not found",
                     appName, resourceGroup));
         }
 
-        final String expandedFilePath = run.getEnvironment(listener).expand(filePath);
+        final String expandedFilePath = run.getEnvironment(listener).expand(getFilePath());
         final DockerBuildInfo dockerBuildInfo;
         try {
             dockerBuildInfo = validateDockerBuildInfo(run, listener, app);
@@ -173,8 +176,8 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         }
 
         final WebAppDeploymentCommandContext commandContext = new WebAppDeploymentCommandContext(expandedFilePath);
-        commandContext.setSourceDirectory(sourceDirectory);
-        commandContext.setTargetDirectory(targetDirectory);
+        commandContext.setSourceDirectory(getSourceDirectory());
+        commandContext.setTargetDirectory(getTargetDirectory());
         commandContext.setSlotName(slotName);
         commandContext.setPublishType(publishType);
         commandContext.setDockerBuildInfo(dockerBuildInfo);

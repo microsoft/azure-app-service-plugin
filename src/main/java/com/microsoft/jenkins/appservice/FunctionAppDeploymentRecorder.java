@@ -50,7 +50,7 @@ public class FunctionAppDeploymentRecorder extends BaseDeploymentRecorder {
         // Also check if result is null here because in pipeline function app deploy is not run as a post-build action.
         // In this case result is null and pipeline will stop if previous step failed. So no need to check result in
         // this case.
-        if (run.getResult() != null && run.getResult() != Result.SUCCESS && deployOnlyIfSuccessful) {
+        if (run.getResult() != null && run.getResult() != Result.SUCCESS && isDeployOnlyIfSuccessful()) {
             listener.getLogger().println("Deploy to Azure Function App is skipped due to previous steps failed.");
             return;
         }
@@ -58,19 +58,22 @@ public class FunctionAppDeploymentRecorder extends BaseDeploymentRecorder {
         listener.getLogger().println("Starting Azure Function App Deployment");
 
         // Get app info
+        final String azureCredentialsId = getAzureCredentialsId();
         final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId))
                 .getAzureClient();
+        final String resourceGroup = getResourceGroup();
+        final String appName = getAppName();
         final FunctionApp app = azureClient.appServices().functionApps().getByResourceGroup(resourceGroup, appName);
         if (app == null) {
             throw new AbortException(String.format("Function App %s in resource group %s not found",
                     appName, resourceGroup));
         }
 
-        final String expandedFilePath = run.getEnvironment(listener).expand(filePath);
+        final String expandedFilePath = run.getEnvironment(listener).expand(getFilePath());
         final FunctionAppDeploymentCommandContext commandContext =
                 new FunctionAppDeploymentCommandContext(expandedFilePath);
-        commandContext.setSourceDirectory(sourceDirectory);
-        commandContext.setTargetDirectory(targetDirectory);
+        commandContext.setSourceDirectory(getSourceDirectory());
+        commandContext.setTargetDirectory(getTargetDirectory());
 
         try {
             commandContext.configure(run, workspace, listener, app);
