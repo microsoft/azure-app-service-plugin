@@ -10,15 +10,19 @@ import hudson.remoting.VirtualChannel;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.IndexDiff;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.jenkinsci.plugins.gitclient.Git;
 import org.jenkinsci.plugins.gitclient.GitClient;
 import org.jenkinsci.plugins.gitclient.RepositoryCallback;
-import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.rules.TemporaryFolder;
 import org.powermock.reflect.Whitebox;
 
@@ -30,6 +34,52 @@ public class GitDeployCommandTest {
 
     @Rule
     public TemporaryFolder workspace = new TemporaryFolder();
+
+    @Rule
+    public EnvironmentVariables sysEnvVars = new EnvironmentVariables();
+
+    @Test
+    public void setAuthorCommitter() throws Exception {
+        final GitDeployCommand command = new GitDeployCommand();
+        File repo = workspace.newFolder("repo");
+        GitClient git = Git.with(null, null)
+                .in(repo)
+                .getClient();
+        git.init();
+
+        sysEnvVars.set(Constants.GIT_AUTHOR_NAME_KEY, "foo");
+        sysEnvVars.set(Constants.GIT_AUTHOR_EMAIL_KEY, "foo@example.com");
+        sysEnvVars.set(Constants.GIT_COMMITTER_NAME_KEY, "bar");
+        sysEnvVars.set(Constants.GIT_COMMITTER_EMAIL_KEY, "bar@example.com");
+
+        Whitebox.invokeMethod(command, "setAuthor", git);
+        Whitebox.invokeMethod(command, "setCommitter", git);
+
+        FileUtils.write(new File(repo, "f1.txt"), "f1");
+        git.add("f1.txt");
+        git.commit("c1");
+
+        git.withRepository(new RepositoryCallback<Void>() {
+            @Override
+            public Void invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+                try (RevWalk walk = new RevWalk(repo)) {
+                    ObjectId head = repo.resolve("master");
+                    RevCommit commit = walk.parseCommit(head);
+
+                    Assert.assertEquals("c1", commit.getShortMessage());
+
+                    PersonIdent authorIdent = commit.getAuthorIdent();
+                    Assert.assertEquals("foo", authorIdent.getName());
+                    Assert.assertEquals("foo@example.com", authorIdent.getEmailAddress());
+
+                    PersonIdent committerIdent = commit.getCommitterIdent();
+                    Assert.assertEquals("bar", committerIdent.getName());
+                    Assert.assertEquals("bar@example.com", committerIdent.getEmailAddress());
+                }
+                return null;
+            }
+        });
+    }
 
     @Test
     public void cleanWorkingDirectory() throws Exception {

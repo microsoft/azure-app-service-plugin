@@ -26,7 +26,10 @@ import org.eclipse.jgit.dircache.DirCacheBuilder;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.FileMode;
 import org.eclipse.jgit.lib.IndexDiff;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.lib.UserConfig;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.FileTreeIterator;
 import org.eclipse.jgit.treewalk.TreeWalk;
@@ -94,6 +97,9 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
                 return;
             }
 
+            setAuthor(git);
+            setCommitter(git);
+
             git.commit(env.expand(DEPLOY_COMMIT_MESSAGE));
 
             git.push().to(new URIish(pubProfile.gitUrl())).execute();
@@ -124,6 +130,48 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
         }
 
         return tool.getGitExe();
+    }
+
+    /**
+     * Set author according to current git config.
+     *
+     * @param git Git client
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void setAuthor(final GitClient git) throws IOException, InterruptedException {
+        final PersonIdent identity = git.withRepository(new GetAuthorCallback());
+        git.setAuthor(identity);
+    }
+
+    private static final class GetAuthorCallback implements RepositoryCallback<PersonIdent>  {
+        @Override
+        public PersonIdent invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+            final StoredConfig config = repo.getConfig();
+            final UserConfig userConfig = UserConfig.KEY.parse(config);
+            return new PersonIdent(userConfig.getAuthorName(), userConfig.getAuthorEmail());
+        }
+    }
+
+    /**
+     * Set committer according to current git config.
+     *
+     * @param git Git client
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void setCommitter(final GitClient git) throws IOException, InterruptedException {
+        final PersonIdent identity = git.withRepository(new GetCommitterCallback());
+        git.setCommitter(identity);
+    }
+
+    private static final class GetCommitterCallback implements RepositoryCallback<PersonIdent>  {
+        @Override
+        public PersonIdent invoke(Repository repo, VirtualChannel channel) throws IOException, InterruptedException {
+            final StoredConfig config = repo.getConfig();
+            final UserConfig userConfig = UserConfig.KEY.parse(config);
+            return new PersonIdent(userConfig.getCommitterName(), userConfig.getCommitterEmail());
+        }
     }
 
     /**
