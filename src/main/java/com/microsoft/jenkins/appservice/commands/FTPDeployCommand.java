@@ -220,6 +220,9 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             // Need some preparation in some cases
             prepareDirectory(ftpClient, remoteName);
 
+            // Create parent directories recursively
+            makeDirectoryRecursively(ftpClient, remoteName);
+
             if (!ftpClient.setFileType(FTP.BINARY_FILE_TYPE)) {
                 throw new FTPException("Fail to set FTP file type to binary");
             }
@@ -237,6 +240,31 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             final String targetFilePath = FilenameUtils.concat(ftpClient.printWorkingDirectory(), fileName);
             if (targetFilePath.equalsIgnoreCase(FilenameUtils.separatorsToSystem(TOMCAT_ROOT_WAR))) {
                 removeFtpDirectory(ftpClient, TOMCAT_ROOT_DIR);
+            }
+        }
+
+        private void makeDirectoryRecursively(final FTPClient ftpClient, final String fileName) throws IOException {
+            final String currentWorkingDirectory = ftpClient.printWorkingDirectory();
+
+            final String parentPath = FilenameUtils.getPath(fileName);
+            final String[] dirs = parentPath.split("/");
+            for (String dir : dirs) {
+                if (!dir.isEmpty()) {
+                    if (!ftpClient.changeWorkingDirectory(dir)) {
+                        if (!ftpClient.makeDirectory(dir)) {
+                            throw new IOException(
+                                    "Fail to create directory: " + dir + " under " + ftpClient.printWorkingDirectory());
+                        }
+                        if (!ftpClient.changeWorkingDirectory(dir)) {
+                            throw new IOException(
+                                    "Fail to change directory: " + dir + " under " + ftpClient.printWorkingDirectory());
+                        }
+                    }
+                }
+            }
+
+            if (!ftpClient.changeWorkingDirectory(currentWorkingDirectory)) {
+                throw new IOException("Fail to restore working directory to " + currentWorkingDirectory);
             }
         }
     }

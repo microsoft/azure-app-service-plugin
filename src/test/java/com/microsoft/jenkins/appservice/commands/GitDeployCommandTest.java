@@ -291,6 +291,4 @@ public class GitDeployCommandTest {
         changed = Whitebox.<Boolean>invokeMethod(command, "isWorkingTreeChanged", git);
         Assert.assertTrue(changed);
     }
-
-
 }

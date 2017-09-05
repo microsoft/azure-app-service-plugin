@@ -7,18 +7,22 @@ package com.microsoft.jenkins.appservice;
 
 import com.microsoft.azure.management.appservice.FunctionApp;
 import com.microsoft.azure.management.appservice.PublishingProfile;
-import com.microsoft.jenkins.appservice.FunctionAppDeploymentCommandContext;
 import com.microsoft.jenkins.appservice.commands.DeploymentState;
+import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
 import com.microsoft.jenkins.appservice.commands.TransitionInfo;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 
 import static org.mockito.Mockito.mock;
@@ -26,8 +30,11 @@ import static org.mockito.Mockito.when;
 
 public class FunctionAppDeploymentCommandContextTest {
 
+    @Rule
+    public TemporaryFolder workspaceDir = new TemporaryFolder();
+
     @Test
-    public void getterSetter() throws AzureCloudException {
+    public void getterSetter() throws AzureCloudException, IOException {
         FunctionAppDeploymentCommandContext ctx = new FunctionAppDeploymentCommandContext("**/*.js,**/*.json");
 
         Assert.assertEquals("", ctx.getSourceDirectory());
@@ -37,8 +44,9 @@ public class FunctionAppDeploymentCommandContextTest {
         Assert.assertFalse(ctx.getIsFinished());
         Assert.assertEquals(DeploymentState.Unknown, ctx.getDeploymentState());
 
-        ctx.setSourceDirectory("src");
-        Assert.assertEquals("src", ctx.getSourceDirectory());
+        File srcDir = workspaceDir.newFolder();
+        ctx.setSourceDirectory(srcDir.getPath());
+        Assert.assertEquals(srcDir.getPath(), ctx.getSourceDirectory());
 
         ctx.setTargetDirectory("target");
         Assert.assertEquals("target", ctx.getTargetDirectory());
@@ -50,7 +58,7 @@ public class FunctionAppDeploymentCommandContextTest {
 
         final Run run = mock(Run.class);
         final TaskListener listener = mock(TaskListener.class);
-        final FilePath workspace = new FilePath(new File("workspace"));
+        final FilePath workspace = new FilePath(workspaceDir.getRoot());
         final FunctionApp app = mock(FunctionApp.class);
         when(app.getPublishingProfile()).thenReturn(pubProfile);
 
@@ -64,11 +72,11 @@ public class FunctionAppDeploymentCommandContextTest {
     }
 
     @Test
-    public void configure() throws AzureCloudException {
+    public void configureNonJava() throws AzureCloudException {
         FunctionAppDeploymentCommandContext ctx = new FunctionAppDeploymentCommandContext("**/*.js,**/*.json");
 
         final Run run = mock(Run.class);
-        final FilePath workspace = new FilePath(new File("workspace"));
+        final FilePath workspace = new FilePath(workspaceDir.getRoot());
         final TaskListener listener = mock(TaskListener.class);
         final FunctionApp app = mock(FunctionApp.class);
 
@@ -77,5 +85,54 @@ public class FunctionAppDeploymentCommandContextTest {
         Assert.assertTrue(commands.containsKey(GitDeployCommand.class));
         Assert.assertEquals(1, commands.size());
         Assert.assertEquals(ctx.getStartCommandClass().getName(), GitDeployCommand.class.getName());
+    }
+
+    @Test
+    public void configureJava() throws AzureCloudException, IOException {
+        FunctionAppDeploymentCommandContext ctx = new FunctionAppDeploymentCommandContext("**/*.jar,**/*.json");
+
+        File file = new File(workspaceDir.getRoot(), "function.json");
+        FileUtils.write(file, "{\"scriptFile\": \"program.jar\"}");
+
+        final Run run = mock(Run.class);
+        final FilePath workspace = new FilePath(workspaceDir.getRoot());
+        final TaskListener listener = mock(TaskListener.class);
+        final FunctionApp app = mock(FunctionApp.class);
+
+        ctx.configure(run, workspace, listener, app);
+        HashMap<Class, TransitionInfo> commands = ctx.getCommands();
+        Assert.assertTrue(commands.containsKey(FTPDeployCommand.class));
+        Assert.assertEquals(1, commands.size());
+        Assert.assertEquals(ctx.getStartCommandClass().getName(), FTPDeployCommand.class.getName());
+    }
+
+    @Test
+    public void assertGetScriptFileFromConfig() throws IOException, InterruptedException {
+        assertGetScriptFileFromConfig("{\"scriptFile\": \"program.jar\"}", "program.jar");
+        assertGetScriptFileFromConfig("{}", "");
+    }
+
+    private void assertGetScriptFileFromConfig(String content, String expScriptFile) throws IOException, InterruptedException {
+        File file = workspaceDir.newFile();
+        FileUtils.write(file, content);
+
+        String scriptFile = FunctionAppDeploymentCommandContext.getScriptFileFromConfig(new FilePath(file));
+        Assert.assertEquals(expScriptFile, scriptFile);
+    }
+
+    @Test
+    public void assertIsJavaFunction() throws IOException, InterruptedException {
+        assertIsJavaFunction("{\"scriptFile\": \"program.jar\"}", true);
+        assertIsJavaFunction("{\"scriptFile\": \"program.js\"}", false);
+        assertIsJavaFunction("{}", false);
+    }
+
+    public void assertIsJavaFunction(String content, boolean exp) throws IOException, InterruptedException {
+        File file = new File(workspaceDir.getRoot(), "function.json");
+        FileUtils.write(file, content);
+
+        boolean isJava = FunctionAppDeploymentCommandContext.isJavaFunction(
+                new FilePath(workspaceDir.getRoot()), "", "**/*.json");
+        Assert.assertEquals(exp, isJava);
     }
 }
