@@ -24,10 +24,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DockerDeployCommand extends DockerCommand
         implements ICommand<DockerDeployCommand.IDockerDeployCommandData> {
-    private static final String SETTING_DOCKER_IMAGE = "DOCKER_CUSTOM_IMAGE_NAME";
-    private static final String SETTING_REGISTRY_SERVER = "DOCKER_REGISTRY_SERVER_URL";
-    private static final String SETTING_REGISTRY_USERNAME = "DOCKER_REGISTRY_SERVER_USERNAME";
-    private static final String SETTING_REGISTRY_PASSWORD = "DOCKER_REGISTRY_SERVER_PASSWORD";
+    static final String SETTING_DOCKER_IMAGE = "DOCKER_CUSTOM_IMAGE_NAME";
+    static final String SETTING_REGISTRY_SERVER = "DOCKER_REGISTRY_SERVER_URL";
+    static final String SETTING_REGISTRY_USERNAME = "DOCKER_REGISTRY_SERVER_USERNAME";
+    static final String SETTING_REGISTRY_PASSWORD = "DOCKER_REGISTRY_SERVER_PASSWORD";
+    static final String SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE = "WEBSITES_ENABLE_APP_SERVICE_STORAGE";
 
     @Override
     public void execute(final IDockerDeployCommandData context) {
@@ -55,6 +56,9 @@ public class DockerDeployCommand extends DockerCommand
                     update.withPrivateRegistryImage(image, authConfig.getRegistryAddress())
                             .withCredentials(authConfig.getUsername(), authConfig.getPassword());
                 }
+
+                disableSMBShareIfNotSet(webApp, update);
+
                 update.withTags(new HashedMap());
                 webApp.inner().withKind("app");
                 update.apply();
@@ -85,8 +89,11 @@ public class DockerDeployCommand extends DockerCommand
                 appSettings.add(new NameValuePair()
                         .withName(SETTING_REGISTRY_PASSWORD)
                         .withValue(authConfig.getPassword()));
-                siteConfigResourceInner.withLinuxFxVersion(String.format("DOCKER|%s", image));
+
+                disableSMBShareIfNotSet(appSettings);
+
                 siteConfigResourceInner.withAppSettings(appSettings);
+                siteConfigResourceInner.withLinuxFxVersion(String.format("DOCKER|%s", image));
                 azure.webApps().inner().updateConfigurationSlot(
                         webApp.resourceGroupName(), webApp.name(), slot.name(), siteConfigResourceInner);
             }
@@ -96,6 +103,49 @@ public class DockerDeployCommand extends DockerCommand
             context.logError("Fails in updating Azure app service", e);
             context.setDeploymentState(DeploymentState.HasError);
         }
+    }
+
+    /**
+     * Disable SMB share if not set.
+     *
+     * This helps improve the reliability for container apps.
+     * @see <a href=
+     *      "https://docs.microsoft.com/en-us/azure/app-service/containers/app-service-linux-faq#custom-containers">
+     *      Azure App Service Web Apps for Containers FAQ</a>
+     * @param webApp Web App
+     * @param update Update params
+     */
+    static void disableSMBShareIfNotSet(final WebApp webApp, final WebApp.Update update) {
+        if (!webApp.appSettings().containsKey(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)) {
+            update.withAppSetting(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, "false");
+        }
+    }
+
+    /**
+     * Disable SMB share if not set.
+     *
+     * This helps improve the reliability for container apps.
+     * @see <a href=
+     *      "https://docs.microsoft.com/en-us/azure/app-service/containers/app-service-linux-faq#custom-containers">
+     *      Azure App Service Web Apps for Containers FAQ</a>
+     * @param appSettings App settings
+     */
+    static void disableSMBShareIfNotSet(final List<NameValuePair> appSettings) {
+        if (!isAppSettingsContainKey(appSettings, SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)) {
+            appSettings.add(new NameValuePair()
+                    .withName(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)
+                    .withValue("false")
+            );
+        }
+    }
+
+    private static boolean isAppSettingsContainKey(final List<NameValuePair> appSettings, final String name) {
+        for (NameValuePair setting : appSettings) {
+            if (setting.name().equalsIgnoreCase(name)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public interface IDockerDeployCommandData extends IBaseCommandData {
