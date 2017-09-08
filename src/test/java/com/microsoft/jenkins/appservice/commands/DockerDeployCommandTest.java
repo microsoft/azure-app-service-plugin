@@ -7,15 +7,12 @@
 package com.microsoft.jenkins.appservice.commands;
 
 import com.microsoft.azure.management.appservice.AppSetting;
-import com.microsoft.azure.management.appservice.NameValuePair;
+import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.WebApp;
-import org.junit.Assert;
+import com.microsoft.azure.management.appservice.WebAppBase;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,61 +23,48 @@ import static org.mockito.Mockito.when;
 
 public class DockerDeployCommandTest {
 
-    @Test
-    public void disableSMBShareIfNotSet() {
-        // Not set
-        Map<String, AppSetting> appSettings = new HashMap<>();
-        WebApp.Update update = mock(WebApp.Update.class);
-        WebApp webApp = mock(WebApp.class);
+    private void assertDisableSMBShareIfNotSet(
+            WebAppBase.Update update, Map<String, AppSetting> appSettings, boolean shouldSet) {
+        WebAppBase webApp = mock(WebAppBase.class);
         when(webApp.appSettings()).thenReturn(appSettings);
 
         DockerDeployCommand.disableSMBShareIfNotSet(webApp, update);
-        verify(update).withAppSetting(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, "false");
+
+        if (shouldSet) {
+            verify(update).withAppSetting(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, "false");
+        } else {
+            verify(update, never()).withAppSetting(anyString(), anyString());
+        }
+    }
+
+    private <T extends WebAppBase.Update> void disableSMBShareIfNotSet(Class<T> clazz) {
+        // Not set
+        assertDisableSMBShareIfNotSet(mock(clazz), new HashMap<String, AppSetting>(), true);
 
         // Set to true
-        appSettings = new HashMap(){
+        assertDisableSMBShareIfNotSet(mock(clazz), new HashMap<String, AppSetting>() {
             {
-                put(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, "true");
+                AppSetting appSetting = mock(AppSetting.class);
+                when(appSetting.key()).thenReturn(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE);
+                when(appSetting.value()).thenReturn("true");
+                put(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, appSetting);
             }
-        };
-        update = mock(WebApp.Update.class);
-        when(webApp.appSettings()).thenReturn(appSettings);
-
-        DockerDeployCommand.disableSMBShareIfNotSet(webApp, update);
-        verify(update, never()).withAppSetting(anyString(), anyString());
+        }, false);
 
         // Set to false
-        appSettings = new HashMap(){
+        assertDisableSMBShareIfNotSet(mock(clazz), new HashMap<String, AppSetting>() {
             {
-                put(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, "false");
+                AppSetting appSetting = mock(AppSetting.class);
+                when(appSetting.key()).thenReturn(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE);
+                when(appSetting.value()).thenReturn("false");
+                put(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, appSetting);
             }
-        };
-        update = mock(WebApp.Update.class);
-        when(webApp.appSettings()).thenReturn(appSettings);
-
-        DockerDeployCommand.disableSMBShareIfNotSet(webApp, update);
-        verify(update, never()).withAppSetting(anyString(), anyString());
+        }, false);
     }
 
     @Test
-    public void disableSMBShareIfNotSetSlot() {
-        // Not set
-        List<NameValuePair> appSettings = new ArrayList<>();
-        DockerDeployCommand.disableSMBShareIfNotSet(appSettings);
-        Assert.assertEquals("false", appSettings.get(0).value());
-
-        // Set to true
-        appSettings = Arrays.asList(
-            new NameValuePair().withName(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE).withValue("true")
-        );
-        DockerDeployCommand.disableSMBShareIfNotSet(appSettings);
-        Assert.assertEquals("true", appSettings.get(0).value());
-
-        // Set to false
-        appSettings = Arrays.asList(
-            new NameValuePair().withName(DockerDeployCommand.SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE).withValue("false")
-        );
-        DockerDeployCommand.disableSMBShareIfNotSet(appSettings);
-        Assert.assertEquals("false", appSettings.get(0).value());
+    public void disableSMBShareIfNotSet() {
+        disableSMBShareIfNotSet(WebApp.Update.class);
+        disableSMBShareIfNotSet(DeploymentSlot.Update.class);
     }
 }

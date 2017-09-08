@@ -9,22 +9,18 @@ package com.microsoft.jenkins.appservice.commands;
 import com.github.dockerjava.api.model.AuthConfig;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.DeploymentSlot;
-import com.microsoft.azure.management.appservice.NameValuePair;
 import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
 import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.util.TokenCache;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DockerDeployCommand extends DockerCommand
         implements ICommand<DockerDeployCommand.IDockerDeployCommandData> {
-    static final String SETTING_DOCKER_IMAGE = "DOCKER_CUSTOM_IMAGE_NAME";
     static final String SETTING_REGISTRY_SERVER = "DOCKER_REGISTRY_SERVER_URL";
     static final String SETTING_REGISTRY_USERNAME = "DOCKER_REGISTRY_SERVER_USERNAME";
     static final String SETTING_REGISTRY_PASSWORD = "DOCKER_REGISTRY_SERVER_PASSWORD";
@@ -68,6 +64,15 @@ public class DockerDeployCommand extends DockerCommand
                 final DeploymentSlot slot = webApp.deploymentSlots().getByName(slotName);
                 checkNotNull(slot, "Deployment slot not found:" + slotName);
 
+                DeploymentSlot.Update update = slot.update();
+                update.withAppSetting(SETTING_REGISTRY_SERVER, authConfig.getRegistryAddress());
+                update.withAppSetting(SETTING_REGISTRY_USERNAME, authConfig.getUsername());
+                update.withAppSetting(SETTING_REGISTRY_PASSWORD, authConfig.getPassword());
+
+                disableSMBShareIfNotSet(slot, update);
+
+                update.apply();
+
                 final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(
                         context.getAzureCredentialsId());
                 final Azure azure = TokenCache.getInstance(sp).getAzureClient();
@@ -76,23 +81,6 @@ public class DockerDeployCommand extends DockerCommand
                         slot.resourceGroupName(), webApp.name(), slotName);
                 checkNotNull(siteConfigResourceInner, "Configuration not found for slot:" + slotName);
 
-                List<NameValuePair> appSettings = new ArrayList<>();
-                appSettings.add(new NameValuePair()
-                        .withName(SETTING_DOCKER_IMAGE)
-                        .withValue(image));
-                appSettings.add(new NameValuePair()
-                        .withName(SETTING_REGISTRY_SERVER)
-                        .withValue(authConfig.getRegistryAddress()));
-                appSettings.add(new NameValuePair()
-                        .withName(SETTING_REGISTRY_USERNAME)
-                        .withValue(authConfig.getUsername()));
-                appSettings.add(new NameValuePair()
-                        .withName(SETTING_REGISTRY_PASSWORD)
-                        .withValue(authConfig.getPassword()));
-
-                disableSMBShareIfNotSet(appSettings);
-
-                siteConfigResourceInner.withAppSettings(appSettings);
                 siteConfigResourceInner.withLinuxFxVersion(String.format("DOCKER|%s", image));
                 azure.webApps().inner().updateConfigurationSlot(
                         webApp.resourceGroupName(), webApp.name(), slot.name(), siteConfigResourceInner);
@@ -112,40 +100,13 @@ public class DockerDeployCommand extends DockerCommand
      * @see <a href=
      *      "https://docs.microsoft.com/en-us/azure/app-service/containers/app-service-linux-faq#custom-containers">
      *      Azure App Service Web Apps for Containers FAQ</a>
-     * @param webApp Web App
+     * @param webApp Web app
      * @param update Update params
      */
-    static void disableSMBShareIfNotSet(final WebApp webApp, final WebApp.Update update) {
+    static void disableSMBShareIfNotSet(final WebAppBase webApp, final WebAppBase.Update update) {
         if (!webApp.appSettings().containsKey(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)) {
             update.withAppSetting(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, "false");
         }
-    }
-
-    /**
-     * Disable SMB share if not set.
-     *
-     * This helps improve the reliability for container apps.
-     * @see <a href=
-     *      "https://docs.microsoft.com/en-us/azure/app-service/containers/app-service-linux-faq#custom-containers">
-     *      Azure App Service Web Apps for Containers FAQ</a>
-     * @param appSettings App settings
-     */
-    static void disableSMBShareIfNotSet(final List<NameValuePair> appSettings) {
-        if (!isAppSettingsContainKey(appSettings, SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)) {
-            appSettings.add(new NameValuePair()
-                    .withName(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)
-                    .withValue("false")
-            );
-        }
-    }
-
-    private static boolean isAppSettingsContainKey(final List<NameValuePair> appSettings, final String name) {
-        for (NameValuePair setting : appSettings) {
-            if (setting.name().equalsIgnoreCase(name)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public interface IDockerDeployCommandData extends IBaseCommandData {
