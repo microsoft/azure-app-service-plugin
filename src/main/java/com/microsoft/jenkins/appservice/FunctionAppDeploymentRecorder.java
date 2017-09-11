@@ -9,7 +9,7 @@ package com.microsoft.jenkins.appservice;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.FunctionApp;
 import com.microsoft.azure.util.AzureCredentials;
-import com.microsoft.jenkins.appservice.util.TokenCache;
+import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import com.microsoft.jenkins.services.CommandService;
 import hudson.AbortException;
@@ -59,8 +59,7 @@ public class FunctionAppDeploymentRecorder extends BaseDeploymentRecorder {
 
         // Get app info
         final String azureCredentialsId = getAzureCredentialsId();
-        final Azure azureClient = TokenCache.getInstance(AzureCredentials.getServicePrincipal(azureCredentialsId))
-                .getAzureClient();
+        final Azure azureClient = AzureUtils.buildAzureClient(AzureCredentials.getServicePrincipal(azureCredentialsId));
         final String resourceGroup = getResourceGroup();
         final String appName = getAppName();
         final FunctionApp app = azureClient.appServices().functionApps().getByResourceGroup(resourceGroup, appName);
@@ -115,8 +114,8 @@ public class FunctionAppDeploymentRecorder extends BaseDeploymentRecorder {
         public ListBoxModel doFillAppNameItems(@QueryParameter final String azureCredentialsId,
                                                @QueryParameter final String resourceGroup) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
-                final Azure azureClient = TokenCache.getInstance(
-                        AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+                final Azure azureClient = AzureUtils.buildAzureClient(
+                        AzureCredentials.getServicePrincipal(azureCredentialsId));
                 return listAppNameItems(azureClient.appServices().functionApps(), resourceGroup);
             } else {
                 return new ListBoxModel(new ListBoxModel.Option(""));

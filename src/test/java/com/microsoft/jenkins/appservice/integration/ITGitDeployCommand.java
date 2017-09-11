@@ -5,14 +5,20 @@
  */
 package com.microsoft.jenkins.appservice.integration;
 
-import com.microsoft.azure.management.appservice.*;
+import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.appservice.AppServicePlan;
+import com.microsoft.azure.management.appservice.OperatingSystem;
+import com.microsoft.azure.management.appservice.PhpVersion;
+import com.microsoft.azure.management.appservice.PythonVersion;
+import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.resources.ResourceGroup;
+import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
+import com.microsoft.jenkins.appservice.util.AzureUtils;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.StreamBuildListener;
 import hudson.model.TaskListener;
-import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -43,15 +49,17 @@ public class ITGitDeployCommand extends IntegrationTest {
         commandDataMock = mock(GitDeployCommand.IGitDeployCommandData.class);
         setUpBaseCommandMockErrorHandling(commandDataMock);
 
+        Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+
         // Create resource group
-        final ResourceGroup resourceGroup = customTokenCache.getAzureClient().resourceGroups()
+        final ResourceGroup resourceGroup = azureClient.resourceGroups()
                 .define(testEnv.azureResourceGroup)
                 .withRegion(testEnv.azureLocation)
                 .create();
         Assert.assertNotNull(resourceGroup);
 
         // Create app service plan
-        appServicePlan = customTokenCache.getAzureClient().appServices().appServicePlans()
+        appServicePlan = azureClient.appServices().appServicePlans()
                 .define(testEnv.appServicePlanName)
                 .withRegion(testEnv.azureLocation)
                 .withNewResourceGroup(testEnv.azureResourceGroup)
@@ -89,7 +97,8 @@ public class ITGitDeployCommand extends IntegrationTest {
      */
     @Test
     public void deployNodeJS() throws IOException, InterruptedException {
-        final WebApp webApp = customTokenCache.getAzureClient().appServices().webApps()
+        final Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+        final WebApp webApp = azureClient.appServices().webApps()
                 .define(testEnv.appServiceName)
                 .withExistingWindowsPlan(appServicePlan)
                 .withExistingResourceGroup(testEnv.azureResourceGroup)
@@ -114,7 +123,8 @@ public class ITGitDeployCommand extends IntegrationTest {
      */
     @Test
     public void deployPHP() throws IOException, InterruptedException {
-        final WebApp webApp = customTokenCache.getAzureClient().appServices().webApps()
+        final Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+        final WebApp webApp = azureClient.appServices().webApps()
                 .define(testEnv.appServiceName)
                 .withExistingWindowsPlan(appServicePlan)
                 .withExistingResourceGroup(testEnv.azureResourceGroup)
@@ -138,7 +148,8 @@ public class ITGitDeployCommand extends IntegrationTest {
      */
     @Test
     public void deployPython() throws IOException, InterruptedException {
-        final WebApp webApp = customTokenCache.getAzureClient().appServices().webApps()
+        final Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+        final WebApp webApp = azureClient.appServices().webApps()
                 .define(testEnv.appServiceName)
                 .withExistingWindowsPlan(appServicePlan)
                 .withExistingResourceGroup(testEnv.azureResourceGroup)

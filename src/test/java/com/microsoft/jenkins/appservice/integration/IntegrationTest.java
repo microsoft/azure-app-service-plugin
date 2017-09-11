@@ -11,7 +11,7 @@ import com.microsoft.azure.management.appservice.SkuDescription;
 import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.commands.IBaseCommandData;
-import com.microsoft.jenkins.appservice.util.TokenCache;
+import com.microsoft.jenkins.appservice.util.AzureUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -122,7 +122,6 @@ public class IntegrationTest {
         }
     }
 
-    protected TokenCache customTokenCache = null;
     protected TestEnvironment testEnv = null;
     protected AzureCredentials.ServicePrincipal servicePrincipal = null;
 
@@ -139,7 +138,6 @@ public class IntegrationTest {
                 testEnv.authenticationEndpoint,
                 testEnv.resourceManagerEndpoint,
                 testEnv.graphEndpoint);
-        customTokenCache = TokenCache.getInstance(servicePrincipal);
         clearAzureResources();
     }
 
@@ -150,7 +148,7 @@ public class IntegrationTest {
 
     protected void clearAzureResources() {
         try {
-            customTokenCache.getAzureClient().resourceGroups().deleteByName(testEnv.azureResourceGroup);
+            AzureUtils.buildAzureClient(servicePrincipal).resourceGroups().deleteByName(testEnv.azureResourceGroup);
         } catch (CloudException e) {
             if (e.response().code() != 404) {
                 LOGGER.log(Level.SEVERE, null, e);

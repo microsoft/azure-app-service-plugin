@@ -13,7 +13,7 @@ import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
 import com.microsoft.azure.util.AzureCredentials;
-import com.microsoft.jenkins.appservice.util.TokenCache;
+import com.microsoft.jenkins.appservice.util.AzureUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 
@@ -75,7 +75,7 @@ public class DockerDeployCommand extends DockerCommand
 
                 final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(
                         context.getAzureCredentialsId());
-                final Azure azure = TokenCache.getInstance(sp).getAzureClient();
+                final Azure azure = AzureUtils.buildAzureClient(sp);
 
                 final SiteConfigResourceInner siteConfigResourceInner = azure.webApps().inner().getConfigurationSlot(
                         slot.resourceGroupName(), webApp.name(), slotName);

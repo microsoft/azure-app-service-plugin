@@ -15,8 +15,8 @@ import com.microsoft.azure.management.appservice.implementation.WebAppsInner;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.fluentcore.model.HasInner;
 import com.microsoft.azure.util.AzureCredentials;
+import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.appservice.util.Constants;
-import com.microsoft.jenkins.appservice.util.TokenCache;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
@@ -138,8 +138,8 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
             final ListBoxModel model = new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
             // list all resource groups
             if (StringUtils.isNotBlank(azureCredentialsId)) {
-                final Azure azureClient = TokenCache.getInstance(
-                        AzureCredentials.getServicePrincipal(azureCredentialsId)).getAzureClient();
+                final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(azureCredentialsId);
+                final Azure azureClient = AzureUtils.buildAzureClient(sp);
                 for (final ResourceGroup rg : azureClient.resourceGroups().list()) {
                     model.add(rg.name());
                 }

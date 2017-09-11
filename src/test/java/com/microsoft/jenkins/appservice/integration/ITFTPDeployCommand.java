@@ -5,8 +5,10 @@
  */
 package com.microsoft.jenkins.appservice.integration;
 
+import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.*;
 import com.microsoft.azure.management.resources.ResourceGroup;
+import com.microsoft.jenkins.appservice.util.AzureUtils;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.StreamBuildListener;
@@ -42,14 +44,16 @@ public class ITFTPDeployCommand extends IntegrationTest {
         when(commandDataMock.getListener()).thenReturn(listener);
         setUpBaseCommandMockErrorHandling(commandDataMock);
 
+        Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+
         // Setup web app
-        final ResourceGroup resourceGroup = customTokenCache.getAzureClient().resourceGroups()
+        final ResourceGroup resourceGroup = azureClient.resourceGroups()
                 .define(testEnv.azureResourceGroup)
                 .withRegion(testEnv.azureLocation)
                 .create();
         Assert.assertNotNull(resourceGroup);
 
-        final AppServicePlan asp = customTokenCache.getAzureClient().appServices().appServicePlans()
+        final AppServicePlan asp = azureClient.appServices().appServicePlans()
                 .define(testEnv.appServicePlanName)
                 .withRegion(testEnv.azureLocation)
                 .withNewResourceGroup(testEnv.azureResourceGroup)
@@ -58,7 +62,7 @@ public class ITFTPDeployCommand extends IntegrationTest {
                 .create();
         Assert.assertNotNull(asp);
 
-        webApp = customTokenCache.getAzureClient().appServices().webApps()
+        webApp = azureClient.appServices().webApps()
                 .define(testEnv.appServiceName)
                 .withExistingWindowsPlan(asp)
                 .withExistingResourceGroup(testEnv.azureResourceGroup)
