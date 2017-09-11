@@ -6,6 +6,7 @@
 package com.microsoft.jenkins.appservice.commands;
 
 import com.microsoft.azure.management.appservice.PublishingProfile;
+import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.jenkins.appservice.util.FilePathUtils;
 import hudson.FilePath;
 import hudson.Util;
@@ -59,6 +60,9 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             ftpUrl = ftpUrl.substring(0, splitIndex);
         }
 
+        // Stop app first to make sure all opening handlers released
+        context.getWebAppBase().stop();
+
         try {
             workspace.act(new FTPDeployCommandOnSlave(
                 context.getListener(),
@@ -75,6 +79,8 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+
+        context.getWebAppBase().start();
     }
 
     private static final class FTPDeployCommandOnSlave extends MasterToSlaveCallable<Void, FTPException> {
@@ -278,5 +284,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         String getSourceDirectory();
 
         String getTargetDirectory();
+
+        WebAppBase getWebAppBase();
     }
 }

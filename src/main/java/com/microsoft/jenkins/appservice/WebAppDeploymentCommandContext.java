@@ -9,6 +9,7 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.jenkins.appservice.commands.AbstractCommandContext;
 import com.microsoft.jenkins.appservice.commands.DefaultDockerClientBuilder;
 import com.microsoft.jenkins.appservice.commands.DeploymentState;
@@ -93,6 +94,8 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
             final FilePath workspace,
             final TaskListener listener,
             final WebApp app) throws AzureCloudException {
+        this.webApp = app;
+
         if (StringUtils.isBlank(slotName)) {
             // Deploy to default
             pubProfile = app.getPublishingProfile();
@@ -111,7 +114,6 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
         Class startCommandClass;
         if (StringUtils.isNotBlank(publishType) && publishType.equalsIgnoreCase(PUBLISH_TYPE_DOCKER)) {
             startCommandClass = DockerBuildCommand.class;
-            this.webApp = app;
             commands.put(DockerBuildCommand.class, new TransitionInfo(
                     new DockerBuildCommand(), DockerPushCommand.class, null));
             commands.put(DockerPushCommand.class, new TransitionInfo(
@@ -182,6 +184,11 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
 
     @Override
     public WebApp getWebApp() {
+        return webApp;
+    }
+
+    @Override
+    public WebAppBase getWebAppBase() {
         return webApp;
     }
 
