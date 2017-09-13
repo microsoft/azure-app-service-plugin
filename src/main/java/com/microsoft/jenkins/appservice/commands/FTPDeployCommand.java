@@ -23,6 +23,8 @@ import java.io.InputStream;
 public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCommandData> {
 
     private static final String SITE_ROOT = "/site/wwwroot/";
+    private static final int MAX_RETRY = 10;
+    private static final int RETRY_INTERVAL = 1000;
 
     // Java specific
     private static final String TOMCAT_ROOT_WAR = SITE_ROOT + "webapps/ROOT.war";
@@ -233,10 +235,24 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
                 throw new FTPException("Fail to set FTP file type to binary");
             }
 
-            try (InputStream stream = file.read()) {
-                if (!ftpClient.storeFile(remoteName, stream)) {
-                    throw new FTPException("Fail to upload file to: " + remoteName);
+            // Retry if upload failed.
+            // This is usually caused by file still opened by another process.
+            boolean storeSuccess = false;
+            for (int i = 0; i < MAX_RETRY; i++) {
+                try (InputStream stream = file.read()) {
+                    storeSuccess = ftpClient.storeFile(remoteName, stream);
                 }
+                if (!storeSuccess) {
+                    listener.getLogger().println(String.format(
+                            "Fail to upload file. File may still be opened by another process. Retry for %d times.",
+                            i + 1));
+                    Thread.sleep(RETRY_INTERVAL);
+                } else {
+                    break;
+                }
+            }
+            if (!storeSuccess) {
+                throw new FTPException("Fail to upload file to: " + remoteName);
             }
         }
 
