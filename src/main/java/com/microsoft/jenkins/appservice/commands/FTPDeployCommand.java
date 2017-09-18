@@ -25,6 +25,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
     private static final String SITE_ROOT = "/site/wwwroot/";
     private static final int MAX_RETRY = 10;
     private static final int RETRY_INTERVAL = 1000;
+    private static final String STATE_STOPPED = "Stopped";
 
     // Java specific
     private static final String TOMCAT_ROOT_WAR = SITE_ROOT + "webapps/ROOT.war";
@@ -63,7 +64,10 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         }
 
         // Stop app first to make sure all opening handlers released
-        context.getWebAppBase().stop();
+        boolean isStoppedBeforeDeployment = context.getWebAppBase().state().equals(STATE_STOPPED);
+        if (!isStoppedBeforeDeployment) {
+            context.getWebAppBase().stop();
+        }
 
         try {
             workspace.act(new FTPDeployCommandOnSlave(
@@ -82,7 +86,9 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
             Thread.currentThread().interrupt();
         }
 
-        context.getWebAppBase().start();
+        if (!isStoppedBeforeDeployment) {
+            context.getWebAppBase().start();
+        }
     }
 
     private static final class FTPDeployCommandOnSlave extends MasterToSlaveCallable<Void, FTPException> {
