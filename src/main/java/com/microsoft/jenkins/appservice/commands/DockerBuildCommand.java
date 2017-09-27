@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Microsoft Corporation. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for
  * license information.
@@ -11,6 +11,10 @@ import com.github.dockerjava.api.model.BuildResponseItem;
 import com.github.dockerjava.api.model.ResponseItem;
 import com.github.dockerjava.core.command.BuildImageResultCallback;
 import com.google.common.collect.Sets;
+import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.command.CommandState;
+import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
@@ -25,12 +29,13 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
     @Override
     public void execute(final IDockerBuildCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
+        final JobContext jobContext = context.getJobContext();
 
         try {
             final String image = imageAndTag(dockerBuildInfo);
             context.logStatus(String.format("Building new docker image `%s`", image));
 
-            final FilePath workspace = context.getWorkspace();
+            final FilePath workspace = jobContext.getWorkspace();
             if (workspace == null) {
                 throw new AzureCloudException("workspace is not available at this time.");
             }
@@ -38,14 +43,19 @@ public class DockerBuildCommand extends DockerCommand implements ICommand<Docker
             final FilePath dockerfile = findDockerFile(workspace, dockerBuildInfo.getDockerfile());
             context.logStatus("Dockerfile found: " + dockerfile.getRemote());
 
-            final String imageId = workspace.act(new DockerBuildCommandOnSlave(
-                    context.getListener(), context.getDockerClientBuilder(), dockerBuildInfo, dockerfile, image));
+            final String imageId = workspace.act(
+                    new DockerBuildCommandOnSlave(
+                            jobContext.getTaskListener(),
+                            context.getDockerClientBuilder(),
+                            dockerBuildInfo,
+                            dockerfile,
+                            image));
             dockerBuildInfo.setImageId(imageId);
 
-            context.setDeploymentState(DeploymentState.Success);
+            context.setCommandState(CommandState.Success);
         } catch (AzureCloudException | InterruptedException | IOException e) {
             context.logStatus("Build failed for " + e.getMessage());
-            context.setDeploymentState(DeploymentState.HasError);
+            context.setCommandState(CommandState.HasError);
         }
     }
 

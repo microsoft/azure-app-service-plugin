@@ -9,6 +9,10 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.jenkins.appservice.util.FilePathUtils;
+import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.command.CommandState;
+import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.command.ICommand;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Util;
@@ -52,15 +56,16 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
 
     @Override
     public void execute(final IGitDeployCommandData context) {
+        final JobContext jobContext = context.getJobContext();
         try {
             final PublishingProfile pubProfile = context.getPublishingProfile();
-            final Run run = context.getRun();
-            final TaskListener listener = context.getListener();
+            final Run run = jobContext.getRun();
+            final TaskListener listener = jobContext.getTaskListener();
             final EnvVars env = run.getEnvironment(listener);
-            final FilePath ws = context.getWorkspace();
+            final FilePath ws = jobContext.getWorkspace();
             if (ws == null) {
                 context.logError("Workspace is null");
-                context.setDeploymentState(DeploymentState.HasError);
+                context.setCommandState(CommandState.HasError);
                 return;
             }
             final FilePath repo = ws.child(DEPLOY_REPO);
@@ -93,7 +98,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
 
             if (!isWorkingTreeChanged(git)) {
                 context.logStatus("Deploy repository is up-to-date. Nothing to commit.");
-                context.setDeploymentState(DeploymentState.Success);
+                context.setCommandState(CommandState.Success);
                 return;
             }
 
@@ -104,12 +109,12 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
 
             git.push().to(new URIish(pubProfile.gitUrl())).execute();
 
-            context.setDeploymentState(DeploymentState.Success);
+            context.setCommandState(CommandState.Success);
 
         } catch (IOException | InterruptedException | URISyntaxException e) {
             e.printStackTrace();
             context.logError("Fail to deploy using Git: " + e.getMessage());
-            context.setDeploymentState(DeploymentState.HasError);
+            context.setCommandState(CommandState.HasError);
         }
     }
 

@@ -72,7 +72,7 @@ public class ITGitDeployCommand extends IntegrationTest {
         File workspaceDir = com.google.common.io.Files.createTempDir();
         workspaceDir.deleteOnExit();
         workspace = new FilePath(workspaceDir);
-        when(commandDataMock.getWorkspace()).thenReturn(workspace);
+        when(commandDataMock.getJobContext().getWorkspace()).thenReturn(workspace);
 
         // Mock run
         final Run run = mock(Run.class);
@@ -83,11 +83,11 @@ public class ITGitDeployCommand extends IntegrationTest {
             e.printStackTrace();
             Assert.fail(e.getMessage());
         }
-        when(commandDataMock.getRun()).thenReturn(run);
+        when(commandDataMock.getJobContext().getRun()).thenReturn(run);
 
         // Mock task listener
         final TaskListener listener = new StreamBuildListener(System.out, Charset.defaultCharset());
-        when(commandDataMock.getListener()).thenReturn(listener);
+        when(commandDataMock.getJobContext().getTaskListener()).thenReturn(listener);
     }
 
     /**

@@ -10,9 +10,7 @@ import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.WebAppBase;
-import com.microsoft.jenkins.appservice.commands.AbstractCommandContext;
 import com.microsoft.jenkins.appservice.commands.DefaultDockerClientBuilder;
-import com.microsoft.jenkins.appservice.commands.DeploymentState;
 import com.microsoft.jenkins.appservice.commands.DockerBuildCommand;
 import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
 import com.microsoft.jenkins.appservice.commands.DockerClientBuilder;
@@ -21,19 +19,22 @@ import com.microsoft.jenkins.appservice.commands.DockerPushCommand;
 import com.microsoft.jenkins.appservice.commands.DockerRemoveImageCommand;
 import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
-import com.microsoft.jenkins.appservice.commands.IBaseCommandData;
-import com.microsoft.jenkins.appservice.commands.ICommand;
-import com.microsoft.jenkins.appservice.commands.TransitionInfo;
+import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.command.BaseCommandContext;
+import com.microsoft.jenkins.azurecommons.command.CommandService;
+import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.Util;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
 
-import java.util.HashMap;
-
-public class WebAppDeploymentCommandContext extends AbstractCommandContext
+public class WebAppDeploymentCommandContext extends BaseCommandContext
         implements FTPDeployCommand.IFTPDeployCommandData,
         GitDeployCommand.IGitDeployCommandData,
         DockerBuildCommand.IDockerBuildCommandData,
@@ -92,6 +93,7 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
     public void configure(
             final Run<?, ?> run,
             final FilePath workspace,
+            final Launcher launcher,
             final TaskListener listener,
             final WebApp app) throws AzureCloudException {
         this.webApp = app;
@@ -109,38 +111,31 @@ public class WebAppDeploymentCommandContext extends AbstractCommandContext
             pubProfile = slot.getPublishingProfile();
         }
 
-        HashMap<Class, TransitionInfo> commands = new HashMap<>();
+        CommandService.Builder builder = CommandService.builder();
 
         Class startCommandClass;
         if (StringUtils.isNotBlank(publishType) && publishType.equalsIgnoreCase(PUBLISH_TYPE_DOCKER)) {
-            startCommandClass = DockerBuildCommand.class;
-            commands.put(DockerBuildCommand.class, new TransitionInfo(
-                    new DockerBuildCommand(), DockerPushCommand.class, null));
-            commands.put(DockerPushCommand.class, new TransitionInfo(
-                    new DockerPushCommand(), DockerDeployCommand.class, null));
+            builder.withStartCommand(DockerBuildCommand.class);
+            builder.withTransition(DockerBuildCommand.class, DockerPushCommand.class);
+            builder.withTransition(DockerPushCommand.class, DockerDeployCommand.class);
             if (deleteTempImage) {
-                commands.put(DockerDeployCommand.class, new TransitionInfo(
-                        new DockerDeployCommand(), DockerRemoveImageCommand.class, null));
-                commands.put(DockerRemoveImageCommand.class, new TransitionInfo(
-                        new DockerRemoveImageCommand(), null, null));
-            } else {
-                commands.put(DockerDeployCommand.class, new TransitionInfo(
-                        new DockerDeployCommand(), null, null));
+                builder.withTransition(DockerDeployCommand.class, DockerRemoveImageCommand.class);
             }
         } else if (app.javaVersion() != JavaVersion.OFF) {
             // For Java application, use FTP-based deployment as it's the recommended way
-            startCommandClass = FTPDeployCommand.class;
-            commands.put(FTPDeployCommand.class, new TransitionInfo(
-                    new FTPDeployCommand(), null, null));
+            builder.withStartCommand(FTPDeployCommand.class);
         } else {
             // For non-Java application, use Git-based deployment
-            startCommandClass = GitDeployCommand.class;
-            commands.put(GitDeployCommand.class, new TransitionInfo(
-                    new GitDeployCommand(), null, null));
+            builder.withStartCommand(GitDeployCommand.class);
         }
 
-        super.configure(run, workspace, listener, commands, startCommandClass);
-        this.setDeploymentState(DeploymentState.Running);
+        JobContext jobContext = new JobContext(run, workspace, launcher, listener);
+        super.configure(jobContext, builder.build());
+    }
+
+    @Override
+    public StepExecution startImpl(StepContext context) throws Exception {
+        return null;
     }
 
     @Override

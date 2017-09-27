@@ -7,6 +7,10 @@
 package com.microsoft.jenkins.appservice.commands;
 
 import com.github.dockerjava.api.DockerClient;
+import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.command.CommandState;
+import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import jenkins.security.MasterToSlaveCallable;
 
@@ -21,18 +25,19 @@ public class DockerRemoveImageCommand extends DockerCommand
     @Override
     public void execute(final IDockerRemoveImageCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
+        final JobContext jobContext = context.getJobContext();
 
         final String imageId = dockerBuildInfo.getImageId();
         context.logStatus(String.format("Removing docker image `%s` from current build agent.", imageId));
 
         try {
-            context.getWorkspace().act(new DockerRemoveCommandOnSlave(
+            jobContext.getWorkspace().act(new DockerRemoveCommandOnSlave(
                     context.getDockerClientBuilder(), dockerBuildInfo, imageId));
             context.logStatus("Remove completed.");
-            context.setDeploymentState(DeploymentState.Success);
+            context.setCommandState(CommandState.Success);
         } catch (IOException | InterruptedException | AzureCloudException e) {
             context.logError("Fail to remove docker image: " + e.getMessage());
-            context.setDeploymentState(DeploymentState.HasError);
+            context.setCommandState(CommandState.HasError);
         }
     }
 

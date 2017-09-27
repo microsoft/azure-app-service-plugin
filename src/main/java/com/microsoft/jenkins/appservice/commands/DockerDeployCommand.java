@@ -14,6 +14,9 @@ import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
 import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
+import com.microsoft.jenkins.azurecommons.command.CommandState;
+import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.command.ICommand;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 
@@ -85,11 +88,11 @@ public class DockerDeployCommand extends DockerCommand
                 azure.webApps().inner().updateConfigurationSlot(
                         webApp.resourceGroupName(), webApp.name(), slot.name(), siteConfigResourceInner);
             }
-            context.setDeploymentState(DeploymentState.Success);
+            context.setCommandState(CommandState.Success);
             context.logStatus("Azure app service updated successfully.");
         } catch (Exception e) {
             context.logError("Fails in updating Azure app service", e);
-            context.setDeploymentState(DeploymentState.HasError);
+            context.setCommandState(CommandState.HasError);
         }
     }
 

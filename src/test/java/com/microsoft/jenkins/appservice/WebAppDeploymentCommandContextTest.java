@@ -5,18 +5,28 @@
  */
 package com.microsoft.jenkins.appservice;
 
-import com.microsoft.azure.management.appservice.*;
+import com.google.common.collect.ImmutableSet;
+import com.microsoft.azure.management.appservice.DeploymentSlot;
+import com.microsoft.azure.management.appservice.DeploymentSlots;
+import com.microsoft.azure.management.appservice.JavaVersion;
+import com.microsoft.azure.management.appservice.PublishingProfile;
+import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.jenkins.appservice.commands.DockerBuildCommand;
+import com.microsoft.jenkins.appservice.commands.DockerDeployCommand;
+import com.microsoft.jenkins.appservice.commands.DockerPushCommand;
+import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
+import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
+import com.microsoft.jenkins.azurecommons.command.CommandService;
+import com.microsoft.jenkins.azurecommons.command.CommandState;
+import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import com.microsoft.jenkins.appservice.WebAppDeploymentCommandContext;
-import com.microsoft.jenkins.appservice.commands.*;
-import com.microsoft.jenkins.exceptions.AzureCloudException;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.HashMap;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -30,9 +40,9 @@ public class WebAppDeploymentCommandContextTest {
         Assert.assertEquals("", ctx.getSourceDirectory());
         Assert.assertEquals("", ctx.getTargetDirectory());
         Assert.assertEquals("sample.war", ctx.getFilePath());
-        Assert.assertFalse(ctx.getHasError());
-        Assert.assertFalse(ctx.getIsFinished());
-        Assert.assertEquals(DeploymentState.Unknown, ctx.getDeploymentState());
+        Assert.assertFalse(ctx.getLastCommandState().isError());
+        Assert.assertFalse(ctx.getLastCommandState().isFinished());
+        Assert.assertEquals(CommandState.Unknown, ctx.getLastCommandState());
 
         ctx.setSourceDirectory("src");
         Assert.assertEquals("src", ctx.getSourceDirectory());
@@ -48,16 +58,16 @@ public class WebAppDeploymentCommandContextTest {
         final Run run = mock(Run.class);
         final TaskListener listener = mock(TaskListener.class);
         final FilePath workspace = new FilePath(new File("workspace"));
+        final Launcher launcher = mock(Launcher.class);
         final WebApp app = mock(WebApp.class);
         when(app.getPublishingProfile()).thenReturn(pubProfile);
 
-        ctx.configure(run, workspace, listener, app);
+        ctx.configure(run, workspace, launcher, listener, app);
 
-        Assert.assertEquals(workspace, ctx.getWorkspace());
+        Assert.assertEquals(workspace, ctx.getJobContext().getWorkspace());
         Assert.assertEquals("ftp://example.com", ctx.getPublishingProfile().ftpUrl());
         Assert.assertEquals("user", ctx.getPublishingProfile().ftpUsername());
         Assert.assertEquals("pass", ctx.getPublishingProfile().ftpPassword());
-        Assert.assertEquals(DeploymentState.Running, ctx.getDeploymentState());
     }
 
     @Test
@@ -66,44 +76,49 @@ public class WebAppDeploymentCommandContextTest {
 
         final Run run = mock(Run.class);
         final FilePath workspace = new FilePath(new File("workspace"));
+        final Launcher launcher = mock(Launcher.class);
         final TaskListener listener = mock(TaskListener.class);
         final WebApp app = mock(WebApp.class);
 
         // Non-Java Application
         when(app.javaVersion()).thenReturn(JavaVersion.OFF);
-        ctx.configure(run, workspace, listener, app);
-        HashMap<Class, TransitionInfo> commands = ctx.getCommands();
-        Assert.assertTrue(commands.containsKey(GitDeployCommand.class));
-        Assert.assertFalse(commands.containsKey(FTPDeployCommand.class));
+        ctx.configure(run, workspace, launcher, listener, app);
+        CommandService commandService = ctx.getCommandService();
+        ImmutableSet<Class> commands = commandService.getRegisteredCommands();
+        Assert.assertTrue(commands.contains(GitDeployCommand.class));
+        Assert.assertFalse(commands.contains(FTPDeployCommand.class));
         Assert.assertEquals(1, commands.size());
-        Assert.assertEquals(ctx.getStartCommandClass().getName(), GitDeployCommand.class.getName());
+        Assert.assertEquals(commandService.getStartCommandClass(), GitDeployCommand.class);
 
         // Java Application
         when(app.javaVersion()).thenReturn(JavaVersion.JAVA_8_NEWEST);
-        ctx.configure(run, workspace, listener, app);
-        commands = ctx.getCommands();
-        Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
-        Assert.assertTrue(commands.containsKey(FTPDeployCommand.class));
+        ctx.configure(run, workspace, launcher, listener, app);
+        commandService = ctx.getCommandService();
+        commands = commandService.getRegisteredCommands();
+        Assert.assertFalse(commands.contains(GitDeployCommand.class));
+        Assert.assertTrue(commands.contains(FTPDeployCommand.class));
         Assert.assertEquals(1, commands.size());
-        Assert.assertEquals(ctx.getStartCommandClass().getName(), FTPDeployCommand.class.getName());
+        Assert.assertEquals(commandService.getStartCommandClass(), FTPDeployCommand.class);
 
         // Docker
         ctx.setPublishType(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER);
-        ctx.configure(run, workspace, listener, app);
-        commands = ctx.getCommands();
-        Assert.assertFalse(commands.containsKey(GitDeployCommand.class));
-        Assert.assertFalse(commands.containsKey(FTPDeployCommand.class));
-        Assert.assertTrue(commands.containsKey(DockerBuildCommand.class));
-        Assert.assertTrue(commands.containsKey(DockerPushCommand.class));
-        Assert.assertTrue(commands.containsKey(DockerDeployCommand.class));
+        ctx.configure(run, workspace, launcher, listener, app);
+        commandService = ctx.getCommandService();
+        commands = commandService.getRegisteredCommands();
+        Assert.assertFalse(commands.contains(GitDeployCommand.class));
+        Assert.assertFalse(commands.contains(FTPDeployCommand.class));
+        Assert.assertTrue(commands.contains(DockerBuildCommand.class));
+        Assert.assertTrue(commands.contains(DockerPushCommand.class));
+        Assert.assertTrue(commands.contains(DockerDeployCommand.class));
         Assert.assertEquals(3, commands.size());
-        Assert.assertEquals(ctx.getStartCommandClass().getName(), DockerBuildCommand.class.getName());
+        Assert.assertEquals(commandService.getStartCommandClass(), DockerBuildCommand.class);
     }
 
     @Test
     public void configureSlot() throws AzureCloudException {
         final Run run = mock(Run.class);
         final FilePath workspace = new FilePath(new File("workspace"));
+        final Launcher launcher = mock(Launcher.class);
         final TaskListener listener = mock(TaskListener.class);
         final WebApp app = mock(WebApp.class);
 
@@ -127,20 +142,20 @@ public class WebAppDeploymentCommandContextTest {
 
         // Configure default
         WebAppDeploymentCommandContext ctx = new WebAppDeploymentCommandContext("sample.war");
-        ctx.configure(run, workspace, listener, app);
+        ctx.configure(run, workspace, launcher, listener, app);
         Assert.assertEquals("default-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure slot
         ctx = new WebAppDeploymentCommandContext("sample.war");
         ctx.setSlotName("staging");
-        ctx.configure(run, workspace, listener, app);
+        ctx.configure(run, workspace, launcher, listener, app);
         Assert.assertEquals("slot-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure not existing slot
         try {
             ctx = new WebAppDeploymentCommandContext("sample.war");
             ctx.setSlotName("not-found");
-            ctx.configure(run, workspace, listener, app);
+            ctx.configure(run, workspace, launcher, listener, app);
             Assert.fail("Should throw exception when slot not found");
         } catch (AzureCloudException ex) {
         }

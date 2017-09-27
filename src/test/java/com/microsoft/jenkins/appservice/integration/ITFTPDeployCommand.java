@@ -41,7 +41,7 @@ public class ITFTPDeployCommand extends IntegrationTest {
         command = new FTPDeployCommand();
         commandDataMock = mock(FTPDeployCommand.IFTPDeployCommandData.class);
         StreamBuildListener listener = new StreamBuildListener(System.out, Charset.defaultCharset());
-        when(commandDataMock.getListener()).thenReturn(listener);
+        when(commandDataMock.getJobContext().getTaskListener()).thenReturn(listener);
         setUpBaseCommandMockErrorHandling(commandDataMock);
 
         Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
@@ -79,8 +79,8 @@ public class ITFTPDeployCommand extends IntegrationTest {
         workspace = new FilePath(workspaceDir);
 
         final Run run = mock(Run.class);
-        when(commandDataMock.getRun()).thenReturn(run);
-        when(commandDataMock.getWorkspace()).thenReturn(workspace);
+        when(commandDataMock.getJobContext().getRun()).thenReturn(run);
+        when(commandDataMock.getJobContext().getWorkspace()).thenReturn(workspace);
     }
 
     /**

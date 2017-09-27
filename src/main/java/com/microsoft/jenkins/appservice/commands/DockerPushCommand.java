@@ -9,6 +9,10 @@ package com.microsoft.jenkins.appservice.commands;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.model.PushResponseItem;
 import com.github.dockerjava.core.command.PushImageResultCallback;
+import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.command.CommandState;
+import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
 import hudson.model.TaskListener;
@@ -22,27 +26,28 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
     @Override
     public void execute(final IDockerPushCommandData context) {
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
+        final JobContext jobContext = context.getJobContext();
 
         try {
             final String image = imageAndTag(dockerBuildInfo);
             context.logStatus(String.format("Push docker image `%s` to %s",
                     image, dockerBuildInfo.getAuthConfig().getRegistryAddress()));
 
-            final FilePath workspace = context.getWorkspace();
+            final FilePath workspace = jobContext.getWorkspace();
 
-            final DeploymentState state = workspace.act(new DockerPushCommandOnSlave(
-                    context.getListener(), context.getDockerClientBuilder(), dockerBuildInfo, image));
+            final CommandState state = workspace.act(new DockerPushCommandOnSlave(
+                    jobContext.getTaskListener(), context.getDockerClientBuilder(), dockerBuildInfo, image));
 
             context.logStatus("Push completed");
-            context.setDeploymentState(state);
+            context.setCommandState(state);
         } catch (AzureCloudException | InterruptedException | IOException e) {
-            context.getListener().getLogger().println("Build failed for " + e.getMessage());
-            context.setDeploymentState(DeploymentState.HasError);
+            context.logStatus("Build failed for " + e.getMessage());
+            context.setCommandState(CommandState.HasError);
         }
     }
 
     private static final class DockerPushCommandOnSlave
-            extends MasterToSlaveCallable<DeploymentState, AzureCloudException> {
+            extends MasterToSlaveCallable<CommandState, AzureCloudException> {
 
         private final DockerClientBuilder dockerClientBuilder;
         private final TaskListener listener;
@@ -61,8 +66,8 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
         }
 
         @Override
-        public DeploymentState call() throws AzureCloudException {
-            final DeploymentState[] state = {DeploymentState.Success};
+        public CommandState call() throws AzureCloudException {
+            final CommandState[] state = {CommandState.Success};
             final DockerClient dockerClient = dockerClientBuilder.build(dockerBuildInfo.getAuthConfig());
             final PushImageResultCallback callback = new PushImageResultCallback() {
                 @Override
@@ -74,7 +79,7 @@ public class DockerPushCommand extends DockerCommand implements ICommand<DockerP
                 @Override
                 public void onError(final Throwable throwable) {
                     listener.getLogger().println("Fail to push docker image:" + throwable.getMessage());
-                    state[0] = DeploymentState.HasError;
+                    state[0] = CommandState.HasError;
                     super.onError(throwable);
                 }
             };

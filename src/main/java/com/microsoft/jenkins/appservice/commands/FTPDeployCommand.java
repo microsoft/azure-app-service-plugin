@@ -8,6 +8,10 @@ package com.microsoft.jenkins.appservice.commands;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.jenkins.appservice.util.FilePathUtils;
+import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.command.CommandState;
+import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.command.ICommand;
 import hudson.FilePath;
 import hudson.Util;
 import hudson.model.TaskListener;
@@ -44,12 +48,13 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
     }
 
     public void execute(final IFTPDeployCommandData context) {
-        final FilePath workspace = context.getWorkspace();
+        final JobContext jobContext = context.getJobContext();
+        final FilePath workspace = jobContext.getWorkspace();
         final PublishingProfile pubProfile = context.getPublishingProfile();
 
         if (workspace == null) {
             context.logError("Workspace is null");
-            context.setDeploymentState(DeploymentState.HasError);
+            context.setCommandState(CommandState.HasError);
             return;
         }
 
@@ -71,7 +76,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
 
         try {
             workspace.act(new FTPDeployCommandOnSlave(
-                context.getListener(),
+                jobContext.getTaskListener(),
                 ftpUrl,
                 pubProfile.ftpUsername(),
                 pubProfile.ftpPassword(),
@@ -89,6 +94,8 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
         if (!isStoppedBeforeDeployment) {
             context.getWebAppBase().start();
         }
+
+        context.setCommandState(CommandState.Success);
     }
 
     private static final class FTPDeployCommandOnSlave extends MasterToSlaveCallable<Void, FTPException> {

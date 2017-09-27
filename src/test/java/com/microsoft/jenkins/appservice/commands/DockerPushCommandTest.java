@@ -10,7 +10,11 @@ import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.PushImageCmd;
 import com.github.dockerjava.core.command.PushImageResultCallback;
 import com.google.common.io.Files;
+import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.command.CommandState;
 import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.util.StreamTaskListener;
 import org.junit.Before;
@@ -20,7 +24,11 @@ import java.io.File;
 import java.nio.charset.Charset;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by juniwang on 27/06/2017.
@@ -42,11 +50,13 @@ public class DockerPushCommandTest extends AbstractDockerCommandTest {
         File workspaceDir = Files.createTempDir();
         workspaceDir.deleteOnExit();
         FilePath workspace = new FilePath(workspaceDir);
-        when(commandData.getWorkspace()).thenReturn(workspace);
 
-        // Mock task listener
+        // Mock job context
+        final Run run = mock(Run.class);
+        final Launcher launcher = mock(Launcher.class);
         final TaskListener listener = new StreamTaskListener(System.out, Charset.defaultCharset());
-        when(commandData.getListener()).thenReturn(listener);
+        final JobContext jobContext = new JobContext(run, workspace, launcher, listener);
+        when(commandData.getJobContext()).thenReturn(jobContext);
     }
 
     @Test
@@ -67,6 +77,6 @@ public class DockerPushCommandTest extends AbstractDockerCommandTest {
         verify(pushImageCmd, times(1)).withTag(dockerBuildInfo.getDockerImageTag());
         verify(pushImageCmd, times(1)).exec(any(PushImageResultCallback.class));
         verify(callback, times(1)).awaitSuccess();
-        verify(commandData, times(1)).setDeploymentState(DeploymentState.Success);
+        verify(commandData, times(1)).setCommandState(CommandState.Success);
     }
 }
