@@ -94,6 +94,7 @@ public class DockerDeployCommand extends DockerCommand
             context.setCommandState(CommandState.Success);
             context.logStatus("Azure app service updated successfully.");
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_DOCKER_DEPLOY,
+                    "Run", AppInsightsUtils.hash(context.getJobContext().getRun().getUrl()),
                     "ResourceGroup", AppInsightsUtils.hash(context.getWebApp().resourceGroupName()),
                     "WebApp", AppInsightsUtils.hash(context.getWebApp().name()),
                     "Slot", context.getSlotName(),
@@ -103,6 +104,7 @@ public class DockerDeployCommand extends DockerCommand
             context.setCommandState(CommandState.HasError);
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_DOCKER_DEPLOY_FAILED,
                     "Message", e.getMessage(),
+                    "Run", AppInsightsUtils.hash(context.getJobContext().getRun().getUrl()),
                     "ResourceGroup", AppInsightsUtils.hash(context.getWebApp().resourceGroupName()),
                     "WebApp", AppInsightsUtils.hash(context.getWebApp().name()),
                     "Slot", context.getSlotName());

@@ -91,10 +91,13 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
 
             context.setCommandState(CommandState.Success);
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_FTP_DEPLOY,
+                    "Run", AppInsightsUtils.hash(context.getJobContext().getRun().getUrl()),
+                    "ResourceGroup", AppInsightsUtils.hash(context.getWebAppBase().resourceGroupName()),
                     "WebApp", AppInsightsUtils.hash(context.getWebAppBase().name()));
         } catch (IOException | FTPException e) {
             context.logError("Fail to deploy to FTP: " + e.getMessage());
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_FTP_DEPLOY_FAILED,
+                    "Run", AppInsightsUtils.hash(context.getJobContext().getRun().getUrl()),
                     "ResourceGroup", AppInsightsUtils.hash(context.getWebAppBase().resourceGroupName()),
                     "WebApp", AppInsightsUtils.hash(context.getWebAppBase().name()),
                     "Message", e.getMessage());

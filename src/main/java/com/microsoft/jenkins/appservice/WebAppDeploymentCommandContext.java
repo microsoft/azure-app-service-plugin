@@ -10,6 +10,7 @@ import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.WebAppBase;
+import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.commands.DefaultDockerClientBuilder;
 import com.microsoft.jenkins.appservice.commands.DockerBuildCommand;
 import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
@@ -19,11 +20,13 @@ import com.microsoft.jenkins.appservice.commands.DockerPushCommand;
 import com.microsoft.jenkins.appservice.commands.DockerRemoveImageCommand;
 import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
+import com.microsoft.jenkins.appservice.util.Constants;
 import com.microsoft.jenkins.azurecommons.JobContext;
 import com.microsoft.jenkins.azurecommons.command.BaseCommandContext;
 import com.microsoft.jenkins.azurecommons.command.CommandService;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
 import com.microsoft.jenkins.azurecommons.command.ICommand;
+import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsUtils;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -110,6 +113,15 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
 
             pubProfile = slot.getPublishingProfile();
         }
+
+        final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(azureCredentialsId);
+
+        AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_START_DEPLOY,
+                "Run", AppInsightsUtils.hash(run.getUrl()),
+                "Subscription", AppInsightsUtils.hash(sp.getSubscriptionId()),
+                "ResourceGroup", AppInsightsUtils.hash(app.resourceGroupName()),
+                "WebApp", AppInsightsUtils.hash(app.name()),
+                "Slot", slotName);
 
         CommandService.Builder builder = CommandService.builder();
 

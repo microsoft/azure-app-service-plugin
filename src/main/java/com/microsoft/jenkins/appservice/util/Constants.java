@@ -25,6 +25,7 @@ public final class Constants {
      */
     public static final String AI_WEB_APP = "WebApp";
     public static final String AI_FUNCTIONS = "Functions";
+    public static final String AI_START_DEPLOY = "StartDeploy";
     public static final String AI_GIT_DEPLOY = "GitDeploy";
     public static final String AI_GIT_DEPLOY_FAILED = "GitDeployFailed";
     public static final String AI_FTP_DEPLOY = "FTPDeploy";

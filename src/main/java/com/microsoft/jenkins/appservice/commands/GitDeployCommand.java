@@ -115,6 +115,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
             context.setCommandState(CommandState.Success);
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_GIT_DEPLOY,
                     "Branch", DEPLOY_BRANCH,
+                    "Run", AppInsightsUtils.hash(context.getJobContext().getRun().getUrl()),
                     "ResourceGroup", AppInsightsUtils.hash(context.getWebAppBase().resourceGroupName()),
                     "WebApp", AppInsightsUtils.hash(context.getWebAppBase().name()));
         } catch (IOException | InterruptedException | URISyntaxException e) {
@@ -123,6 +124,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
             context.setCommandState(CommandState.HasError);
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_GIT_DEPLOY_FAILED,
                     "Branch", DEPLOY_BRANCH,
+                    "Run", AppInsightsUtils.hash(context.getJobContext().getRun().getUrl()),
                     "ResourceGroup", AppInsightsUtils.hash(context.getWebAppBase().resourceGroupName()),
                     "WebApp", AppInsightsUtils.hash(context.getWebAppBase().name()),
                     "Message", e.getMessage());
