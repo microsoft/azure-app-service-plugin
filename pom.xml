@@ -45,8 +45,8 @@
 
     <developers>
         <developer>
-            <id>vscjenkins</id>
-            <name>Visual Studio China Jenkins Team</name>
+            <id>azure_devops</id>
+            <name>Azure DevOps Team</name>
             <email>vscjenkins@microsoft.com</email>
         </developer>
     </developers>
@@ -206,6 +206,19 @@
     </repositories>
     
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}</directory>
+                <includes>
+                    <include>RuntimeLicenses/License.txt</include>
+                    <include>RuntimeLicenses/ThirdPartyNotices.txt</include>
+                    <include>LICENSE.txt</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.jenkins-ci.tools</groupId>
@@ -250,6 +263,7 @@
                     <configLocation>checkstyle.xml</configLocation>
                     <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
+                    <resourceIncludes>src/main/resources/**</resourceIncludes>
                 </configuration>
             </plugin>
         </plugins>
