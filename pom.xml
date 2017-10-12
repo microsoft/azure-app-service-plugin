@@ -97,6 +97,12 @@
 
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>credentials</artifactId>
+            <version>2.1.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>azure-commons</artifactId>
             <version>${azure-commons.version}</version>
         </dependency>
