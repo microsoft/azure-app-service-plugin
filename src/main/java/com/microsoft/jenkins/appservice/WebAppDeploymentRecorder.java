@@ -197,7 +197,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         }
     }
 
-    private DockerBuildInfo validateDockerBuildInfo(final Run<?, ?> run, final TaskListener listener, final WebApp app)
+    private DockerBuildInfo validateDockerBuildInfo(Run<?, ?> run, TaskListener listener, WebApp app)
             throws IOException, InterruptedException, AzureCloudException {
         final DockerBuildInfo dockerBuildInfo = new DockerBuildInfo();
 
