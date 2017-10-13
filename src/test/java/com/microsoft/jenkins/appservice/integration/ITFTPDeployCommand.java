@@ -9,6 +9,7 @@ import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.*;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
+import com.microsoft.jenkins.azurecommons.JobContext;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.StreamBuildListener;
@@ -40,6 +41,8 @@ public class ITFTPDeployCommand extends IntegrationTest {
         super.setUp();
         command = new FTPDeployCommand();
         commandDataMock = mock(FTPDeployCommand.IFTPDeployCommandData.class);
+        JobContext jobContextMock = mock(JobContext.class);
+        when(commandDataMock.getJobContext()).thenReturn(jobContextMock);
         StreamBuildListener listener = new StreamBuildListener(System.out, Charset.defaultCharset());
         when(commandDataMock.getJobContext().getTaskListener()).thenReturn(listener);
         setUpBaseCommandMockErrorHandling(commandDataMock);
