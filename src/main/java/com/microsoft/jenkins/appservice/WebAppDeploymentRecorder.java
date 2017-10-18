@@ -36,7 +36,6 @@ import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryEndpoint;
 import org.jenkinsci.plugins.docker.commons.credentials.DockerRegistryToken;
@@ -198,11 +197,11 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         }
     }
 
-    private DockerBuildInfo validateDockerBuildInfo(final Run<?, ?> run, final TaskListener listener, final WebApp app)
+    private DockerBuildInfo validateDockerBuildInfo(Run<?, ?> run, TaskListener listener, WebApp app)
             throws IOException, InterruptedException, AzureCloudException {
         final DockerBuildInfo dockerBuildInfo = new DockerBuildInfo();
 
-        final String linuxFxVersion = getLinuxFxVersion(app);
+        final String linuxFxVersion = app.linuxFxVersion();
         if (StringUtils.isBlank(linuxFxVersion) || isBuiltInDockerImage(linuxFxVersion)) {
             // windows app doesn't need any docker config
             if (StringUtils.isNotBlank(this.publishType)
@@ -269,22 +268,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         authConfig.withPassword(credentials[1]);
 
         return authConfig;
-    }
-
-    public static final String getLinuxFxVersion(final WebApp webApp) throws AzureCloudException {
-        // https://github.com/Azure/azure-sdk-for-java/issues/1761
-        // access the field via reflection for now
-        try {
-            final SiteConfigResourceInner siteConfig = (SiteConfigResourceInner) FieldUtils.readField(
-                    webApp, "siteConfig", true);
-            if (siteConfig != null) {
-                return siteConfig.linuxFxVersion();
-            }
-        } catch (IllegalAccessException e) {
-            throw new AzureCloudException(String.format("Cannot get the docker container info of web app %s",
-                    webApp.name()));
-        }
-        return "";
     }
 
     public static boolean isBuiltInDockerImage(final String linuxFxVersion) {

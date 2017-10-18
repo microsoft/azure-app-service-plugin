@@ -14,6 +14,7 @@ import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
+import com.microsoft.jenkins.azurecommons.JobContext;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -71,6 +72,8 @@ public class ITGitDeployCommand extends IntegrationTest {
         // Create workspace
         File workspaceDir = com.google.common.io.Files.createTempDir();
         workspaceDir.deleteOnExit();
+        JobContext jobContextMock = mock(JobContext.class);
+        when(commandDataMock.getJobContext()).thenReturn(jobContextMock);
         workspace = new FilePath(workspaceDir);
         when(commandDataMock.getJobContext().getWorkspace()).thenReturn(workspace);
 
