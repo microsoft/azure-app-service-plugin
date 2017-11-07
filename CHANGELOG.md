@@ -1,5 +1,9 @@
 # Azure App Service Plugin Changelog
 
+## Version 0.1.3, 2017-11-07
+* Specify refspec explicitly when doing git push
+* Add Third Party Notice
+
 ## Version 0.1.2, 2017-10-18
 * Remove runtime licenses
 
