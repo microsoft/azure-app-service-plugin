@@ -5,81 +5,30 @@
  */
 package com.microsoft.jenkins.appservice.util;
 
-import com.microsoft.azure.AzureEnvironment;
-import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
-import com.microsoft.azure.util.AzureCredentials;
-import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
-
-import java.util.HashMap;
+import com.microsoft.azure.util.AzureBaseCredentials;
+import com.microsoft.azure.util.AzureCredentialUtil;
+import com.microsoft.jenkins.appservice.AzureAppServicePlugin;
+import com.microsoft.jenkins.azurecommons.core.AzureClientFactory;
+import com.microsoft.jenkins.azurecommons.core.credentials.TokenCredentialData;
 
 public final class AzureUtils {
 
-    private AzureUtils() {
-        // Hide
-    }
-
-    static String getUserAgent() {
-        String version = null;
-        String instanceId = null;
-        try {
-            version = AzureUtils.class.getPackage().getImplementationVersion();
-            Jenkins inst = Jenkins.getInstance();
-            if (inst != null) {
-                instanceId = inst.getLegacyInstanceId();
-            }
-        } catch (Exception e) {
-        }
-
-        if (version == null) {
-            version = "local";
-        }
-        if (instanceId == null) {
-            instanceId = "local";
-        }
-
-        return Constants.PLUGIN_NAME + "/" + version + "/" + instanceId;
-    }
-
-    static ApplicationTokenCredentials fromServicePrincipal(
-            final AzureCredentials.ServicePrincipal servicePrincipal) {
-        final AzureEnvironment env = new AzureEnvironment(new HashMap<String, String>() {
-            {
-                this.put(AzureEnvironment.Endpoint.MANAGEMENT.toString(),
-                        StringUtils.defaultIfBlank(
-                                servicePrincipal.getServiceManagementURL(),
-                                AzureEnvironment.AZURE.managementEndpoint()));
-                this.put(AzureEnvironment.Endpoint.RESOURCE_MANAGER.toString(),
-                        StringUtils.defaultIfBlank(
-                                servicePrincipal.getResourceManagerEndpoint(),
-                                AzureEnvironment.AZURE.resourceManagerEndpoint()));
-                this.put(AzureEnvironment.Endpoint.ACTIVE_DIRECTORY.toString(),
-                        StringUtils.defaultIfBlank(
-                            servicePrincipal.getAuthenticationEndpoint(),
-                                AzureEnvironment.AZURE.activeDirectoryEndpoint()));
-                this.put(AzureEnvironment.Endpoint.GRAPH.toString(),
-                        StringUtils.defaultIfBlank(
-                                servicePrincipal.getGraphEndpoint(),
-                                AzureEnvironment.AZURE.graphEndpoint()));
-                // Must not be left blank
-                this.put("activeDirectoryResourceId", "https://management.core.windows.net/");
+    public static Azure buildClient(final String credentialId) {
+        AzureBaseCredentials credential = AzureCredentialUtil.getCredential2(credentialId);
+        TokenCredentialData token = TokenCredentialData.deserialize(credential.serializeToTokenData());
+        return AzureClientFactory.getClient(token, new AzureClientFactory.Configurer() {
+            @Override
+            public Azure.Configurable configure(Azure.Configurable configurable) {
+                return configurable
+                        .withLogLevel(Constants.DEFAULT_AZURE_SDK_LOGGING_LEVEL)
+                        .withInterceptor(new AzureAppServicePlugin.AzureTelemetryInterceptor())
+                        .withUserAgent(AzureClientFactory.getUserAgent(Constants.PLUGIN_NAME,
+                                AzureUtils.class.getPackage().getImplementationVersion()));
             }
         });
-        return new ApplicationTokenCredentials(
-                servicePrincipal.getClientId(),
-                servicePrincipal.getTenant(),
-                servicePrincipal.getClientSecret(),
-                env
-        );
     }
 
-    public static Azure buildAzureClient(final AzureCredentials.ServicePrincipal servicePrincipal) {
-        return Azure
-                .configure()
-                .withLogLevel(Constants.DEFAULT_AZURE_SDK_LOGGING_LEVEL)
-                .withUserAgent(getUserAgent())
-                .authenticate(fromServicePrincipal(servicePrincipal))
-                .withSubscription(servicePrincipal.getSubscriptionId());
+    private AzureUtils() {
     }
 }

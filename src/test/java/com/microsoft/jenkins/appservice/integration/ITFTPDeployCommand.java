@@ -10,6 +10,7 @@ import com.microsoft.azure.management.appservice.*;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.core.AzureClientFactory;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.StreamBuildListener;
@@ -47,7 +48,12 @@ public class ITFTPDeployCommand extends IntegrationTest {
         when(commandDataMock.getJobContext().getTaskListener()).thenReturn(listener);
         setUpBaseCommandMockErrorHandling(commandDataMock);
 
-        Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+        Azure azureClient = AzureClientFactory.getClient(
+                servicePrincipal.getClientId(),
+                servicePrincipal.getClientSecret(),
+                servicePrincipal.getTenant(),
+                servicePrincipal.getSubscriptionId(),
+                servicePrincipal.getAzureEnvironment());
 
         // Setup web app
         final ResourceGroup resourceGroup = azureClient.resourceGroups()
