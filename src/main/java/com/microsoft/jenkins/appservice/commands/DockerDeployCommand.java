@@ -12,15 +12,12 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
-import com.microsoft.azure.util.AzureBaseCredentials;
-import com.microsoft.azure.util.AzureCredentialUtil;
 import com.microsoft.jenkins.appservice.AzureAppServicePlugin;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.appservice.util.Constants;
 import com.microsoft.jenkins.azurecommons.command.CommandState;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
 import com.microsoft.jenkins.azurecommons.command.ICommand;
-import com.microsoft.jenkins.azurecommons.core.credentials.TokenCredentialData;
 import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
@@ -81,10 +78,7 @@ public class DockerDeployCommand extends DockerCommand
 
                 update.apply();
 
-                AzureBaseCredentials credential = AzureCredentialUtil.getCredential2(context.getAzureCredentialsId());
-                TokenCredentialData token = TokenCredentialData.deserialize(credential.serializeToTokenData());
                 final Azure azure = AzureUtils.buildClient(context.getAzureCredentialsId());
-
                 final SiteConfigResourceInner siteConfigResourceInner = azure.webApps().inner().getConfigurationSlot(
                         slot.resourceGroupName(), webApp.name(), slotName);
                 checkNotNull(siteConfigResourceInner, "Configuration not found for slot:" + slotName);
