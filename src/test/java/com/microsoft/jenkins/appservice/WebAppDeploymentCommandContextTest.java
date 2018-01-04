@@ -42,6 +42,7 @@ public class WebAppDeploymentCommandContextTest {
     public void getterSetter() throws AzureCloudException {
         WebAppDeploymentCommandContext ctx = new WebAppDeploymentCommandContext("sample.war");
         ctx.setAzureCredentialsId("sp");
+        ctx.setSubscriptionId("00000000-0000-0000-0000-000000000000");
 
         Assert.assertEquals("", ctx.getSourceDirectory());
         Assert.assertEquals("", ctx.getTargetDirectory());
@@ -80,6 +81,7 @@ public class WebAppDeploymentCommandContextTest {
     public void configure() throws AzureCloudException {
         WebAppDeploymentCommandContext ctx = new WebAppDeploymentCommandContext("sample.war");
         ctx.setAzureCredentialsId("sp");
+        ctx.setSubscriptionId("00000000-0000-0000-0000-000000000000");
 
         final Run run = mock(Run.class);
         final FilePath workspace = new FilePath(new File("workspace"));
@@ -150,12 +152,14 @@ public class WebAppDeploymentCommandContextTest {
         // Configure default
         WebAppDeploymentCommandContext ctx = new WebAppDeploymentCommandContext("sample.war");
         ctx.setAzureCredentialsId("sp");
+        ctx.setSubscriptionId("00000000-0000-0000-0000-000000000000");
         ctx.configure(run, workspace, launcher, listener, app);
         Assert.assertEquals("default-user", ctx.getPublishingProfile().ftpUsername());
 
         // Configure slot
         ctx = new WebAppDeploymentCommandContext("sample.war");
         ctx.setAzureCredentialsId("sp");
+        ctx.setSubscriptionId("00000000-0000-0000-0000-000000000000");
         ctx.setSlotName("staging");
         ctx.configure(run, workspace, launcher, listener, app);
         Assert.assertEquals("slot-user", ctx.getPublishingProfile().ftpUsername());
@@ -164,6 +168,7 @@ public class WebAppDeploymentCommandContextTest {
         try {
             ctx = new WebAppDeploymentCommandContext("sample.war");
             ctx.setAzureCredentialsId("sp");
+            ctx.setSubscriptionId("00000000-0000-0000-0000-000000000000");
             ctx.setSlotName("not-found");
             ctx.configure(run, workspace, launcher, listener, app);
             Assert.fail("Should throw exception when slot not found");

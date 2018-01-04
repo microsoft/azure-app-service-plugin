@@ -12,6 +12,7 @@ import com.microsoft.azure.management.resources.fluentcore.arm.Region;
 import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
+import com.microsoft.jenkins.azurecommons.core.AzureClientFactory;
 import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsGlobalConfig;
 import org.junit.After;
 import org.junit.Before;
@@ -151,7 +152,13 @@ public class IntegrationTest {
 
     protected void clearAzureResources() {
         try {
-            AzureUtils.buildAzureClient(servicePrincipal).resourceGroups().deleteByName(testEnv.azureResourceGroup);
+            AzureClientFactory.getClient(
+                    servicePrincipal.getClientId(),
+                    servicePrincipal.getClientSecret(),
+                    servicePrincipal.getTenant(),
+                    servicePrincipal.getSubscriptionId(),
+                    servicePrincipal.getAzureEnvironment()
+            ).resourceGroups().deleteByName(testEnv.azureResourceGroup);
         } catch (CloudException e) {
             if (e.response().code() != 404) {
                 LOGGER.log(Level.SEVERE, null, e);

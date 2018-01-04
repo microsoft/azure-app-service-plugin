@@ -12,7 +12,6 @@ import com.github.dockerjava.api.model.AuthConfig;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
-import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
 import com.microsoft.jenkins.appservice.commands.DockerPingCommand;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
@@ -156,7 +155,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
 
         // Get app info
         final String azureCredentialsId = getAzureCredentialsId();
-        final Azure azureClient = AzureUtils.buildAzureClient(AzureCredentials.getServicePrincipal(azureCredentialsId));
+        final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
         final String resourceGroup = getResourceGroup();
         final String appName = getAppName();
         final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
@@ -181,6 +180,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         commandContext.setDockerBuildInfo(dockerBuildInfo);
         commandContext.setDeleteTempImage(deleteTempImage);
         commandContext.setAzureCredentialsId(azureCredentialsId);
+        commandContext.setSubscriptionId(azureClient.subscriptionId());
 
         try {
             commandContext.configure(run, workspace, launcher, listener, app);
@@ -309,8 +309,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         public ListBoxModel doFillAppNameItems(@QueryParameter final String azureCredentialsId,
                                                @QueryParameter final String resourceGroup) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
-                final Azure azureClient = AzureUtils.buildAzureClient(
-                        AzureCredentials.getServicePrincipal(azureCredentialsId));
+                final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
                 return listAppNameItems(azureClient.webApps(), resourceGroup);
             } else {
                 return new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
@@ -349,8 +348,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
                 final String resourceGroup,
                 final String appName) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
-                final Azure azureClient = AzureUtils.buildAzureClient(
-                        AzureCredentials.getServicePrincipal(azureCredentialsId));
+                final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
                 final SiteConfigResourceInner siteConfig =
                         azureClient.webApps().inner().getConfiguration(resourceGroup, appName);
                 if (siteConfig != null) {

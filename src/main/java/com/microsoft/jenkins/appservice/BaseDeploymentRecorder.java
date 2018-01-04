@@ -14,7 +14,7 @@ import com.microsoft.azure.management.appservice.implementation.SiteInner;
 import com.microsoft.azure.management.appservice.implementation.WebAppsInner;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.fluentcore.model.HasInner;
-import com.microsoft.azure.util.AzureCredentials;
+import com.microsoft.azure.util.AzureBaseCredentials;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.appservice.util.Constants;
 import hudson.Util;
@@ -39,9 +39,12 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
     private final String resourceGroup;
     private final String appName;
 
-    @CheckForNull private String filePath;
-    @CheckForNull private String sourceDirectory;
-    @CheckForNull private String targetDirectory;
+    @CheckForNull
+    private String filePath;
+    @CheckForNull
+    private String sourceDirectory;
+    @CheckForNull
+    private String targetDirectory;
     private boolean deployOnlyIfSuccessful;
 
     protected BaseDeploymentRecorder(
@@ -130,7 +133,7 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
             return new StandardListBoxModel()
                     .withEmptySelection()
                     .withAll(CredentialsProvider.lookupCredentials(
-                            AzureCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()
+                            AzureBaseCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()
                     ));
         }
 
@@ -138,8 +141,7 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
             final ListBoxModel model = new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
             // list all resource groups
             if (StringUtils.isNotBlank(azureCredentialsId)) {
-                final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(azureCredentialsId);
-                final Azure azureClient = AzureUtils.buildAzureClient(sp);
+                final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
                 for (final ResourceGroup rg : azureClient.resourceGroups().list()) {
                     model.add(rg.name());
                 }

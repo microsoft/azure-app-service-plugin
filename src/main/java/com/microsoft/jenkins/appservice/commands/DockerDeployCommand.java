@@ -12,7 +12,6 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.WebAppBase;
 import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
-import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.AzureAppServicePlugin;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.appservice.util.Constants;
@@ -79,10 +78,7 @@ public class DockerDeployCommand extends DockerCommand
 
                 update.apply();
 
-                final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(
-                        context.getAzureCredentialsId());
-                final Azure azure = AzureUtils.buildAzureClient(sp);
-
+                final Azure azure = AzureUtils.buildClient(context.getAzureCredentialsId());
                 final SiteConfigResourceInner siteConfigResourceInner = azure.webApps().inner().getConfigurationSlot(
                         slot.resourceGroupName(), webApp.name(), slotName);
                 checkNotNull(siteConfigResourceInner, "Configuration not found for slot:" + slotName);

@@ -10,7 +10,6 @@ import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.WebAppBase;
-import com.microsoft.azure.util.AzureCredentials;
 import com.microsoft.jenkins.appservice.commands.DefaultDockerClientBuilder;
 import com.microsoft.jenkins.appservice.commands.DockerBuildCommand;
 import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
@@ -55,6 +54,7 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
     private String slotName;
     private boolean deleteTempImage;
     private String azureCredentialsId;
+    private String subscriptionId;
 
     private PublishingProfile pubProfile;
     private WebApp webApp;
@@ -114,11 +114,9 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
             pubProfile = slot.getPublishingProfile();
         }
 
-        final AzureCredentials.ServicePrincipal sp = AzureCredentials.getServicePrincipal(azureCredentialsId);
-
         AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_START_DEPLOY,
                 "Run", AppInsightsUtils.hash(run.getUrl()),
-                "Subscription", AppInsightsUtils.hash(sp.getSubscriptionId()),
+                "Subscription", AppInsightsUtils.hash(subscriptionId),
                 "ResourceGroup", AppInsightsUtils.hash(app.resourceGroupName()),
                 "WebApp", AppInsightsUtils.hash(app.name()),
                 "Slot", slotName);
@@ -207,5 +205,13 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
     @Override
     public String getAzureCredentialsId() {
         return this.azureCredentialsId;
+    }
+
+    public String getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public void setSubscriptionId(String subscriptionId) {
+        this.subscriptionId = subscriptionId;
     }
 }

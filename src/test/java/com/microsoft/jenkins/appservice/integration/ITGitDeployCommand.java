@@ -15,6 +15,7 @@ import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.azurecommons.JobContext;
+import com.microsoft.jenkins.azurecommons.core.AzureClientFactory;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.model.Run;
@@ -50,7 +51,12 @@ public class ITGitDeployCommand extends IntegrationTest {
         commandDataMock = mock(GitDeployCommand.IGitDeployCommandData.class);
         setUpBaseCommandMockErrorHandling(commandDataMock);
 
-        Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+        Azure azureClient = AzureClientFactory.getClient(
+                servicePrincipal.getClientId(),
+                servicePrincipal.getClientSecret(),
+                servicePrincipal.getTenant(),
+                servicePrincipal.getSubscriptionId(),
+                servicePrincipal.getAzureEnvironment());
 
         // Create resource group
         final ResourceGroup resourceGroup = azureClient.resourceGroups()
@@ -100,7 +106,12 @@ public class ITGitDeployCommand extends IntegrationTest {
      */
     @Test
     public void deployNodeJS() throws IOException, InterruptedException {
-        final Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+        final Azure azureClient = AzureClientFactory.getClient(
+                servicePrincipal.getClientId(),
+                servicePrincipal.getClientSecret(),
+                servicePrincipal.getTenant(),
+                servicePrincipal.getSubscriptionId(),
+                servicePrincipal.getAzureEnvironment());
         final WebApp webApp = azureClient.appServices().webApps()
                 .define(testEnv.appServiceName)
                 .withExistingWindowsPlan(appServicePlan)
@@ -127,7 +138,12 @@ public class ITGitDeployCommand extends IntegrationTest {
      */
     @Test
     public void deployPHP() throws IOException, InterruptedException {
-        final Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+        final Azure azureClient = AzureClientFactory.getClient(
+                servicePrincipal.getClientId(),
+                servicePrincipal.getClientSecret(),
+                servicePrincipal.getTenant(),
+                servicePrincipal.getSubscriptionId(),
+                servicePrincipal.getAzureEnvironment());
         final WebApp webApp = azureClient.appServices().webApps()
                 .define(testEnv.appServiceName)
                 .withExistingWindowsPlan(appServicePlan)
@@ -153,7 +169,12 @@ public class ITGitDeployCommand extends IntegrationTest {
      */
     @Test
     public void deployPython() throws IOException, InterruptedException {
-        final Azure azureClient = AzureUtils.buildAzureClient(servicePrincipal);
+        final Azure azureClient = AzureClientFactory.getClient(
+                servicePrincipal.getClientId(),
+                servicePrincipal.getClientSecret(),
+                servicePrincipal.getTenant(),
+                servicePrincipal.getSubscriptionId(),
+                servicePrincipal.getAzureEnvironment());
         final WebApp webApp = azureClient.appServices().webApps()
                 .define(testEnv.appServiceName)
                 .withExistingWindowsPlan(appServicePlan)
