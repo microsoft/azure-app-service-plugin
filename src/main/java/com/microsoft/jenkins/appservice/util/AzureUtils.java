@@ -14,9 +14,16 @@ import com.microsoft.jenkins.azurecommons.core.credentials.TokenCredentialData;
 
 public final class AzureUtils {
 
-    public static Azure buildClient(final String credentialId) {
+    public static TokenCredentialData getToken(String credentialId) {
         AzureBaseCredentials credential = AzureCredentialUtil.getCredential2(credentialId);
-        TokenCredentialData token = TokenCredentialData.deserialize(credential.serializeToTokenData());
+        if (credential == null) {
+            throw new IllegalStateException("Can't find credential with id: " + credentialId);
+        }
+        return TokenCredentialData.deserialize(credential.serializeToTokenData());
+    }
+
+    public static Azure buildClient(final String credentialId) {
+        TokenCredentialData token = getToken(credentialId);
         return AzureClientFactory.getClient(token, new AzureClientFactory.Configurer() {
             @Override
             public Azure.Configurable configure(Azure.Configurable configurable) {
