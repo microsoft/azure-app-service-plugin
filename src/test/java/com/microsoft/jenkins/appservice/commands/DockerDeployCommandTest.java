@@ -26,7 +26,7 @@ public class DockerDeployCommandTest {
     private void assertDisableSMBShareIfNotSet(
             WebAppBase.Update update, Map<String, AppSetting> appSettings, boolean shouldSet) {
         WebAppBase webApp = mock(WebAppBase.class);
-        when(webApp.appSettings()).thenReturn(appSettings);
+        when(webApp.getAppSettings()).thenReturn(appSettings);
 
         DockerDeployCommand.disableSMBShareIfNotSet(webApp, update);
 

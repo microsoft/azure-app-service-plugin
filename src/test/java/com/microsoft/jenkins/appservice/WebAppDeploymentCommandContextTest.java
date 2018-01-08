@@ -121,6 +121,20 @@ public class WebAppDeploymentCommandContextTest {
         Assert.assertTrue(commands.contains(DockerDeployCommand.class));
         Assert.assertEquals(3, commands.size());
         Assert.assertEquals(commandService.getStartCommandClass(), DockerBuildCommand.class);
+
+        // Docker without build step
+        ctx.setSkipDockerBuild(true);
+        ctx.setPublishType(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER);
+        ctx.configure(run, workspace, launcher, listener, app);
+        commandService = ctx.getCommandService();
+        commands = commandService.getRegisteredCommands();
+        Assert.assertFalse(commands.contains(GitDeployCommand.class));
+        Assert.assertFalse(commands.contains(FTPDeployCommand.class));
+        Assert.assertFalse(commands.contains(DockerBuildCommand.class));
+        Assert.assertFalse(commands.contains(DockerPushCommand.class));
+        Assert.assertTrue(commands.contains(DockerDeployCommand.class));
+        Assert.assertEquals(1, commands.size());
+        Assert.assertEquals(commandService.getStartCommandClass(), DockerDeployCommand.class);
     }
 
     @Test

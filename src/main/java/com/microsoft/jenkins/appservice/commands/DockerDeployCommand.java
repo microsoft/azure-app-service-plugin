@@ -118,7 +118,7 @@ public class DockerDeployCommand extends DockerCommand
      * @param update Update params
      */
     static void disableSMBShareIfNotSet(final WebAppBase webApp, final WebAppBase.Update update) {
-        if (!webApp.appSettings().containsKey(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)) {
+        if (!webApp.getAppSettings().containsKey(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)) {
             update.withAppSetting(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE, "false");
         }
     }

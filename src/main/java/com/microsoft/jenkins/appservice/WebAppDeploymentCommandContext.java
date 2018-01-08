@@ -53,6 +53,7 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
     private String targetDirectory;
     private String slotName;
     private boolean deleteTempImage;
+    private boolean skipDockerBuild;
     private String azureCredentialsId;
     private String subscriptionId;
 
@@ -87,6 +88,10 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
 
     public void setDeleteTempImage(final boolean deleteTempImage) {
         this.deleteTempImage = deleteTempImage;
+    }
+
+    public void setSkipDockerBuild(final boolean skipDockerBuild) {
+        this.skipDockerBuild = skipDockerBuild;
     }
 
     public void setAzureCredentialsId(final String azureCredentialsId) {
@@ -125,11 +130,18 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
 
         Class startCommandClass;
         if (StringUtils.isNotBlank(publishType) && publishType.equalsIgnoreCase(PUBLISH_TYPE_DOCKER)) {
-            builder.withStartCommand(DockerBuildCommand.class);
-            builder.withTransition(DockerBuildCommand.class, DockerPushCommand.class);
-            builder.withTransition(DockerPushCommand.class, DockerDeployCommand.class);
-            if (deleteTempImage) {
-                builder.withTransition(DockerDeployCommand.class, DockerRemoveImageCommand.class);
+            // Docker deployment
+            if (!skipDockerBuild) {
+                // Build and push docker image first
+                builder.withStartCommand(DockerBuildCommand.class);
+                builder.withTransition(DockerBuildCommand.class, DockerPushCommand.class);
+                builder.withTransition(DockerPushCommand.class, DockerDeployCommand.class);
+                if (deleteTempImage) {
+                    builder.withTransition(DockerDeployCommand.class, DockerRemoveImageCommand.class);
+                }
+            } else {
+                // Use existing docker image and skip build step
+                builder.withStartCommand(DockerDeployCommand.class);
             }
         } else if (app.javaVersion() != JavaVersion.OFF) {
             // For Java application, use FTP-based deployment as it's the recommended way

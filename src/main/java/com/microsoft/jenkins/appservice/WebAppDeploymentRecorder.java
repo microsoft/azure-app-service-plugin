@@ -11,7 +11,6 @@ import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.github.dockerjava.api.model.AuthConfig;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.WebApp;
-import com.microsoft.azure.management.appservice.implementation.SiteConfigResourceInner;
 import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
 import com.microsoft.jenkins.appservice.commands.DockerPingCommand;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
@@ -57,6 +56,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     private String dockerFilePath;
     private DockerRegistryEndpoint dockerRegistryEndpoint;
     private boolean deleteTempImage;
+    private boolean skipDockerBuild;
 
     @CheckForNull
     private
@@ -102,6 +102,11 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         this.deleteTempImage = deleteTempImage;
     }
 
+    @DataBoundSetter
+    public void setSkipDockerBuild(final boolean skipDockerBuild) {
+        this.skipDockerBuild = skipDockerBuild;
+    }
+
     public String getDockerImageName() {
         return dockerImageName;
     }
@@ -124,6 +129,10 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
 
     public boolean isDeleteTempImage() {
         return deleteTempImage;
+    }
+
+    public boolean isSkipDockerBuild() {
+        return skipDockerBuild;
     }
 
     @DataBoundSetter
@@ -179,6 +188,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         commandContext.setPublishType(publishType);
         commandContext.setDockerBuildInfo(dockerBuildInfo);
         commandContext.setDeleteTempImage(deleteTempImage);
+        commandContext.setSkipDockerBuild(skipDockerBuild);
         commandContext.setAzureCredentialsId(azureCredentialsId);
         commandContext.setSubscriptionId(azureClient.subscriptionId());
 
@@ -201,8 +211,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             throws IOException, InterruptedException, AzureCloudException {
         final DockerBuildInfo dockerBuildInfo = new DockerBuildInfo();
 
-        final String linuxFxVersion = app.linuxFxVersion();
-        if (StringUtils.isBlank(linuxFxVersion) || isBuiltInDockerImage(linuxFxVersion)) {
+        if (!isLinuxApp(app) || isBuiltInDockerImage(app.linuxFxVersion())) {
             // windows app doesn't need any docker config
             if (StringUtils.isNotBlank(this.publishType)
                     && this.publishType.equals(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
@@ -222,7 +231,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         dockerBuildInfo.withAuthConfig(getAuthConfig(run.getParent(), dockerRegistryEndpoint));
 
         // the original docker image on Azure
-        dockerBuildInfo.withLinuxFxVersion(linuxFxVersion);
+        dockerBuildInfo.withLinuxFxVersion(app.linuxFxVersion());
 
         // docker image tag
         final String tag = StringUtils.isBlank(dockerImageTag)
@@ -270,8 +279,12 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         return authConfig;
     }
 
+    public static boolean isLinuxApp(final WebApp webApp) {
+        return webApp.inner().kind().equalsIgnoreCase("app,linux");
+    }
+
     public static boolean isBuiltInDockerImage(final String linuxFxVersion) {
-        return !linuxFxVersion.startsWith("DOCKER|");
+        return StringUtils.isNotBlank(linuxFxVersion) && !linuxFxVersion.startsWith("DOCKER|");
     }
 
     @Override
@@ -349,12 +362,8 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
                 final String appName) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
-                final SiteConfigResourceInner siteConfig =
-                        azureClient.webApps().inner().getConfiguration(resourceGroup, appName);
-                if (siteConfig != null) {
-                    return StringUtils.isNotBlank(siteConfig.linuxFxVersion())
-                            && !isBuiltInDockerImage(siteConfig.linuxFxVersion());
-                }
+                final WebApp webApp = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
+                return isLinuxApp(webApp) && !isBuiltInDockerImage(webApp.linuxFxVersion());
             }
             return false;
         }
