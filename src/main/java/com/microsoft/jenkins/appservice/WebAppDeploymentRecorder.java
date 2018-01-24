@@ -10,6 +10,7 @@ import com.cloudbees.plugins.credentials.common.IdCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.github.dockerjava.api.model.AuthConfig;
 import com.microsoft.azure.management.Azure;
+import com.microsoft.azure.management.appservice.OperatingSystem;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
 import com.microsoft.jenkins.appservice.commands.DockerPingCommand;
@@ -211,7 +212,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             throws IOException, InterruptedException, AzureCloudException {
         final DockerBuildInfo dockerBuildInfo = new DockerBuildInfo();
 
-        if (!isLinuxApp(app) || isBuiltInDockerImage(app.linuxFxVersion())) {
+        if (!OperatingSystem.LINUX.equals(app.operatingSystem()) || isBuiltInDockerImage(app.linuxFxVersion())) {
             // windows app doesn't need any docker config
             if (StringUtils.isNotBlank(this.publishType)
                     && this.publishType.equals(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
@@ -277,10 +278,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         authConfig.withPassword(credentials[1]);
 
         return authConfig;
-    }
-
-    public static boolean isLinuxApp(final WebApp webApp) {
-        return webApp.inner().kind().equalsIgnoreCase("app,linux");
     }
 
     public static boolean isBuiltInDockerImage(final String linuxFxVersion) {
@@ -363,7 +360,8 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
                 final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
                 final WebApp webApp = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
-                return isLinuxApp(webApp) && !isBuiltInDockerImage(webApp.linuxFxVersion());
+                return OperatingSystem.LINUX.equals(webApp.operatingSystem())
+                        && !isBuiltInDockerImage(webApp.linuxFxVersion());
             }
             return false;
         }

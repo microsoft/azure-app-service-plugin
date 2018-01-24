@@ -19,7 +19,6 @@ import com.microsoft.jenkins.azurecommons.command.CommandState;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
 import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsUtils;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang.StringUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -60,8 +59,6 @@ public class DockerDeployCommand extends DockerCommand
 
                 disableSMBShareIfNotSet(webApp, update);
 
-                update.withTags(new HashedMap());
-                webApp.inner().withKind("app");
                 update.apply();
                 webApp.stop();
                 webApp.start();
