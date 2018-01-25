@@ -83,6 +83,9 @@ public class DockerDeployCommand extends DockerCommand
                 siteConfigResourceInner.withLinuxFxVersion(String.format("DOCKER|%s", image));
                 azure.webApps().inner().updateConfigurationSlot(
                         webApp.resourceGroupName(), webApp.name(), slot.name(), siteConfigResourceInner);
+
+                slot.stop();
+                slot.start();
             }
             context.setCommandState(CommandState.Success);
             context.logStatus("Azure app service updated successfully.");
