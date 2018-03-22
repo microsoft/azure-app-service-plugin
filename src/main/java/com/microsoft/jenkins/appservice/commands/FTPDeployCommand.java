@@ -30,7 +30,7 @@ import java.io.InputStream;
 public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCommandData> {
 
     private static final String SITE_ROOT = "/site/wwwroot/";
-    private static final int MAX_RETRY = 10;
+    private static final int MAX_RETRY = 300;
     private static final int RETRY_INTERVAL = 1000;
     private static final String STATE_STOPPED = "Stopped";
 
