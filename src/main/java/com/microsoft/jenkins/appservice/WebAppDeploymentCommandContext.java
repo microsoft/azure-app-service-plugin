@@ -143,7 +143,9 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
                 // Use existing docker image and skip build step
                 builder.withStartCommand(DockerDeployCommand.class);
             }
-        } else if (app.javaVersion() != JavaVersion.OFF) {
+        } else if (app.javaVersion() != JavaVersion.OFF
+                || (StringUtils.isNotBlank(app.linuxFxVersion())
+                    && app.linuxFxVersion().toLowerCase().contains("jre"))) {
             // For Java application, use FTP-based deployment as it's the recommended way
             builder.withStartCommand(FTPDeployCommand.class);
         } else {
