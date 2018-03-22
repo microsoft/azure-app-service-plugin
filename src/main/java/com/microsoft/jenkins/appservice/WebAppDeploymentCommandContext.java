@@ -6,7 +6,6 @@
 package com.microsoft.jenkins.appservice;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
-import com.microsoft.azure.management.appservice.JavaVersion;
 import com.microsoft.azure.management.appservice.PublishingProfile;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.azure.management.appservice.WebAppBase;
@@ -20,6 +19,7 @@ import com.microsoft.jenkins.appservice.commands.DockerRemoveImageCommand;
 import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
 import com.microsoft.jenkins.appservice.util.Constants;
+import com.microsoft.jenkins.appservice.util.WebAppUtils;
 import com.microsoft.jenkins.azurecommons.JobContext;
 import com.microsoft.jenkins.azurecommons.command.BaseCommandContext;
 import com.microsoft.jenkins.azurecommons.command.CommandService;
@@ -143,9 +143,7 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
                 // Use existing docker image and skip build step
                 builder.withStartCommand(DockerDeployCommand.class);
             }
-        } else if (app.javaVersion() != JavaVersion.OFF
-                || (StringUtils.isNotBlank(app.linuxFxVersion())
-                    && app.linuxFxVersion().toLowerCase().contains("jre"))) {
+        } else if (WebAppUtils.isJavaApp(app)) {
             // For Java application, use FTP-based deployment as it's the recommended way
             builder.withStartCommand(FTPDeployCommand.class);
         } else {

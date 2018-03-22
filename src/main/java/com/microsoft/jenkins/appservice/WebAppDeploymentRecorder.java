@@ -16,6 +16,7 @@ import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
 import com.microsoft.jenkins.appservice.commands.DockerPingCommand;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.appservice.util.Constants;
+import com.microsoft.jenkins.appservice.util.WebAppUtils;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.AbortException;
 import hudson.EnvVars;
@@ -212,7 +213,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             throws IOException, InterruptedException, AzureCloudException {
         final DockerBuildInfo dockerBuildInfo = new DockerBuildInfo();
 
-        if (!OperatingSystem.LINUX.equals(app.operatingSystem()) || isBuiltInDockerImage(app.linuxFxVersion())) {
+        if (!OperatingSystem.LINUX.equals(app.operatingSystem()) || WebAppUtils.isBuiltInDockerImage(app)) {
             // windows app doesn't need any docker config
             if (StringUtils.isNotBlank(this.publishType)
                     && this.publishType.equals(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER)) {
@@ -278,10 +279,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         authConfig.withPassword(credentials[1]);
 
         return authConfig;
-    }
-
-    public static boolean isBuiltInDockerImage(final String linuxFxVersion) {
-        return StringUtils.isNotBlank(linuxFxVersion) && !linuxFxVersion.startsWith("DOCKER|");
     }
 
     @Override
@@ -361,7 +358,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
                 final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
                 final WebApp webApp = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
                 return OperatingSystem.LINUX.equals(webApp.operatingSystem())
-                        && !isBuiltInDockerImage(webApp.linuxFxVersion());
+                        && !WebAppUtils.isBuiltInDockerImage(webApp);
             }
             return false;
         }
