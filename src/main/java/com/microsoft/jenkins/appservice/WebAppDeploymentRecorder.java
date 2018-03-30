@@ -43,7 +43,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
@@ -166,7 +165,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
 
         // Get app info
         final String azureCredentialsId = getAzureCredentialsId();
-        final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
+        final Azure azureClient = AzureUtils.buildClient(run.getParent(), azureCredentialsId);
         final String resourceGroup = getResourceGroup();
         final String appName = getAppName();
         final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
@@ -309,23 +308,25 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             return listAzureCredentialsIdItems(owner);
         }
 
-        public ListBoxModel doFillResourceGroupItems(@QueryParameter final String azureCredentialsId) {
-            return listResourceGroupItems(azureCredentialsId);
+        public ListBoxModel doFillResourceGroupItems(@AncestorInPath Item owner,
+                                                     @QueryParameter String azureCredentialsId) {
+            return listResourceGroupItems(owner, azureCredentialsId);
         }
 
-        public ListBoxModel doFillAppNameItems(@QueryParameter final String azureCredentialsId,
-                                               @QueryParameter final String resourceGroup) {
+        public ListBoxModel doFillAppNameItems(@AncestorInPath Item owner,
+                                               @QueryParameter String azureCredentialsId,
+                                               @QueryParameter String resourceGroup) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
-                final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
+                final Azure azureClient = AzureUtils.buildClient(owner, azureCredentialsId);
                 return listAppNameItems(azureClient.webApps(), resourceGroup);
             } else {
                 return new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
             }
         }
 
-        public FormValidation doVerifyConfiguration(@AncestorInPath final Item owner,
-                                                    @QueryParameter final String url,
-                                                    @QueryParameter final String credentialsId) {
+        public FormValidation doVerifyConfiguration(@AncestorInPath Item owner,
+                                                    @QueryParameter String url,
+                                                    @QueryParameter String credentialsId) {
 
             final DockerPingCommand pingCommand = new DockerPingCommand();
             try {
@@ -349,18 +350,18 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             }
         }
 
-        @JavaScriptMethod
-        public boolean isWebAppOnLinux(
-                final String azureCredentialsId,
-                final String resourceGroup,
-                final String appName) {
+        public String doIsWebAppOnLinux(@AncestorInPath Item owner,
+                                        @QueryParameter String azureCredentialsId,
+                                        @QueryParameter String resourceGroup,
+                                        @QueryParameter String appName) {
             if (StringUtils.isNotBlank(azureCredentialsId) && StringUtils.isNotBlank(resourceGroup)) {
-                final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
+                final Azure azureClient = AzureUtils.buildClient(owner, azureCredentialsId);
                 final WebApp webApp = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
-                return OperatingSystem.LINUX.equals(webApp.operatingSystem())
+                boolean isLinux = OperatingSystem.LINUX.equals(webApp.operatingSystem())
                         && !WebAppUtils.isBuiltInDockerImage(webApp);
+                return String.valueOf(isLinux);
             }
-            return false;
+            return "false";
         }
     }
 }

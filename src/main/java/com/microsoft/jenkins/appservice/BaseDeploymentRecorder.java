@@ -6,9 +6,7 @@
 
 package com.microsoft.jenkins.appservice;
 
-import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardListBoxModel;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.implementation.SiteInner;
 import com.microsoft.azure.management.appservice.implementation.WebAppsInner;
@@ -31,7 +29,6 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.CheckForNull;
-import java.util.Collections;
 
 public abstract class BaseDeploymentRecorder extends Recorder implements SimpleBuildStep {
 
@@ -125,23 +122,33 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
 
     protected static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
-        public boolean isApplicable(final Class<? extends AbstractProject> aClass) {
+        public boolean isApplicable(Class<? extends AbstractProject> aClass) {
             return true;
         }
 
-        protected ListBoxModel listAzureCredentialsIdItems(final Item owner) {
-            return new StandardListBoxModel()
-                    .withEmptySelection()
-                    .withAll(CredentialsProvider.lookupCredentials(
-                            AzureBaseCredentials.class, owner, ACL.SYSTEM, Collections.<DomainRequirement>emptyList()
-                    ));
+        protected ListBoxModel listAzureCredentialsIdItems(Item owner) {
+            StandardListBoxModel model = new StandardListBoxModel();
+            model.includeEmptyValue();
+            model.includeAs(ACL.SYSTEM, owner, AzureBaseCredentials.class);
+            return model;
         }
 
-        protected ListBoxModel listResourceGroupItems(final String azureCredentialsId) {
+        /**
+         * Leave for backward compatibility in azure-function plugin.
+         *
+         * @deprecated see {@link #listResourceGroupItems(Item, String)}.
+         */
+        @Deprecated
+        protected ListBoxModel listResourceGroupItems(String azureCredentialsId) {
+            return listResourceGroupItems(null, azureCredentialsId);
+        }
+
+        protected ListBoxModel listResourceGroupItems(Item owner,
+                                                      String azureCredentialsId) {
             final ListBoxModel model = new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
             // list all resource groups
             if (StringUtils.isNotBlank(azureCredentialsId)) {
-                final Azure azureClient = AzureUtils.buildClient(azureCredentialsId);
+                final Azure azureClient = AzureUtils.buildClient(owner, azureCredentialsId);
                 for (final ResourceGroup rg : azureClient.resourceGroups().list()) {
                     model.add(rg.name());
                 }
@@ -149,8 +156,8 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
             return model;
         }
 
-        protected ListBoxModel listAppNameItems(final HasInner<WebAppsInner> hasInner,
-                                                final String resourceGroup) {
+        protected ListBoxModel listAppNameItems(HasInner<WebAppsInner> hasInner,
+                                                String resourceGroup) {
             final ListBoxModel model = new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
             // list all app services
             // https://github.com/Azure/azure-sdk-for-java/issues/1762

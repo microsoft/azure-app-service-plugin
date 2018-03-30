@@ -19,6 +19,7 @@ import com.microsoft.jenkins.azurecommons.command.CommandState;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
 import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsUtils;
+import hudson.model.Item;
 import org.apache.commons.lang.StringUtils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,6 +33,7 @@ public class DockerDeployCommand extends DockerCommand
 
     @Override
     public void execute(final IDockerDeployCommandData context) {
+        final Item owner = context.getJobContext().getOwner();
         final DockerBuildInfo dockerBuildInfo = context.getDockerBuildInfo();
         final AuthConfig authConfig = dockerBuildInfo.getAuthConfig();
         final WebApp webApp = (WebApp) context.getWebApp();
@@ -75,7 +77,7 @@ public class DockerDeployCommand extends DockerCommand
 
                 update.apply();
 
-                final Azure azure = AzureUtils.buildClient(context.getAzureCredentialsId());
+                final Azure azure = AzureUtils.buildClient(owner, context.getAzureCredentialsId());
                 final SiteConfigResourceInner siteConfigResourceInner = azure.webApps().inner().getConfigurationSlot(
                         slot.resourceGroupName(), webApp.name(), slotName);
                 checkNotNull(siteConfigResourceInner, "Configuration not found for slot:" + slotName);
@@ -109,13 +111,14 @@ public class DockerDeployCommand extends DockerCommand
 
     /**
      * Disable SMB share if not set.
-     *
+     * <p>
      * This helps improve the reliability for container apps.
-     * @see <a href=
-     *      "https://docs.microsoft.com/en-us/azure/app-service/containers/app-service-linux-faq#custom-containers">
-     *      Azure App Service Web Apps for Containers FAQ</a>
+     *
      * @param webApp Web app
      * @param update Update params
+     * @see <a href=
+     * "https://docs.microsoft.com/en-us/azure/app-service/containers/app-service-linux-faq#custom-containers">
+     * Azure App Service Web Apps for Containers FAQ</a>
      */
     static void disableSMBShareIfNotSet(final WebAppBase webApp, final WebAppBase.Update update) {
         if (!webApp.getAppSettings().containsKey(SETTING_WEBSITES_ENABLE_APP_SERVICE_STORAGE)) {

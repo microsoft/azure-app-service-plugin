@@ -98,6 +98,10 @@
 
     Behaviour.specify("SELECT[name$=appName]", "azureAppService", 10000, function (app) {
         var oldChange = app.onchange;
+        var checkLinuxUrl = app.getAttribute("data-check-url");
+        if (checkLinuxUrl === null || checkLinuxUrl === "") {
+            return;
+        }
         app.onchange = function () {
             if (oldChange) {
                 oldChange();
@@ -106,17 +110,30 @@
             var azureCredentialsId = getElementValue("SELECT[name$=azureCredentialsId]")
             var resourceGroup = getElementValue("SELECT[name$=resourceGroup]")
             if (app.value && azureCredentialsId && resourceGroup) {
-                azureWebAppDescriptor.isWebAppOnLinux(azureCredentialsId, resourceGroup, app.value, function (t) {
-                    if (t.responseObject()) {
-                        webAppController.showAllRadioBlocks(true);
-                    } else {
-                        webAppController.showRadioBlockByValues(["file"], true);
+                var config = {
+                    parameters: {
+                        "azureCredentialsId": azureCredentialsId,
+                        "resourceGroup": resourceGroup,
+                        "appName": app.value
+                    },
+                    onSuccess: function (rsp) {
+                        if (rsp.responseText === "true") {
+                            webAppController.showAllRadioBlocks(true);
+                        } else {
+                            webAppController.showRadioBlockByValues(["file"], true);
+                        }
+                    },
+                    onFailure: function (rsp) {
+                        webAppController.showAllRadioBlocks(false);
                     }
-                })
+                };
+                new Ajax.Request(checkLinuxUrl, config);
             } else {
                 webAppController.showAllRadioBlocks(false);
             }
-        }
+        };
+
+        app.onchange();
     });
 
     Behaviour.specify("INPUT[name$=publishType]", "azureAppService", 10000, function () {
