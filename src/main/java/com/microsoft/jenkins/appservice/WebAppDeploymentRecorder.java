@@ -175,7 +175,8 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
                     appName, resourceGroup));
         }
 
-        final String expandedFilePath = run.getEnvironment(listener).expand(getFilePath());
+        final EnvVars envVars = run.getEnvironment(listener);
+        final String expandedFilePath = envVars.expand(getFilePath());
         final DockerBuildInfo dockerBuildInfo;
         try {
             dockerBuildInfo = validateDockerBuildInfo(run, listener, app);
@@ -184,9 +185,9 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         }
 
         final WebAppDeploymentCommandContext commandContext = new WebAppDeploymentCommandContext(expandedFilePath);
-        commandContext.setSourceDirectory(getSourceDirectory());
-        commandContext.setTargetDirectory(getTargetDirectory());
-        commandContext.setSlotName(slotName);
+        commandContext.setSourceDirectory(envVars.expand(getSourceDirectory()));
+        commandContext.setTargetDirectory(envVars.expand(getTargetDirectory()));
+        commandContext.setSlotName(envVars.expand(slotName));
         commandContext.setPublishType(publishType);
         commandContext.setDockerBuildInfo(dockerBuildInfo);
         commandContext.setDeleteTempImage(deleteTempImage);
