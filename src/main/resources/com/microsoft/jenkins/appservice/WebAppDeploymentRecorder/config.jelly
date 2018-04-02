@@ -17,7 +17,7 @@
         </f:entry>
 
         <f:entry title="${%App_Name}" field="appName">
-            <f:select/>
+            <f:select data-check-url="${descriptor.descriptorFullUrl}/isWebAppOnLinux" />
         </f:entry>
 
         <f:radioBlock name="publishType" value="file" inline="true" title="${%Publish_via_File}"
@@ -69,9 +69,5 @@
             <f:textbox/>
         </f:entry>
     </f:section>
-    <script>
-        var azureWebAppDescriptor =
-        <st:bind value="${descriptor}"/>;
-    </script>
     <script src="${rootURL}/plugin/azure-app-service/scripts/webapp.js"/>
 </j:jelly>

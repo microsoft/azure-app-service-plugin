@@ -11,19 +11,21 @@ import com.microsoft.azure.util.AzureCredentialUtil;
 import com.microsoft.jenkins.appservice.AzureAppServicePlugin;
 import com.microsoft.jenkins.azurecommons.core.AzureClientFactory;
 import com.microsoft.jenkins.azurecommons.core.credentials.TokenCredentialData;
+import hudson.model.Item;
 
 public final class AzureUtils {
 
-    public static TokenCredentialData getToken(String credentialId) {
-        AzureBaseCredentials credential = AzureCredentialUtil.getCredential2(credentialId);
+    public static TokenCredentialData getToken(Item owner, String credentialId) {
+        AzureBaseCredentials credential = AzureCredentialUtil.getCredential(owner, credentialId);
         if (credential == null) {
-            throw new IllegalStateException("Can't find credential with id: " + credentialId);
+            throw new IllegalStateException(
+                    String.format("Can't find credential in scope %s with id: %s", owner, credentialId));
         }
         return TokenCredentialData.deserialize(credential.serializeToTokenData());
     }
 
-    public static Azure buildClient(final String credentialId) {
-        TokenCredentialData token = getToken(credentialId);
+    public static Azure buildClient(Item owner, String credentialId) {
+        TokenCredentialData token = getToken(owner, credentialId);
         return AzureClientFactory.getClient(token, new AzureClientFactory.Configurer() {
             @Override
             public Azure.Configurable configure(Azure.Configurable configurable) {
