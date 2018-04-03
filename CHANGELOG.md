@@ -1,5 +1,12 @@
 # Azure App Service Plugin Changelog
 
+## Version 0.3.0, 2018-04-03
+* Add an option to skip docker build step (#25)
+* Restart slot after successful deployment (JENKINS-48191, #21)
+* Support Java container app on Linux (#23)
+* Support for credentials lookup in [Folders](https://plugins.jenkins.io/cloudbees-folder)
+* Expands variables in source/target directory and slot name (#24)
+
 ## Version 0.2.0, 2018-01-05
 * Support MSI
 
