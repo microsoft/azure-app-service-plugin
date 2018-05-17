@@ -24,7 +24,7 @@
         <jackson.version>2.7.4</jackson.version>
         <guava.version>19.0</guava.version>
         <powermock.version>1.7.0RC2</powermock.version>
-        <azuresdk.version>1.7.0</azuresdk.version>
+        <azuresdk.version>1.10.0</azuresdk.version>
         <azure-credentials.version>1.6.0</azure-credentials.version>
         <azure-commons.version>0.2.5</azure-commons.version>
         <version.docker-java>3.0.10</version.docker-java>

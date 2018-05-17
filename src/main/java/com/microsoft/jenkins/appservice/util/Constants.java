@@ -30,6 +30,8 @@ public final class Constants {
     public static final String AI_GIT_DEPLOY_FAILED = "GitDeployFailed";
     public static final String AI_FTP_DEPLOY = "FTPDeploy";
     public static final String AI_FTP_DEPLOY_FAILED = "GitDeployFailed";
+    public static final String AI_WAR_DEPLOY = "WarDeploy";
+    public static final String AI_WAR_DEPLOY_FAILED = "WarDeployFailed";
     public static final String AI_DOCKER_DEPLOY = "DockerDeploy";
     public static final String AI_DOCKER_DEPLOY_FAILED = "DockerDeployFailed";
     public static final String AI_DOCKER_PUSH = "Push";

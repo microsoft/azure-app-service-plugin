@@ -16,6 +16,7 @@ import com.microsoft.jenkins.appservice.commands.DockerDeployCommand;
 import com.microsoft.jenkins.appservice.commands.DockerPushCommand;
 import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
+import com.microsoft.jenkins.appservice.commands.WarDeployCommand;
 import com.microsoft.jenkins.azurecommons.command.CommandService;
 import com.microsoft.jenkins.azurecommons.command.CommandState;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
@@ -105,9 +106,10 @@ public class WebAppDeploymentCommandContextTest {
         commandService = ctx.getCommandService();
         commands = commandService.getRegisteredCommands();
         Assert.assertFalse(commands.contains(GitDeployCommand.class));
-        Assert.assertTrue(commands.contains(FTPDeployCommand.class));
+        Assert.assertFalse(commands.contains(FTPDeployCommand.class));
+        Assert.assertTrue(commands.contains(WarDeployCommand.class));
         Assert.assertEquals(1, commands.size());
-        Assert.assertEquals(commandService.getStartCommandClass(), FTPDeployCommand.class);
+        Assert.assertEquals(commandService.getStartCommandClass(), WarDeployCommand.class);
 
         // Docker
         ctx.setPublishType(WebAppDeploymentCommandContext.PUBLISH_TYPE_DOCKER);
