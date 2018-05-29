@@ -97,7 +97,8 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
 
             final FilePath sourceDir = ws.child(Util.fixNull(context.getSourceDirectory()));
             final String targetDir = Util.fixNull(context.getTargetDirectory());
-            copyAndAddFiles(git, repo, sourceDir, targetDir, context.getFilePath());
+            final String filePath = Util.fixNull(context.getFilePath());
+            copyAndAddFiles(git, repo, sourceDir, targetDir, filePath);
 
             if (!isWorkingTreeChanged(git)) {
                 context.logStatus("Deploy repository is up-to-date. Nothing to commit.");

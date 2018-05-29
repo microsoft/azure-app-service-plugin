@@ -14,6 +14,7 @@ import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
 import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsUtils;
 import hudson.FilePath;
+import hudson.Util;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,9 +25,9 @@ public class WarDeployCommand implements ICommand<WarDeployCommand.IWarDeployCom
     public void execute(IWarDeployCommandData context) {
         WebApp app = context.getWebApp();
 
-        FilePath srcDir = context.getJobContext().getWorkspace().child(context.getSourceDirectory());
+        FilePath srcDir = context.getJobContext().getWorkspace().child(Util.fixNull(context.getSourceDirectory()));
         try {
-            FilePath[] files = srcDir.list(context.getFilePath());
+            FilePath[] files = srcDir.list(Util.fixNull(context.getFilePath()));
 
             for (FilePath file : files) {
                 if (!file.getName().toLowerCase().endsWith("war")) {

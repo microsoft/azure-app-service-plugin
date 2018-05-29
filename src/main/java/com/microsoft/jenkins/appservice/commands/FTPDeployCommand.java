@@ -170,7 +170,7 @@ public class FTPDeployCommand implements ICommand<FTPDeployCommand.IFTPDeployCom
                 listener.getLogger().println(String.format("Working directory: %s", ftpClient.printWorkingDirectory()));
 
                 final FilePath sourceDir = workspace.child(Util.fixNull(sourceDirectory));
-                final FilePath[] files = sourceDir.list(filePath);
+                final FilePath[] files = sourceDir.list(Util.fixNull(filePath));
 
                 if (files.length == 0) {
                     listener.getLogger().println("No file found. Skip deployment.");
