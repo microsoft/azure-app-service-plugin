@@ -1,5 +1,9 @@
 # Azure App Service Plugin Changelog
 
+## Version 0.3.1, 2018-05-30
+* Switch to war deploy for Java apps
+* Add null check for path names when deploy
+
 ## Version 0.3.0, 2018-04-03
 * Add an option to skip docker build step (#25)
 * Restart slot after successful deployment (JENKINS-48191, #21)
