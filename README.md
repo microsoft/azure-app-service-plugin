@@ -31,7 +31,7 @@ Then create a Web App in Azure portal or through Azure CLI, we support both [Web
 
 ### Deploy to Web App through File Upload
 
-You can deploy your project to Azure Web App by uploading your build artifacts (for example, `.war` file in Java) using Git or FTP.
+You can deploy your project to Azure Web App by uploading your build artifacts (for example, `.war` file in Java). For Java apps, [WAR deploy](https://docs.microsoft.com/en-us/azure/app-service/app-service-deploy-zip#deploy-war-file) will be used. For other languages, Git will be used.
 
 1. Create a new freestyle project in Jenkins, add necessary build steps to build your code.
 2. Add a post-build action 'Publish an Azure Web App'.
@@ -45,7 +45,7 @@ You can deploy your project to Azure Web App by uploading your build artifacts (
 
 Web App on Linux supports a different way to do the deployment using Docker. To deploy using Docker, you need to provide a `Dockerfile` that packages your web app with service runtime into a docker image. Then the plugin will build the image, push it to a docker registry and deploy the image to your web app.
 
-> Web App on Linux also supports traditional ways like Git and FTP, but only for built-in languages (.NET Core, Node.js, PHP and Ruby). For other languages, you need to package your application code and service runtime together into a docker image and use docker to deploy.
+> Web App on Linux also supports traditional ways like Git and WAR deploy, but only for built-in languages (.NET Core, Java, Node.js, PHP and Ruby). For other languages, you need to package your application code and service runtime together into a docker image and use docker to deploy.
 
 To deploy using docker:
 
@@ -64,7 +64,7 @@ You can also use this plugin in pipeline (Jenkinsfile). Here are some samples to
 To deploy a Java web app using file upload:
 
 ```groovy
-azureWebAppPublish azureCredentialsId: '<credential_id>', publishType: 'file',
+azureWebAppPublish azureCredentialsId: '<credential_id>',
                    resourceGroup: '<resource_group_name>', appName: '<app_name>',
                    filePath: '*.war', sourceDirectory: 'target', targetDirectory: 'webapps'
 ```
