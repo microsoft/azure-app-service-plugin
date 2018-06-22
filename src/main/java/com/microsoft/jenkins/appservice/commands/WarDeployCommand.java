@@ -6,6 +6,7 @@
 
 package com.microsoft.jenkins.appservice.commands;
 
+import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.jenkins.appservice.AzureAppServicePlugin;
 import com.microsoft.jenkins.appservice.util.Constants;
@@ -15,6 +16,7 @@ import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsUtils;
 import hudson.FilePath;
 import hudson.Util;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -38,7 +40,17 @@ public class WarDeployCommand implements ICommand<WarDeployCommand.IWarDeployCom
                 context.logStatus("Deploy to app " + file.getBaseName() + " using file: " + file.getRemote());
 
                 try (InputStream stream = file.read()) {
-                    app.warDeploy(stream, file.getBaseName());
+                    String slotName = context.getSlotName();
+                    if (StringUtils.isEmpty(slotName)) {
+                        app.warDeploy(stream, file.getBaseName());
+                    } else {
+                        DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
+                        if (slot != null) {
+                            slot.warDeploy(stream, file.getBaseName());
+                        } else {
+                            throw new IOException("Slot " + slotName + " not found");
+                        }
+                    }
                 }
             }
 
@@ -67,5 +79,6 @@ public class WarDeployCommand implements ICommand<WarDeployCommand.IWarDeployCom
 
         WebApp getWebApp();
 
+        String getSlotName();
     }
 }

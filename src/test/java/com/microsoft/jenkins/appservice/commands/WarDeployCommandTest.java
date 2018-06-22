@@ -5,6 +5,8 @@
  */
 package com.microsoft.jenkins.appservice.commands;
 
+import com.microsoft.azure.management.appservice.DeploymentSlot;
+import com.microsoft.azure.management.appservice.DeploymentSlots;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.jenkins.azurecommons.JobContext;
 import hudson.FilePath;
@@ -18,6 +20,7 @@ import org.junit.rules.TemporaryFolder;
 import java.io.InputStream;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -54,5 +57,37 @@ public class WarDeployCommandTest {
         verify(app).warDeploy(any(InputStream.class), eq("ROOT"));
         verify(app).warDeploy(any(InputStream.class), eq("app"));
         verify(app, never()).warDeploy(any(InputStream.class), eq("other"));
+    }
+
+    @Test
+    public void slot() throws Exception {
+        temporaryFolder.newFile("ROOT.war");
+        temporaryFolder.newFile("app.war");
+        temporaryFolder.newFile("other.txt");
+
+        Run run = mock(Run.class);
+        FilePath workspace = new FilePath(temporaryFolder.getRoot());
+        Launcher launcher = mock(Launcher.class);
+        TaskListener listener = mock(TaskListener.class);
+        JobContext jobContext = new JobContext(run, workspace, launcher, listener);
+
+        WarDeployCommand.IWarDeployCommandData context = mock(WarDeployCommand.IWarDeployCommandData.class);
+        when(context.getJobContext()).thenReturn(jobContext);
+        when(context.getSourceDirectory()).thenReturn("");
+        WebApp app = mock(WebApp.class);
+        DeploymentSlots slots = mock(DeploymentSlots.class);
+        when(app.deploymentSlots()).thenReturn(slots);
+        DeploymentSlot slot = mock(DeploymentSlot.class);
+        when(slots.getByName("slot")).thenReturn(slot);
+        when(context.getWebApp()).thenReturn(app);
+        when(context.getFilePath()).thenReturn("*.war");
+        when(context.getSlotName()).thenReturn("slot");
+
+        WarDeployCommand command = new WarDeployCommand();
+        command.execute(context);
+
+        verify(slot).warDeploy(any(InputStream.class), eq("ROOT"));
+        verify(slot).warDeploy(any(InputStream.class), eq("app"));
+        verify(app, never()).warDeploy(any(InputStream.class), anyString());
     }
 }
