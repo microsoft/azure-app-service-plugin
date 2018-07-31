@@ -16,6 +16,7 @@ import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
 import com.microsoft.jenkins.appservice.commands.DockerPingCommand;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.appservice.util.Constants;
+import com.microsoft.jenkins.appservice.util.DeployTypeEnum;
 import com.microsoft.jenkins.appservice.util.WebAppUtils;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.AbortException;
@@ -68,7 +69,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             final String azureCredentialsId,
             final String appName,
             final String resourceGroup,
-            final String deployType) {
+            final DeployTypeEnum deployType) {
         super(azureCredentialsId, resourceGroup, appName, deployType);
         this.dockerFilePath = "**/Dockerfile";
         this.deleteTempImage = true;
@@ -325,13 +326,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             } else {
                 return new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
             }
-        }
-
-        public ListBoxModel doFillDeployTypeItems(@AncestorInPath Item owner) {
-            return new ListBoxModel(
-                    new ListBoxModel.Option(Constants.ZIP_DEPLOY.toUpperCase(), Constants.ZIP_DEPLOY),
-                    new ListBoxModel.Option(Constants.WAR_DEPLOY.toUpperCase(), Constants.WAR_DEPLOY),
-                    new ListBoxModel.Option(Constants.GIT_DEPLOY.toUpperCase(), Constants.GIT_DEPLOY));
         }
 
         public FormValidation doVerifyConfiguration(@AncestorInPath Item owner,

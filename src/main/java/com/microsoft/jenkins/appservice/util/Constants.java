@@ -22,9 +22,6 @@ public final class Constants {
 
     public static final String ZIP_FILE_EXTENSION = "zip";
     public static final String WAR_FILE_EXTENSION = "war";
-    public static final String ZIP_DEPLOY = ZIP_FILE_EXTENSION;
-    public static final String WAR_DEPLOY = WAR_FILE_EXTENSION;
-    public static final String GIT_DEPLOY = "git";
 
     /**
      * AI constants.

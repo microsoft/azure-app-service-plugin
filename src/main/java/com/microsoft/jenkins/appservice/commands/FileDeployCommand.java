@@ -10,6 +10,7 @@ import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.WebApp;
 import com.microsoft.jenkins.appservice.AzureAppServicePlugin;
 import com.microsoft.jenkins.appservice.util.Constants;
+import com.microsoft.jenkins.appservice.util.DeployTypeEnum;
 import com.microsoft.jenkins.azurecommons.command.CommandState;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
 import com.microsoft.jenkins.azurecommons.command.ICommand;
@@ -30,75 +31,80 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
     @Override
     public void execute(IWarDeployCommandData context) {
         WebApp app = context.getWebApp();
-        String deployType = context.getDeployType();
+        DeployTypeEnum deployType = context.getDeployType();
 
         FilePath srcDir = context.getJobContext().getWorkspace().child(Util.fixNull(context.getSourceDirectory()));
         try {
             FilePath[] files = srcDir.list(Util.fixNull(context.getFilePath()));
 
-            if (deployType.equals(Constants.ZIP_DEPLOY)) {
-                aiDeployInfo = Constants.AI_ZIP_DEPLOY;
-                aiDeployFailedInfo = Constants.AI_ZIP_DEPLOY_FAILED;
-                List<FilePath> zipFilesPathList = new ArrayList<>();
-                for (FilePath file : files) {
-                    if (!file.getName().toLowerCase().endsWith(Constants.ZIP_FILE_EXTENSION)) {
-                        context.logStatus(file.getName() + " is not ZIP file. Will skip.");
-                        continue;
-                    }
-                    zipFilesPathList.add(file);
-                }
-                if (zipFilesPathList.isEmpty()) {
-                    throw new IOException("Choose ZIP deployment, but there is no zip files in your "
-                            + "setting workspace.");
-                }
-                if (zipFilesPathList.size() > 1) {
-                    String errorMsg = String.format("There are %d zip files in the workspace, please check it.",
-                            zipFilesPathList.size());
-                    throw new IOException(errorMsg);
-                }
-                FilePath file = zipFilesPathList.get(0);
-                context.logStatus("Deploy to app " + file.getBaseName() + " using file: " + file.getRemote());
-                try (InputStream stream = file.read()) {
-                    String slotName = context.getSlotName();
-                    if (StringUtils.isEmpty(slotName)) {
-                        app.zipDeploy(stream);
-                    } else {
-                        DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
-                        if (slot != null) {
-                            slot.zipDeploy(stream);
-                        } else {
-                            throw new IOException("Slot " + slotName + " not found");
+            switch (deployType) {
+                case ZIP:
+                    aiDeployInfo = Constants.AI_ZIP_DEPLOY;
+                    aiDeployFailedInfo = Constants.AI_ZIP_DEPLOY_FAILED;
+                    List<FilePath> zipFilesPathList = new ArrayList<>();
+                    for (FilePath file : files) {
+                        if (!file.getName().toLowerCase().endsWith(Constants.ZIP_FILE_EXTENSION)) {
+                            context.logStatus(file.getName() + " is not ZIP file. Will skip.");
+                            continue;
                         }
+                        zipFilesPathList.add(file);
                     }
-                }
-            } else if (deployType.equals(Constants.WAR_DEPLOY)) {
-                aiDeployInfo = Constants.AI_WAR_DEPLOY;
-                aiDeployFailedInfo = Constants.AI_WAR_DEPLOY_FAILED;
-                for (FilePath file : files) {
-                    if (!file.getName().toLowerCase().endsWith(Constants.WAR_FILE_EXTENSION)) {
-                        context.logStatus(file.getName() + " is not WAR file. Will skip.");
-                        continue;
+                    if (zipFilesPathList.isEmpty()) {
+                        throw new IOException("Choose ZIP deployment, but there is no zip files in your "
+                                + "setting workspace.");
                     }
-
+                    if (zipFilesPathList.size() > 1) {
+                        String errorMsg = String.format("There are %d zip files in the workspace, please check it.",
+                                zipFilesPathList.size());
+                        throw new IOException(errorMsg);
+                    }
+                    FilePath file = zipFilesPathList.get(0);
                     context.logStatus("Deploy to app " + file.getBaseName() + " using file: " + file.getRemote());
-
                     try (InputStream stream = file.read()) {
                         String slotName = context.getSlotName();
                         if (StringUtils.isEmpty(slotName)) {
-                            app.warDeploy(stream, file.getBaseName());
+                            app.zipDeploy(stream);
                         } else {
                             DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
                             if (slot != null) {
-                                slot.warDeploy(stream, file.getBaseName());
+                                slot.zipDeploy(stream);
                             } else {
                                 throw new IOException("Slot " + slotName + " not found");
                             }
                         }
                     }
-                }
-            } else {
-                throw new IOException("Java app does not support Git deployment now. Please choose WAR"
-                        + " or ZIP deployment.");
+                    break;
+                case WAR:
+                    aiDeployInfo = Constants.AI_WAR_DEPLOY;
+                    aiDeployFailedInfo = Constants.AI_WAR_DEPLOY_FAILED;
+                    for (FilePath filePath : files) {
+                        if (!filePath.getName().toLowerCase().endsWith(Constants.WAR_FILE_EXTENSION)) {
+                            context.logStatus(filePath.getName() + " is not WAR file. Will skip.");
+                            continue;
+                        }
+
+                        context.logStatus("Deploy to app " + filePath.getBaseName() + " using file: "
+                                + filePath.getRemote());
+
+                        try (InputStream stream = filePath.read()) {
+                            String slotName = context.getSlotName();
+                            if (StringUtils.isEmpty(slotName)) {
+                                app.warDeploy(stream, filePath.getBaseName());
+                            } else {
+                                DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
+                                if (slot != null) {
+                                    slot.warDeploy(stream, filePath.getBaseName());
+                                } else {
+                                    throw new IOException("Slot " + slotName + " not found");
+                                }
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    String errorMsg = String.format("Java app does not support Git deployment now. Please choose WAR"
+                            + " or ZIP deployment.", deployType.toString());
+                    throw new IOException(errorMsg);
             }
 
             context.setCommandState(CommandState.Success);
@@ -119,7 +125,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
     }
 
     public interface IWarDeployCommandData extends IBaseCommandData {
-        String getDeployType();
+        DeployTypeEnum getDeployType();
 
         String getFilePath();
 

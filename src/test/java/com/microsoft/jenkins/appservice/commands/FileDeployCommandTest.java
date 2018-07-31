@@ -8,6 +8,7 @@ package com.microsoft.jenkins.appservice.commands;
 import com.microsoft.azure.management.appservice.DeploymentSlot;
 import com.microsoft.azure.management.appservice.DeploymentSlots;
 import com.microsoft.azure.management.appservice.WebApp;
+import com.microsoft.jenkins.appservice.util.DeployTypeEnum;
 import com.microsoft.jenkins.azurecommons.JobContext;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -51,7 +52,7 @@ public class FileDeployCommandTest {
         WebApp app = mock(WebApp.class);
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.war");
-        when(context.getDeployType()).thenReturn("war");
+        when(context.getDeployType()).thenReturn(DeployTypeEnum.WAR);
 
         FileDeployCommand command = new FileDeployCommand();
         command.execute(context);
@@ -84,7 +85,7 @@ public class FileDeployCommandTest {
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.war");
         when(context.getSlotName()).thenReturn("slot");
-        when(context.getDeployType()).thenReturn("war");
+        when(context.getDeployType()).thenReturn(DeployTypeEnum.WAR);
 
         FileDeployCommand command = new FileDeployCommand();
         command.execute(context);
@@ -111,7 +112,7 @@ public class FileDeployCommandTest {
         WebApp app = mock(WebApp.class);
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.zip");
-        when(context.getDeployType()).thenReturn("zip");
+        when(context.getDeployType()).thenReturn(DeployTypeEnum.ZIP);
 
         FileDeployCommand command = new FileDeployCommand();
         command.execute(context);
@@ -141,7 +142,7 @@ public class FileDeployCommandTest {
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.zip");
         when(context.getSlotName()).thenReturn("slot");
-        when(context.getDeployType()).thenReturn("zip");
+        when(context.getDeployType()).thenReturn(DeployTypeEnum.ZIP);
 
         FileDeployCommand command = new FileDeployCommand();
         command.execute(context);
@@ -167,7 +168,7 @@ public class FileDeployCommandTest {
         WebApp app = mock(WebApp.class);
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.zip");
-        when(context.getDeployType()).thenReturn("zip");
+        when(context.getDeployType()).thenReturn(DeployTypeEnum.ZIP);
 
         FileDeployCommand command = new FileDeployCommand();
         command.execute(context);

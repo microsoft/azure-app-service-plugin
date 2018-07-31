@@ -15,6 +15,7 @@ import com.microsoft.azure.management.resources.fluentcore.model.HasInner;
 import com.microsoft.azure.util.AzureBaseCredentials;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.appservice.util.Constants;
+import com.microsoft.jenkins.appservice.util.DeployTypeEnum;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Item;
@@ -43,14 +44,14 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
     @CheckForNull
     private String targetDirectory;
     @CheckForNull
-    private String deployType;
+    private DeployTypeEnum deployType;
     private boolean deployOnlyIfSuccessful;
 
     protected BaseDeploymentRecorder(
             final String azureCredentialsId,
             final String resourceGroup,
             final String appName,
-            final String deployType) {
+            final DeployTypeEnum deployType) {
         this.azureCredentialsId = azureCredentialsId;
         this.resourceGroup = resourceGroup;
         this.appName = appName;
@@ -80,11 +81,11 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
     }
 
     @DataBoundSetter
-    public void setDeployType(final String deployType) {
+    public void setDeployType(final DeployTypeEnum deployType) {
         this.deployType = deployType;
     }
 
-    public String getDeployType() {
+    public DeployTypeEnum getDeployType() {
         return deployType;
     }
 
