@@ -42,16 +42,20 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
     private String sourceDirectory;
     @CheckForNull
     private String targetDirectory;
+    @CheckForNull
+    private String deployType;
     private boolean deployOnlyIfSuccessful;
 
     protected BaseDeploymentRecorder(
             final String azureCredentialsId,
             final String resourceGroup,
-            final String appName) {
+            final String appName,
+            final String deployType) {
         this.azureCredentialsId = azureCredentialsId;
         this.resourceGroup = resourceGroup;
         this.appName = appName;
         this.deployOnlyIfSuccessful = true;
+        this.deployType = deployType;
     }
 
     public String getAzureCredentialsId() {
@@ -73,6 +77,15 @@ public abstract class BaseDeploymentRecorder extends Recorder implements SimpleB
 
     public String getFilePath() {
         return filePath;
+    }
+
+    @DataBoundSetter
+    public void setDeployType(final String deployType) {
+        this.deployType = deployType;
+    }
+
+    public String getDeployType() {
+        return deployType;
     }
 
     @DataBoundSetter

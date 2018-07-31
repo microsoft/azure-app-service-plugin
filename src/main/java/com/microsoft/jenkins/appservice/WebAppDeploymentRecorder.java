@@ -67,8 +67,9 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     public WebAppDeploymentRecorder(
             final String azureCredentialsId,
             final String appName,
-            final String resourceGroup) {
-        super(azureCredentialsId, resourceGroup, appName);
+            final String resourceGroup,
+            final String deployType) {
+        super(azureCredentialsId, resourceGroup, appName, deployType);
         this.dockerFilePath = "**/Dockerfile";
         this.deleteTempImage = true;
     }
@@ -187,6 +188,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         commandContext.setSourceDirectory(envVars.expand(getSourceDirectory()));
         commandContext.setTargetDirectory(envVars.expand(getTargetDirectory()));
         commandContext.setSlotName(envVars.expand(slotName));
+        commandContext.setDeployType(getDeployType());
         commandContext.setPublishType(publishType);
         commandContext.setDockerBuildInfo(dockerBuildInfo);
         commandContext.setDeleteTempImage(deleteTempImage);
@@ -323,6 +325,13 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             } else {
                 return new ListBoxModel(new ListBoxModel.Option(Constants.EMPTY_SELECTION, ""));
             }
+        }
+
+        public ListBoxModel doFillDeployTypeItems(@AncestorInPath Item owner) {
+            return new ListBoxModel(
+                    new ListBoxModel.Option(Constants.ZIP_DEPLOY.toUpperCase(), Constants.ZIP_DEPLOY),
+                    new ListBoxModel.Option(Constants.WAR_DEPLOY.toUpperCase(), Constants.WAR_DEPLOY),
+                    new ListBoxModel.Option(Constants.GIT_DEPLOY.toUpperCase(), Constants.GIT_DEPLOY));
         }
 
         public FormValidation doVerifyConfiguration(@AncestorInPath Item owner,
