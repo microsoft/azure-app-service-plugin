@@ -102,7 +102,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
                     }
                     break;
                 default:
-                    String errorMsg = String.format("Java app does not support Git deployment now. Please choose WAR"
+                    String errorMsg = String.format("Java app does not support %s deployment now. Please choose WAR"
                             + " or ZIP deployment.", deployType.toString());
                     throw new IOException(errorMsg);
             }
