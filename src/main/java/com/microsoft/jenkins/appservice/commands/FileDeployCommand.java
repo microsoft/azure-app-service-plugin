@@ -113,7 +113,8 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
                     "ResourceGroup", AppInsightsUtils.hash(context.getWebApp().resourceGroupName()),
                     "WebApp", AppInsightsUtils.hash(context.getWebApp().name()));
         } catch (IOException e) {
-            context.logError("Fail to deploy war file due to: " + e.getMessage());
+            String errorMsg = String.format("Fail to deploy %s file due to: %s", deployType.toString(), e.getMessage());
+            context.logError(errorMsg);
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, aiDeployFailedInfo,
                     "Run", AppInsightsUtils.hash(context.getJobContext().getRun().getUrl()),
                     "ResourceGroup", AppInsightsUtils.hash(context.getWebApp().resourceGroupName()),
