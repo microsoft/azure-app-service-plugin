@@ -50,7 +50,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
                         zipFilesPathList.add(file);
                     }
                     if (zipFilesPathList.isEmpty()) {
-                        throw new IOException("Choose ZIP deployment, but there is no zip files in your "
+                        context.logStatus("Choose ZIP deployment, but there is no zip files in your "
                                 + "setting workspace.");
                     }
                     if (zipFilesPathList.size() > 1) {
@@ -77,6 +77,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
                 case WAR:
                     aiDeployInfo = Constants.AI_WAR_DEPLOY;
                     aiDeployFailedInfo = Constants.AI_WAR_DEPLOY_FAILED;
+                    boolean hasWarFile = false;
                     for (FilePath filePath : files) {
                         if (!filePath.getName().toLowerCase().endsWith(Constants.WAR_FILE_EXTENSION)) {
                             context.logStatus(filePath.getName() + " is not WAR file. Will skip.");
@@ -86,6 +87,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
                         context.logStatus("Deploy to app " + filePath.getBaseName() + " using file: "
                                 + filePath.getRemote());
 
+                        hasWarFile = true;
                         try (InputStream stream = filePath.read()) {
                             String slotName = context.getSlotName();
                             if (StringUtils.isEmpty(slotName)) {
@@ -99,6 +101,10 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
                                 }
                             }
                         }
+                    }
+                    if (!hasWarFile) {
+                        context.logStatus("Choose WAR deployment, but there is no war files in your "
+                                + "setting workspace.");
                     }
                     break;
                 default:
