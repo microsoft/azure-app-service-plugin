@@ -16,7 +16,6 @@ import com.microsoft.jenkins.appservice.commands.DockerBuildInfo;
 import com.microsoft.jenkins.appservice.commands.DockerPingCommand;
 import com.microsoft.jenkins.appservice.util.AzureUtils;
 import com.microsoft.jenkins.appservice.util.Constants;
-import com.microsoft.jenkins.appservice.util.DeployTypeEnum;
 import com.microsoft.jenkins.appservice.util.WebAppUtils;
 import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.AbortException;
@@ -68,9 +67,8 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     public WebAppDeploymentRecorder(
             final String azureCredentialsId,
             final String appName,
-            final String resourceGroup,
-            final DeployTypeEnum deployType) {
-        super(azureCredentialsId, resourceGroup, appName, deployType);
+            final String resourceGroup) {
+        super(azureCredentialsId, resourceGroup, appName);
         this.dockerFilePath = "**/Dockerfile";
         this.deleteTempImage = true;
     }
@@ -189,7 +187,6 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         commandContext.setSourceDirectory(envVars.expand(getSourceDirectory()));
         commandContext.setTargetDirectory(envVars.expand(getTargetDirectory()));
         commandContext.setSlotName(envVars.expand(slotName));
-        commandContext.setDeployType(getDeployType());
         commandContext.setPublishType(publishType);
         commandContext.setDockerBuildInfo(dockerBuildInfo);
         commandContext.setDeleteTempImage(deleteTempImage);

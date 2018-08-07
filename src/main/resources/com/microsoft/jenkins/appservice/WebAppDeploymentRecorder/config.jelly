@@ -23,11 +23,6 @@
         <f:radioBlock name="publishType" value="file" inline="true" title="${%Publish_via_File}"
                       checked="${ instance.getPublishType()==null || instance.getPublishType() == 'file'}"
                       help="/${descriptor.descriptorUrl}/help/publishViaFile">
-            <f:entry title="${%Deploy_Type}" field="deployType">
-                <f:enum field="deployType">
-                    ${it.getLabel()}
-                </f:enum>
-            </f:entry>
             <f:entry title="${%File_Path}" field="filePath">
                 <f:textbox/>
             </f:entry>

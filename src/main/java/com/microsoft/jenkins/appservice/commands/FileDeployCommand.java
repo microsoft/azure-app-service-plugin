@@ -31,11 +31,14 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
     @Override
     public void execute(IWarDeployCommandData context) {
         WebApp app = context.getWebApp();
-        DeployTypeEnum deployType = context.getDeployType();
+
+        final String filePattern = Util.fixNull(context.getFilePath());
+        DeployTypeEnum deployType = getDeployTypeFromFilePattern(filePattern);
+
 
         FilePath srcDir = context.getJobContext().getWorkspace().child(Util.fixNull(context.getSourceDirectory()));
         try {
-            FilePath[] files = srcDir.list(Util.fixNull(context.getFilePath()));
+            FilePath[] files = srcDir.list(filePattern);
 
             switch (deployType) {
                 case ZIP:
@@ -131,9 +134,20 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
         }
     }
 
-    public interface IWarDeployCommandData extends IBaseCommandData {
-        DeployTypeEnum getDeployType();
+    private DeployTypeEnum getDeployTypeFromFilePattern(String filePath) {
+        String[] splits = filePath.split("\\.");
+        String extension = splits[splits.length - 1];
+        switch (extension) {
+            case Constants.ZIP_FILE_EXTENSION:
+                return DeployTypeEnum.ZIP;
+            case Constants.WAR_FILE_EXTENSION:
+                return DeployTypeEnum.WAR;
+            default:
+                return DeployTypeEnum.UNKNOWN;
+        }
+    }
 
+    public interface IWarDeployCommandData extends IBaseCommandData {
         String getFilePath();
 
         String getSourceDirectory();

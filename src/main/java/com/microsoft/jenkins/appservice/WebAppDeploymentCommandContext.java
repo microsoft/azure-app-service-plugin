@@ -20,7 +20,6 @@ import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
 import com.microsoft.jenkins.appservice.commands.FileDeployCommand;
 import com.microsoft.jenkins.appservice.util.Constants;
-import com.microsoft.jenkins.appservice.util.DeployTypeEnum;
 import com.microsoft.jenkins.appservice.util.WebAppUtils;
 import com.microsoft.jenkins.azurecommons.JobContext;
 import com.microsoft.jenkins.azurecommons.command.BaseCommandContext;
@@ -50,7 +49,6 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
     public static final String PUBLISH_TYPE_DOCKER = "docker";
 
     private final String filePath;
-    private DeployTypeEnum deployType;
     private String publishType;
     private DockerBuildInfo dockerBuildInfo;
     private String sourceDirectory;
@@ -80,10 +78,6 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
 
     public void setSlotName(final String slotName) {
         this.slotName = slotName;
-    }
-
-    public void setDeployType(final DeployTypeEnum deployType) {
-        this.deployType = deployType;
     }
 
     public void setPublishType(final String publishType) {
@@ -171,11 +165,6 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
     @Override
     public IBaseCommandData getDataForCommand(final ICommand command) {
         return this;
-    }
-
-    @Override
-    public DeployTypeEnum getDeployType() {
-        return deployType;
     }
 
     @Override

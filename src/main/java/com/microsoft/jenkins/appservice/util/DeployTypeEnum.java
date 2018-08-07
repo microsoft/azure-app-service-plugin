@@ -8,7 +8,8 @@ package com.microsoft.jenkins.appservice.util;
 public enum DeployTypeEnum {
     GIT("GIT"),
     WAR("WAR"),
-    ZIP("ZIP");
+    ZIP("ZIP"),
+    UNKNOWN("UNKNOWN");
 
     private String label;
 
