@@ -40,7 +40,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 public class WebAppDeploymentCommandContext extends BaseCommandContext
         implements FTPDeployCommand.IFTPDeployCommandData,
         GitDeployCommand.IGitDeployCommandData,
-        FileDeployCommand.IWarDeployCommandData,
+        FileDeployCommand.IFileDeployCommandData,
         DockerBuildCommand.IDockerBuildCommandData,
         DockerPushCommand.IDockerPushCommandData,
         DockerRemoveImageCommand.IDockerRemoveImageCommandData,

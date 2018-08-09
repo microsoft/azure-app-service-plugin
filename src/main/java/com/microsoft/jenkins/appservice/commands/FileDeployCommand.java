@@ -24,12 +24,12 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployCommandData> {
+public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeployCommandData> {
     private String aiDeployInfo;
     private String aiDeployFailedInfo;
 
     @Override
-    public void execute(IWarDeployCommandData context) {
+    public void execute(IFileDeployCommandData context) {
         WebApp app = context.getWebApp();
 
         final String filePattern = Util.fixNull(context.getFilePath());
@@ -147,7 +147,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IWarDeployC
         }
     }
 
-    public interface IWarDeployCommandData extends IBaseCommandData {
+    public interface IFileDeployCommandData extends IBaseCommandData {
         String getFilePath();
 
         String getSourceDirectory();

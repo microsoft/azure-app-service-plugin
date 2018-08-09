@@ -45,7 +45,7 @@ public class FileDeployCommandTest {
         TaskListener listener = mock(TaskListener.class);
         JobContext jobContext = new JobContext(run, workspace, launcher, listener);
 
-        FileDeployCommand.IWarDeployCommandData context = mock(FileDeployCommand.IWarDeployCommandData.class);
+        FileDeployCommand.IFileDeployCommandData context = mock(FileDeployCommand.IFileDeployCommandData.class);
         when(context.getJobContext()).thenReturn(jobContext);
         when(context.getSourceDirectory()).thenReturn("");
         WebApp app = mock(WebApp.class);
@@ -72,7 +72,7 @@ public class FileDeployCommandTest {
         TaskListener listener = mock(TaskListener.class);
         JobContext jobContext = new JobContext(run, workspace, launcher, listener);
 
-        FileDeployCommand.IWarDeployCommandData context = mock(FileDeployCommand.IWarDeployCommandData.class);
+        FileDeployCommand.IFileDeployCommandData context = mock(FileDeployCommand.IFileDeployCommandData.class);
         when(context.getJobContext()).thenReturn(jobContext);
         when(context.getSourceDirectory()).thenReturn("");
         WebApp app = mock(WebApp.class);
@@ -103,7 +103,7 @@ public class FileDeployCommandTest {
         TaskListener listener = mock(TaskListener.class);
         JobContext jobContext = new JobContext(run, workspace, launcher, listener);
 
-        FileDeployCommand.IWarDeployCommandData context = mock(FileDeployCommand.IWarDeployCommandData.class);
+        FileDeployCommand.IFileDeployCommandData context = mock(FileDeployCommand.IFileDeployCommandData.class);
         when(context.getJobContext()).thenReturn(jobContext);
         when(context.getSourceDirectory()).thenReturn("");
         WebApp app = mock(WebApp.class);
@@ -127,7 +127,7 @@ public class FileDeployCommandTest {
         TaskListener listener = mock(TaskListener.class);
         JobContext jobContext = new JobContext(run, workspace, launcher, listener);
 
-        FileDeployCommand.IWarDeployCommandData context = mock(FileDeployCommand.IWarDeployCommandData.class);
+        FileDeployCommand.IFileDeployCommandData context = mock(FileDeployCommand.IFileDeployCommandData.class);
         when(context.getJobContext()).thenReturn(jobContext);
         when(context.getSourceDirectory()).thenReturn("");
         WebApp app = mock(WebApp.class);
@@ -157,7 +157,7 @@ public class FileDeployCommandTest {
         TaskListener listener = mock(TaskListener.class);
         JobContext jobContext = new JobContext(run, workspace, launcher, listener);
 
-        FileDeployCommand.IWarDeployCommandData context = mock(FileDeployCommand.IWarDeployCommandData.class);
+        FileDeployCommand.IFileDeployCommandData context = mock(FileDeployCommand.IFileDeployCommandData.class);
         when(context.getJobContext()).thenReturn(jobContext);
         when(context.getSourceDirectory()).thenReturn("");
         WebApp app = mock(WebApp.class);

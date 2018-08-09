@@ -5,16 +5,16 @@
  */
 package com.microsoft.jenkins.appservice.integration;
 
+import com.google.common.io.Files;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.appservice.*;
 import com.microsoft.azure.management.resources.ResourceGroup;
-import com.microsoft.jenkins.appservice.util.AzureUtils;
+import com.microsoft.jenkins.appservice.commands.FileDeployCommand;
 import com.microsoft.jenkins.azurecommons.JobContext;
 import com.microsoft.jenkins.azurecommons.core.AzureClientFactory;
 import hudson.FilePath;
 import hudson.model.Run;
 import hudson.model.StreamBuildListener;
-import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,16 +23,13 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.logging.Logger;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ITFTPDeployCommand extends IntegrationTest {
-
-    private static final Logger LOGGER = Logger.getLogger(ITFTPDeployCommand.class.getName());
-    private FTPDeployCommand command = null;
-    private FTPDeployCommand.IFTPDeployCommandData commandDataMock = null;
+public class ITJavaDeployCommand extends IntegrationTest {
+    private FileDeployCommand command = null;
+    private FileDeployCommand.IFileDeployCommandData commandDataMock = null;
     private WebApp webApp = null;
     private FilePath workspace = null;
 
@@ -40,8 +37,8 @@ public class ITFTPDeployCommand extends IntegrationTest {
     @Before
     public void setUp() {
         super.setUp();
-        command = new FTPDeployCommand();
-        commandDataMock = mock(FTPDeployCommand.IFTPDeployCommandData.class);
+        command = new FileDeployCommand();
+        commandDataMock = mock(FileDeployCommand.IFileDeployCommandData.class);
         JobContext jobContextMock = mock(JobContext.class);
         when(commandDataMock.getJobContext()).thenReturn(jobContextMock);
         StreamBuildListener listener = new StreamBuildListener(System.out, Charset.defaultCharset());
@@ -79,12 +76,10 @@ public class ITFTPDeployCommand extends IntegrationTest {
                 .withWebContainer(WebContainer.TOMCAT_8_0_NEWEST)
                 .create();
         Assert.assertNotNull(webApp);
-        when(commandDataMock.getWebAppBase()).thenReturn(webApp);
+        when(commandDataMock.getWebApp()).thenReturn(webApp);
 
-        final PublishingProfile pubProfile = webApp.getPublishingProfile();
-        when(commandDataMock.getPublishingProfile()).thenReturn(pubProfile);
 
-        File workspaceDir = com.google.common.io.Files.createTempDir();
+        File workspaceDir = Files.createTempDir();
         workspaceDir.deleteOnExit();
         workspace = new FilePath(workspaceDir);
 
@@ -94,27 +89,29 @@ public class ITFTPDeployCommand extends IntegrationTest {
     }
 
     /**
-     * This test uploads a war file to a non-root directory and verifies web page content
+     * This test uploads a normal war file to deploy java app and verifies web page content
+     *
      * @throws IOException
      * @throws InterruptedException
      */
     @Test
-    public void uploadNonRoot() throws IOException, InterruptedException {
+    public void warDeployNonRoot() throws IOException, InterruptedException {
         Utils.extractResourceFile(getClass(), "sample-java-app/app.war", workspace.child("webapps/sample.war").getRemote());
         when(commandDataMock.getFilePath()).thenReturn("webapps/sample.war");
 
         command.execute(commandDataMock);
 
-        Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName() + "/sample/"),"Sample \"Hello, World\" Application", 300);
+        Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName() + "/sample/"), "Sample \"Hello, World\" Application", 300);
     }
 
     /**
-     * This test uploads a war file to a root directory and verifies web page content
+     * This test uploads a root war file to deploy java app and verifies web page content
+     *
      * @throws IOException
      * @throws InterruptedException
      */
     @Test
-    public void uploadRoot() throws IOException, InterruptedException {
+    public void warDeployRoot() throws IOException, InterruptedException {
         Utils.extractResourceFile(getClass(), "sample-java-app/app.war", workspace.child("webapps/ROOT.war").getRemote());
         when(commandDataMock.getFilePath()).thenReturn("webapps/ROOT.war");
 
@@ -124,38 +121,17 @@ public class ITFTPDeployCommand extends IntegrationTest {
     }
 
     /**
-     * This test uploads a standalone application which does not use the default tomcat
+     *  This test uploads a zip file to deploy java app and verifies web page content
      * @throws IOException
      * @throws InterruptedException
      */
     @Test
-    public void uploadStandalone() throws IOException, InterruptedException {
-        Utils.extractResourceFile(getClass(), "sample-java-app-spring-boot/gs-spring-boot-0.1.0.jar",
-            workspace.child("gs-spring-boot-0.1.0.jar").getRemote());
-        Utils.extractResourceFile(getClass(), "sample-java-app-spring-boot/web.config",
-            workspace.child("web.config").getRemote());
-        when(commandDataMock.getFilePath()).thenReturn("*.jar,web.config");
+    public void zipDeploy() throws IOException, InterruptedException {
+        Utils.extractResourceFile(getClass(), "sample-java-app-zip/gs-spring-boot-0.1.0.zip", workspace.child("gs-spring-boot-0.1.0.zip").getRemote());
+        when(commandDataMock.getFilePath()).thenReturn("*.zip");
 
         command.execute(commandDataMock);
 
         Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName()), "Greetings from Spring Boot!", 300);
     }
-
-    /**
-     * This test uploads a war file to a root directory and verifies web page content, with source and target directories specified
-     * @throws IOException
-     * @throws InterruptedException
-     */
-    @Test
-    public void uploadWithSourceTargetDirectory() throws IOException, InterruptedException {
-        Utils.extractResourceFile(getClass(), "sample-java-app/app.war", workspace.child("target/ROOT.war").getRemote());
-        when(commandDataMock.getSourceDirectory()).thenReturn("target");
-        when(commandDataMock.getTargetDirectory()).thenReturn("webapps");
-        when(commandDataMock.getFilePath()).thenReturn("ROOT.war");
-
-        command.execute(commandDataMock);
-
-        Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName()), "Sample \"Hello, World\" Application", 300);
-    }
-
 }
