@@ -123,6 +123,16 @@ public class ITFTPDeployCommand extends IntegrationTest {
         Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName()), "Sample \"Hello, World\" Application", 300);
     }
 
+    @Test
+    public void zipDeploy() throws IOException, InterruptedException {
+        Utils.extractResourceFile(getClass(), "sample-java-app-zip/gs-spring-boot-0.1.0.zip", workspace.child("gs-spring-boot-0.1.0.zip").getRemote());
+        when(commandDataMock.getFilePath()).thenReturn("*.zip");
+
+        command.execute(commandDataMock);
+
+        Utils.waitForAppReady(new URL("https://" + webApp.defaultHostName()), "Greetings from Spring Boot!", 300);
+    }
+
     /**
      * This test uploads a standalone application which does not use the default tomcat
      * @throws IOException
