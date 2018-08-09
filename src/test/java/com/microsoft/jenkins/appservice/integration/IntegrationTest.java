@@ -89,8 +89,8 @@ public class IntegrationTest {
             appServicePlanName = TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_APP_SERVICE_PLAN_NAME_PREFIX", "appserviceplan") + "-" + TestEnvironment.GenerateRandomString(16);
 
             SkuDescription sd = new SkuDescription();
-            sd.withTier(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_PRICING_TIER_SKU", "FREE"));
-            sd.withSize(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_PRICING_TIER_SIZE", "F1"));
+            sd.withTier(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_PRICING_TIER_SKU", "SHARED"));
+            sd.withSize(TestEnvironment.loadFromEnv("APP_SERVICE_TEST_DEFAULT_PRICING_TIER_SIZE", "D1"));
             appServicePricingTier = PricingTier.fromSkuDescription(sd);
 
             blobEndpointSuffixForTemplate = new HashMap<>();
