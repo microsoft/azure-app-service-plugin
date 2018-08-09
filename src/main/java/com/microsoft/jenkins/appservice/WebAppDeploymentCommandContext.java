@@ -146,7 +146,7 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
                 builder.withStartCommand(DockerDeployCommand.class);
             }
         } else if (WebAppUtils.isJavaApp(app)) {
-            // For Java application, use WAR deployment
+            // For Java application, use WAR or ZIP deployment
             builder.withStartCommand(FileDeployCommand.class);
         } else {
             // For non-Java application, use Git-based deployment

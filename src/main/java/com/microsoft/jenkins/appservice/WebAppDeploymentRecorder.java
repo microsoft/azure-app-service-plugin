@@ -351,6 +351,28 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
             }
         }
 
+        public FormValidation doCheckFilePath(
+                @AncestorInPath Item owner,
+                @QueryParameter String value,
+                @QueryParameter String azureCredentialsId,
+                @QueryParameter String resourceGroup,
+                @QueryParameter String appName) {
+            final Azure azureClient = AzureUtils.buildClient(owner, azureCredentialsId);
+            try {
+                final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
+                boolean isJavaApp = WebAppUtils.isJavaApp(app);
+                if (isJavaApp) {
+                    if (!value.contains(".zip") && !value.contains(".war")) {
+                        return FormValidation.warning("Java applications need to use WAR/ZIP deployment which means "
+                                + "you have to provide war or zip files.");
+                    }
+                }
+            } catch (Exception e) {
+                // ignore exception for fetching web app info when do parameter checking
+            }
+            return FormValidation.ok();
+        }
+
         public String doIsWebAppOnLinux(@AncestorInPath Item owner,
                                         @QueryParameter String azureCredentialsId,
                                         @QueryParameter String resourceGroup,
