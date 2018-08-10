@@ -20,6 +20,9 @@ public final class Constants {
     // the first option for select element. Keep the same value as jenkins pre-defined default empty value.
     public static final String EMPTY_SELECTION = "- none -";
 
+    public static final String ZIP_FILE_EXTENSION = "zip";
+    public static final String WAR_FILE_EXTENSION = "war";
+
     /**
      * AI constants.
      */
@@ -32,6 +35,8 @@ public final class Constants {
     public static final String AI_FTP_DEPLOY_FAILED = "GitDeployFailed";
     public static final String AI_WAR_DEPLOY = "WarDeploy";
     public static final String AI_WAR_DEPLOY_FAILED = "WarDeployFailed";
+    public static final String AI_ZIP_DEPLOY = "ZipDeploy";
+    public static final String AI_ZIP_DEPLOY_FAILED = "ZipDeployFailed";
     public static final String AI_DOCKER_DEPLOY = "DockerDeploy";
     public static final String AI_DOCKER_DEPLOY_FAILED = "DockerDeployFailed";
     public static final String AI_DOCKER_PUSH = "Push";

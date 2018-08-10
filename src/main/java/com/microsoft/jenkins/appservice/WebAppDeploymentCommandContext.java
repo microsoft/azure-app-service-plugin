@@ -18,7 +18,7 @@ import com.microsoft.jenkins.appservice.commands.DockerPushCommand;
 import com.microsoft.jenkins.appservice.commands.DockerRemoveImageCommand;
 import com.microsoft.jenkins.appservice.commands.FTPDeployCommand;
 import com.microsoft.jenkins.appservice.commands.GitDeployCommand;
-import com.microsoft.jenkins.appservice.commands.WarDeployCommand;
+import com.microsoft.jenkins.appservice.commands.FileDeployCommand;
 import com.microsoft.jenkins.appservice.util.Constants;
 import com.microsoft.jenkins.appservice.util.WebAppUtils;
 import com.microsoft.jenkins.azurecommons.JobContext;
@@ -40,7 +40,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 public class WebAppDeploymentCommandContext extends BaseCommandContext
         implements FTPDeployCommand.IFTPDeployCommandData,
         GitDeployCommand.IGitDeployCommandData,
-        WarDeployCommand.IWarDeployCommandData,
+        FileDeployCommand.IFileDeployCommandData,
         DockerBuildCommand.IDockerBuildCommandData,
         DockerPushCommand.IDockerPushCommandData,
         DockerRemoveImageCommand.IDockerRemoveImageCommandData,
@@ -146,8 +146,8 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
                 builder.withStartCommand(DockerDeployCommand.class);
             }
         } else if (WebAppUtils.isJavaApp(app)) {
-            // For Java application, use WAR deployment
-            builder.withStartCommand(WarDeployCommand.class);
+            // For Java application, use WAR or ZIP deployment
+            builder.withStartCommand(FileDeployCommand.class);
         } else {
             // For non-Java application, use Git-based deployment
             builder.withStartCommand(GitDeployCommand.class);
