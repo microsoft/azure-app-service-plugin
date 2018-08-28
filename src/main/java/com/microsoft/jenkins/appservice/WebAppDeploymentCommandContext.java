@@ -37,6 +37,8 @@ import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 
+import java.util.NoSuchElementException;
+
 public class WebAppDeploymentCommandContext extends BaseCommandContext
         implements FTPDeployCommand.IFTPDeployCommandData,
         GitDeployCommand.IGitDeployCommandData,
@@ -113,7 +115,12 @@ public class WebAppDeploymentCommandContext extends BaseCommandContext
             pubProfile = app.getPublishingProfile();
         } else {
             // Deploy to slot
-            final DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
+            DeploymentSlot slot;
+            try {
+                slot = app.deploymentSlots().getByName(slotName);
+            } catch (NoSuchElementException e) {
+                throw new AzureCloudException(String.format("Slot %s not found", slotName));
+            }
             if (slot == null) {
                 throw new AzureCloudException(String.format("Slot %s not found", slotName));
             }
