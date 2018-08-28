@@ -31,7 +31,10 @@ Then create a Web App in Azure portal or through Azure CLI, we support both [Web
 
 ### Deploy to Web App through File Upload
 
-You can deploy your project to Azure Web App by uploading your build artifacts (for example, `.war` file in Java). For Java apps, [WAR deploy](https://docs.microsoft.com/en-us/azure/app-service/app-service-deploy-zip#deploy-war-file) will be used. For other languages, Git will be used.
+You can deploy your project to Azure Web App by uploading your build artifacts (for example, `.war` or `.zip` file in Java). 
+- For Java EE apps, [WAR deploy](https://docs.microsoft.com/en-us/azure/app-service/app-service-deploy-zip#deploy-war-file) will be used. 
+- For Java SE app, [ZIP deploy](https://docs.microsoft.com/en-us/azure/app-service/app-service-deploy-zip#deploy-zip-file) will be used.
+- For other languages, Git will be used.
 
 1. Create a new freestyle project in Jenkins, add necessary build steps to build your code.
 2. Add a post-build action 'Publish an Azure Web App'.
@@ -40,6 +43,21 @@ You can deploy your project to Azure Web App by uploading your build artifacts (
 5. There are two optional parameters Source Directory and Target Directory that allows you to specify source and target folders when uploading files. For example, Java web app on Azure is actually running in a Tomcat server. So you should upload you war package to `webapps` folder. So in this case, set Target Directory to `webapps`.
 6. You can also set Slot Name if you want to deploy to a slot other than production.
 7. Save the project and build it, your web app will be deployed to Azure when build is completed.
+
+> For Java SE apps, you need to archive a web.config file with your jar file in zip format. The basic web.config file example is as below, and you need to replace the variable $JAR_FILE with your own jar file name.
+> ```xml
+> <?xml version="1.0" encoding="UTF-8"?>
+><configuration>
+>  <system.webServer>
+>    <handlers>
+>      <add name="httpPlatformHandler" path="*" verb="*" modules="httpPlatformHandler" resourceType="Unspecified" />
+>    </handlers>
+>    <httpPlatform processPath="%JAVA_HOME%\bin\java.exe"
+>        arguments="-Djava.net.preferIPv4Stack=true -Dserver.port=%HTTP_PLATFORM_PORT% -jar &quot;%HOME%\site\wwwroot\${JAR_FILE}&quot;">
+>    </httpPlatform>
+>  </system.webServer>
+></configuration>
+> ```
 
 ### Deploy to Web App on Linux using Docker
 
