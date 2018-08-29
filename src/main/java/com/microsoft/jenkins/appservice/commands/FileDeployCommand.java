@@ -128,8 +128,8 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeploy
                             }
                         }
                         if (!deploySuccess) {
-                            throw new IOException(String.format("The war deploy failed after %d times of retry.",
-                                    retryCount));
+                            throw new IOException(String.format("The war deploy for %s failed after %d times of retry.",
+                                    filePath.getName(), retryCount));
                         }
                     }
                     if (!hasWarFile) {
