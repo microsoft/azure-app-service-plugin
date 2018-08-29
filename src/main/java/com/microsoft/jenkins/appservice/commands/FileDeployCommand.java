@@ -69,11 +69,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeploy
                             app.zipDeploy(stream);
                         } else {
                             DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
-                            if (slot != null) {
-                                slot.zipDeploy(stream);
-                            } else {
-                                throw new IOException("Slot " + slotName + " not found");
-                            }
+                            slot.zipDeploy(stream);
                         }
                     }
                     break;
@@ -97,11 +93,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeploy
                                 app.warDeploy(stream, filePath.getBaseName());
                             } else {
                                 DeploymentSlot slot = app.deploymentSlots().getByName(slotName);
-                                if (slot != null) {
-                                    slot.warDeploy(stream, filePath.getBaseName());
-                                } else {
-                                    throw new IOException("Slot " + slotName + " not found");
-                                }
+                                slot.warDeploy(stream, filePath.getBaseName());
                             }
                         }
                     }

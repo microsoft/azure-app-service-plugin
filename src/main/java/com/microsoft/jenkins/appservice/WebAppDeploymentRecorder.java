@@ -48,6 +48,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collections;
+import java.util.NoSuchElementException;
 
 public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
 
@@ -168,7 +169,13 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
         final Azure azureClient = AzureUtils.buildClient(run.getParent(), azureCredentialsId);
         final String resourceGroup = getResourceGroup();
         final String appName = getAppName();
-        final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
+        WebApp app;
+        try {
+            app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);
+        } catch (NoSuchElementException e) {
+            throw new AbortException(String.format("Web App %s in resource group %s not found",
+                    appName, resourceGroup));
+        }
         if (app == null) {
             throw new AbortException(String.format("Web App %s in resource group %s not found",
                     appName, resourceGroup));
