@@ -15,6 +15,7 @@ import com.microsoft.jenkins.azurecommons.command.CommandState;
 import com.microsoft.jenkins.azurecommons.command.IBaseCommandData;
 import com.microsoft.jenkins.azurecommons.command.ICommand;
 import com.microsoft.jenkins.azurecommons.telemetry.AppInsightsUtils;
+import com.microsoft.jenkins.exceptions.AzureCloudException;
 import hudson.FilePath;
 import hudson.Util;
 import org.apache.commons.lang.StringUtils;
@@ -91,7 +92,8 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeploy
                             }
                         }
                     }
-                    throw new IOException(String.format("The zip deploy failed after %d times of retry.", retryCount));
+                    throw new AzureCloudException(String.format("The zip deploy failed after %d times of retry.",
+                            retryCount));
                 case WAR:
                     aiDeployInfo = Constants.AI_WAR_DEPLOY;
                     aiDeployFailedInfo = Constants.AI_WAR_DEPLOY_FAILED;
@@ -128,8 +130,8 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeploy
                             }
                         }
                         if (!deploySuccess) {
-                            throw new IOException(String.format("The war deploy for %s failed after %d times of retry.",
-                                    filePath.getName(), retryCount));
+                            throw new AzureCloudException(String.format("The war deploy for %s failed after %d times "
+                                    + "of retry.", filePath.getName(), retryCount));
                         }
                     }
                     if (!hasWarFile) {
@@ -148,7 +150,7 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeploy
                             + " or ZIP deployment.", deployType.toString());
                     throw new IOException(errorMsg);
             }
-        } catch (IOException e) {
+        } catch (IOException | AzureCloudException e) {
             String errorMsg = String.format("Fail to deploy %s file due to: %s", deployType.toString(), e.getMessage());
             context.logError(errorMsg);
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, aiDeployFailedInfo,
