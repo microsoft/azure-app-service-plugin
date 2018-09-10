@@ -1,5 +1,11 @@
 # Azure App Service Plugin Changelog
 
+## Version 0.4.0, 2018-09-10
+
+* Support zip deploy for Java SE applications
+* Add retry logic for war deploy
+* Fix exception for failing to find Azure resources
+
 ## Version 0.3.1, 2018-05-30
 * Switch to war deploy for Java apps
 * Add null check for path names when deploy
