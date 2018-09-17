@@ -65,7 +65,8 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeploy
                         throw new IOException(errorMsg);
                     }
                     FilePath file = zipFilesPathList.get(0);
-                    context.logStatus("Deploy to app " + file.getBaseName() + " using file: " + file.getRemote());
+                    context.logStatus(String.format("Deploy to app %s with default host https://%s using file %s",
+                            file.getBaseName(), app.defaultHostName(), file.getRemote()));
 
                     int retryCount = 0;
                     while (retryCount < DEFAULT_MAX_RETRY_TIMES) {
@@ -103,8 +104,8 @@ public class FileDeployCommand implements ICommand<FileDeployCommand.IFileDeploy
                             context.logStatus(filePath.getName() + " is not WAR file. Will skip.");
                             continue;
                         }
-                        context.logStatus("Deploy to app " + filePath.getBaseName() + " using file: "
-                                + filePath.getRemote());
+                        context.logStatus(String.format("Deploy to app %s with default host https://%s using file %s",
+                                filePath.getBaseName(), app.defaultHostName(), filePath.getRemote()));
                         hasWarFile = true;
 
                         retryCount = 0;
