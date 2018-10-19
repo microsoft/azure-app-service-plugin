@@ -112,6 +112,8 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
             git.commit(env.expand(DEPLOY_COMMIT_MESSAGE));
 
             git.push().ref(DEPLOY_BRANCH + ":" + DEPLOY_BRANCH).to(new URIish(pubProfile.gitUrl())).execute();
+            context.logStatus(String.format("Deploy to app with default host https://%s",
+                    context.getWebAppBase().defaultHostName()));
 
             context.setCommandState(CommandState.Success);
             AzureAppServicePlugin.sendEvent(Constants.AI_WEB_APP, Constants.AI_GIT_DEPLOY,
