@@ -1,7 +1,9 @@
 # Azure App Service Plugin Changelog
 
-## Version 0.4.0, 2018-09-10
+## Version 0.4.1, 2018-10-19
+* Fix security vulnerability of jackson-databind
 
+## Version 0.4.0, 2018-09-10
 * Support zip deploy for Java SE applications
 * Add retry logic for war deploy
 * Fix exception for failing to find Azure resources
