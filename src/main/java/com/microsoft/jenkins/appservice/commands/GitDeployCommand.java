@@ -27,7 +27,6 @@ import hudson.model.TaskListener;
 import hudson.plugins.git.Branch;
 import hudson.plugins.git.GitTool;
 import hudson.remoting.VirtualChannel;
-import org.apache.commons.io.FilenameUtils;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.dircache.DirCacheBuildIterator;
 import org.eclipse.jgit.dircache.DirCacheBuilder;
@@ -56,6 +55,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
     private static final String DEPLOY_COMMIT_MESSAGE = "Deploy ${BUILD_TAG}";
     private static final String DEPLOY_BRANCH = "master";
     private static final String DEPLOY_REMOTE_BRANCH = "origin/" + DEPLOY_BRANCH;
+    private static final String GIT_ADD_ALL_PARAMETER = "-A";
 
     @Override
     public void execute(final IGitDeployCommandData context) {
@@ -272,11 +272,8 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
             final String fileName = FilePathUtils.trimDirectoryPrefix(sourceDir, file);
             FilePath repoPath = new FilePath(repo.child(targetDir), fileName);
             file.copyTo(repoPath);
-
-            // Git always use Unix file path
-            String filePathInGit = FilenameUtils.separatorsToUnix(FilenameUtils.concat(targetDir, fileName));
-            git.add(filePathInGit);
         }
+        git.add(GIT_ADD_ALL_PARAMETER);
     }
 
     /**
