@@ -55,7 +55,7 @@ public class GitDeployCommand implements ICommand<GitDeployCommand.IGitDeployCom
     private static final String DEPLOY_COMMIT_MESSAGE = "Deploy ${BUILD_TAG}";
     private static final String DEPLOY_BRANCH = "master";
     private static final String DEPLOY_REMOTE_BRANCH = "origin/" + DEPLOY_BRANCH;
-    private static final String GIT_ADD_ALL_PARAMETER = "-A";
+    private static final String GIT_ADD_ALL_PARAMETER = ".";
 
     @Override
     public void execute(final IGitDeployCommandData context) {
