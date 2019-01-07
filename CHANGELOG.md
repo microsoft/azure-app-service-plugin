@@ -1,5 +1,9 @@
 # Azure App Service Plugin Changelog
 
+## Version 0.4.2, 2019-01-07
+* Add all files instead of one by one for git add
+* Fix security vulnerability
+
 ## Version 0.4.1, 2018-10-19
 * Fix security vulnerability of jackson-databind
 
