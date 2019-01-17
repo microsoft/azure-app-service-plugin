@@ -103,3 +103,12 @@ For advanced options, you can use Jenkins Pipeline Syntax tool to generate a sam
 Azure App Service Plugin collects usage data and sends it to Microsoft to help improve our products and services. Read our [privacy statement](http://go.microsoft.com/fwlink/?LinkId=521839) to learn more.
 
 You can turn off usage data collection in Manage Jenkins -> Configure System -> Azure -> Help make Azure Jenkins plugins better by sending anonymous usage statistics to Azure Application Insights.
+
+## Reporting bugs and feature requests
+
+We use [Jenkins JIRA](https://issues.jenkins-ci.org/) to record all bugs and feature requests. Please follow below steps to create your own issues.
+
+1. Search in Jira to see if the issue was existed already.
+2. Create a new issue with the component `azure-app-service-plugin` .
+
+You can refer to [Jira doc](https://confluence.atlassian.com/jiracoreserver/creating-issues-and-sub-tasks-939937904.html#Creatingissuesandsub-tasks-Creatinganissue) for detailed instructions about creating an issue.
