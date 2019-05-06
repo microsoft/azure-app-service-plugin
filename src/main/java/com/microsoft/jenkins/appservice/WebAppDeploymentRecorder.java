@@ -304,12 +304,8 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
 
         public DockerRegistryEndpoint.DescriptorImpl getDockerRegistryEndpointDescriptor() {
             final Jenkins jenkins = Jenkins.getInstance();
-            if (jenkins != null) {
-                return (DockerRegistryEndpoint.DescriptorImpl)
-                        jenkins.getDescriptor(DockerRegistryEndpoint.class);
-            } else {
-                return null;
-            }
+            return (DockerRegistryEndpoint.DescriptorImpl)
+                    jenkins.getDescriptor(DockerRegistryEndpoint.class);
         }
 
         public ListBoxModel doFillAzureCredentialsIdItems(@AncestorInPath final Item owner) {

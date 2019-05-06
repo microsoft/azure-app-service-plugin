@@ -107,7 +107,7 @@ public class FileDeployCommandTest {
         when(context.getJobContext()).thenReturn(jobContext);
         when(context.getSourceDirectory()).thenReturn("");
         WebApp app = mock(WebApp.class);
-        doThrow(IOException.class).when(app).warDeploy(any(InputStream.class), any(String.class));
+        doThrow(RuntimeException.class).when(app).warDeploy(any(InputStream.class), any(String.class));
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.war");
 
@@ -131,7 +131,7 @@ public class FileDeployCommandTest {
         when(context.getJobContext()).thenReturn(jobContext);
         when(context.getSourceDirectory()).thenReturn("");
         WebApp app = mock(WebApp.class);
-        doThrow(IOException.class).doNothing().when(app).warDeploy(any(InputStream.class), any(String.class));
+        doThrow(RuntimeException.class).doNothing().when(app).warDeploy(any(InputStream.class), any(String.class));
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.war");
 
@@ -236,7 +236,7 @@ public class FileDeployCommandTest {
         WebApp app = mock(WebApp.class);
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.zip");
-        doThrow(IOException.class).when(app).zipDeploy(any(InputStream.class));
+        doThrow(RuntimeException.class).when(app).zipDeploy(any(InputStream.class));
 
         FileDeployCommand command = new FileDeployCommand();
         command.execute(context);
@@ -261,7 +261,7 @@ public class FileDeployCommandTest {
         WebApp app = mock(WebApp.class);
         when(context.getWebApp()).thenReturn(app);
         when(context.getFilePath()).thenReturn("*.zip");
-        doThrow(IOException.class).doNothing().when(app).zipDeploy(any(InputStream.class));
+        doThrow(RuntimeException.class).doNothing().when(app).zipDeploy(any(InputStream.class));
 
         FileDeployCommand command = new FileDeployCommand();
         command.execute(context);
