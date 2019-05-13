@@ -188,7 +188,7 @@ public class ITGitDeployCommand extends IntegrationTest {
         Utils.extractResourceFile(getClass(), "sample-python-app/main.py", workspace.child("main.py").getRemote());
         Utils.extractResourceFile(getClass(), "sample-python-app/virtualenv_proxy.py", workspace.child("virtualenv_proxy.py").getRemote());
         Utils.extractResourceFile(getClass(), "sample-python-app/requirements.txt", workspace.child("requirements.txt").getRemote());
-        Utils.extractResourceFile(getClass(), "sample-python-app/web.3.4.config", workspace.child("web.3.4.config").getRemote());
+        Utils.extractResourceFile(getClass(), "sample-python-app/web.3.4.config", workspace.child("web.config").getRemote());
         when(commandDataMock.getFilePath()).thenReturn("*.py,*.config,requirements.txt");
 
         command.execute(commandDataMock);

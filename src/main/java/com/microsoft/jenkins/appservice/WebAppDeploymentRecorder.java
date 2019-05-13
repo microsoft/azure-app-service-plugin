@@ -61,8 +61,7 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
     private boolean skipDockerBuild;
 
     @CheckForNull
-    private
-    String slotName;
+    private String slotName;
 
     @DataBoundConstructor
     public WebAppDeploymentRecorder(
@@ -360,6 +359,9 @@ public class WebAppDeploymentRecorder extends BaseDeploymentRecorder {
                 @QueryParameter String azureCredentialsId,
                 @QueryParameter String resourceGroup,
                 @QueryParameter String appName) {
+            if (StringUtils.isBlank(azureCredentialsId)) {
+                return FormValidation.ok();
+            }
             final Azure azureClient = AzureUtils.buildClient(owner, azureCredentialsId);
             try {
                 final WebApp app = azureClient.webApps().getByResourceGroup(resourceGroup, appName);

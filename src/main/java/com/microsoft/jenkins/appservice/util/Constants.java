@@ -23,6 +23,8 @@ public final class Constants {
     public static final String ZIP_FILE_EXTENSION = "zip";
     public static final String WAR_FILE_EXTENSION = "war";
 
+    public static final String PRODUCTION_SLOT_NAME = "production";
+
     /**
      * AI constants.
      */

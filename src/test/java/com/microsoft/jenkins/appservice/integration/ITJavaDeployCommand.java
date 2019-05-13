@@ -128,7 +128,7 @@ public class ITJavaDeployCommand extends IntegrationTest {
     @Test
     public void zipDeploy() throws IOException, InterruptedException {
         Utils.extractResourceFile(getClass(), "sample-java-app-zip/gs-spring-boot-0.1.0.zip", workspace.child("gs-spring-boot-0.1.0.zip").getRemote());
-        when(commandDataMock.getFilePath()).thenReturn("*.zip");
+        when(commandDataMock.getFilePath()).thenReturn("gs-spring-boot-0.1.0.zip");
 
         command.execute(commandDataMock);
 
