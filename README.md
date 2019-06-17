@@ -98,6 +98,22 @@ azureWebAppPublish azureCredentialsId: '<credential_id>', publishType: 'docker',
 
 For advanced options, you can use Jenkins Pipeline Syntax tool to generate a sample script.
 
+## Swap slots
+
+You can use `Swap slots for an Azure Web App` step in `Post-build Actions` to swap slots for your web app.
+
+1. In your freestyle project, add a post-build action `Swap slots for an Azure Web App`.
+2. Select your Azure credential in Azure Profile Configuration section.
+3. In App Configuration section, choose the resource group and web app in your subscription.
+4. Choose the two slots you want to swap.
+5. Save the project and build it, your slots will be swapped when build is completed.
+
+Here is the sample to swap slots in pipeline script:
+
+```groovy
+azureWebAppSwapSlots appName: '<web_app_name>', azureCredentialsId: '<credential_id>', resourceGroup: '<resource_group_name>', sourceSlotName: '<source_slot_name>', targetSlotName: '<target_slot_name>'
+```
+
 ## Data/Telemetry
 
 Azure App Service Plugin collects usage data and sends it to Microsoft to help improve our products and services. Read our [privacy statement](http://go.microsoft.com/fwlink/?LinkId=521839) to learn more.
