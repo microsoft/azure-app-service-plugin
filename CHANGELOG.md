@@ -1,5 +1,9 @@
 # Azure App Service Plugin Changelog
 
+## Version 1.0.0, 2019-06-17
+* Bump Jenkins version to 2.60.3
+* Add support for swapping slots
+
 ## Version 0.4.2, 2019-01-07
 * Add all files instead of one by one for git add
 * Fix security vulnerability
